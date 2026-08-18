@@ -6,7 +6,7 @@ export default function NoticePage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch("https://raw.githubusercontent.com/xVapure/Noteab-Macro/refs/heads/main/assets/noticetabcontents.txt")
+        fetch("https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/noticetabcontents.txt")
             .then(res => res.text())
             .then(text => {
                 setContent(text);
@@ -66,10 +66,7 @@ export default function NoticePage() {
             </div>
 
             <div className="info-banner">
-                📺 New to Coteab? Watch the tutorial:{" "}
-                <a href="https://www.youtube.com/watch?v=dZzQytUMlCE" target="_blank" rel="noreferrer">
-                    https://www.youtube.com/watch?v=dZzQytUMlCE
-                </a>
+                Reoteab is an unofficial community-maintained continuation. See the repository for current notes and releases.
             </div>
 
             {loading ? (
@@ -85,7 +82,7 @@ export default function NoticePage() {
             )}
 
             <div className="info-banner" style={{ marginTop: "16px" }}>
-                🌐 <a href="https://discord.gg/coteab" target="_blank" rel="noreferrer">JOIN OUR DEVELOPMENT SERVER</a> to keep in touch with the latest Coteab Macro updates!
+                <a href="https://github.com/DeeepXD/Reoteab" target="_blank" rel="noreferrer">Reoteab on GitHub</a>
             </div>
         </>
     );

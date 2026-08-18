@@ -4,11 +4,11 @@ from .base_support import *
 class GuiMixin:
     def init_gui(self):
         selected_theme = self.config.get("selected_theme", "solar")
-        abslt_path = os.path.dirname(os.path.abspath(__file__))
-        icon_path = os.path.join(abslt_path, "NoteabBiomeTracker.ico")
+        abslt_path = getattr(sys, "_MEIPASS", str(get_base_path()))
+        icon_path = os.path.join(abslt_path, "assets", "reoteab-icon.ico")
 
         self.root = ttk.Window(themename=selected_theme)
-        self.set_title_threadsafe(f"Coteab Macro {current_ver} (Idle)")
+        self.set_title_threadsafe(f"Reoteab {current_ver} (Idle)")
         self.root.geometry("1000x700")
         self.root.minsize(900, 600)
         try:
@@ -107,7 +107,7 @@ class GuiMixin:
             "Other Features": other_features_frame,
             "Customizations": customizations_frame,
             "Credits": credits_frame,
-            "Donations <3": donations_frame
+            "Upstream Appreciation": donations_frame
         }
 
         for f in frames.values():
@@ -363,8 +363,8 @@ class GuiMixin:
         self._remote_running = False
 
     def create_donations_tab(self, frame):
-        t1 = "Our projects are 100% free to use and you're allowed to recycle any fraction of our code with proper credits. However, if you want to support our team, you can help us by purchasing any of the gamepasses below :)"
-        t2 = """It helps us out a lot mentally, any donations above 100 Robux will get you on the appreciation list below, 500 Robux will give you the permission to leave a special message on the appreciation list (must be sfw though) & 1000 Robux will give you access to early Coteab macro releases (beta vers) :D Normally we will check donations history daily, but if your Roblox username isn't displayed here please DM "@criticize." on Discord. The appreciation list also takes up to 5 minutes to update due to Github."""
+        t1 = "This page preserves the original Coteab team's donation information and donor acknowledgements for historical credit."
+        t2 = "Purchases here do not fund Reoteab. Reoteab does not manage the store, donor list, or upstream benefits."
         link = "https://www.roblox.com/games/18203398779/Medival-castle#!/store"
         ttk.Label(frame, text=t1, justify="left", wraplength=700).pack(padx=10, pady=(12, 6), anchor="w")
         ttk.Label(frame, text=t2, justify="left", wraplength=700).pack(padx=10, pady=(0, 6), anchor="w")
@@ -445,7 +445,7 @@ class GuiMixin:
     def create_notice_tab(self, frame):
         txt = ttk.Text(frame, height=14, wrap="word")
         txt.pack(fill="both", expand=True, padx=5, pady=(5, 90))
-        notice_url = "https://raw.githubusercontent.com/xVapure/Noteab-Macro/refs/heads/main/assets/noticetabcontents.txt"
+        notice_url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/noticetabcontents.txt"
         try:
             r = requests.get(notice_url, timeout=10)
             r.raise_for_status()
@@ -458,17 +458,17 @@ class GuiMixin:
         bottom_frame = ttk.Frame(frame)
         bottom_frame.pack(side="bottom", fill="x", padx=5, pady=5)
 
-        discord_link = "https://discord.gg/fw6q274Nrt"
+        project_link = "https://github.com/DeeepXD/Reoteab"
         discord_label = ttk.Label(
             bottom_frame,
-            text="JOIN OUR DEVELOPMENT SERVER TO KEEP IN TOUCH WITH THE LATEST 'C'OTEAB MACRO UPDATES, WE OFFER AN ACTIVE COMMUNITY AND MACRO SUPPORT! (CLICK HERE)",
+            text="REOTEAB ON GITHUB",
             foreground="royalblue",
             cursor="hand2",
             wraplength=700
         )
         discord_label.configure(font=('Segoe UI', 9, 'underline'))
         discord_label.pack(side="top", fill="x", anchor="w", padx=(0, 10))
-        discord_label.bind("<Button-1>", lambda e: webbrowser.open_new(discord_link))
+        discord_label.bind("<Button-1>", lambda e: webbrowser.open_new(project_link))
 
         update_label = ttk.Label(bottom_frame, text="Checking for updates...", wraplength=400, cursor="hand2")
         update_label.pack(side="top", fill="x", anchor="w", padx=5)
@@ -1066,12 +1066,7 @@ class GuiMixin:
         dev_til = ttk.Label(devs_frame, text='- Til/Comet', foreground="#03cafc", cursor="hand2")
         dev_til.grid(row=2, column=1, sticky='w')
         dev_til.bind("<Button-1>", lambda e: webbrowser.open_new("https://github.com/sleepytil"))
-        discord_label = ttk.Label(noteab_frame, text="""Join the Coteab Discord server!!!""", foreground="royalblue", cursor="hand2")
-        discord_label.configure(font=('Segoe UI', 9, 'underline'))
-        discord_label.pack()
-        discord_label.bind("<Button-1>", lambda e: webbrowser.open_new("https://discord.gg/fw6q274Nrt"))
-
-        github_label = ttk.Label(noteab_frame, text="""GitHub: Coteab Macro!""", foreground="#03cafc", cursor="hand2")
+        github_label = ttk.Label(noteab_frame, text="""Upstream Coteab source""", foreground="#03cafc", cursor="hand2")
         github_label.pack()
         github_label.bind("<Button-1>", lambda e: webbrowser.open_new("https://github.com/xVapure/Noteab-Macro"))
 

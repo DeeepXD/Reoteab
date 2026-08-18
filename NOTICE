@@ -11,11 +11,10 @@ ManasAarohi, Matt, spacedev0572, and other contributors in its application
 credits. Coteab is based on Noteab.
 
 The Apache License 2.0 and the upstream "Copyright 2025 Noteab" notice are
-preserved in LICENSE. Reoteab's README, NOTICE, .gitignore, third-party license
-files, and portable-path edits to the inherited developer note were added or
-changed for this continuation. No inherited Python, TypeScript, JavaScript,
-CSS, JSON runtime data, or compiled frontend behavior was changed in this
-baseline replacement.
+preserved in LICENSE. Reoteab changes include focused maintenance fixes,
+application and build branding, an original Reoteab icon, and a Reoteab data
+path with fallback to existing CoteabMacro user data. Upstream notices and
+credits remain preserved.
 
 UPSTREAM NOTEAB NOTICE (PRESERVED VERBATIM)
 -------------------------------------------
@@ -42,12 +41,14 @@ conclusion about that ambiguity.
 UPSTREAM ASSETS
 ---------------
 
-The complete Coteab source snapshot includes Coteab and Noteab names and
+The complete Coteab source snapshot included Coteab and Noteab names and
 logos, application icons, backgrounds, contributor/profile images, a team
-image, and recorded game automation paths. These files are preserved
-unmodified as upstream runtime or attribution material. No per-file license
-was supplied for those assets, so this NOTICE does not represent them as
-independently licensed by Reoteab or imply endorsement by the people shown.
+image, and recorded game automation paths. Unused upstream branding images
+and icons were removed during the Reoteab rebrand. Contributor/profile images
+and other attribution material remain where used for credits. No per-file
+license was supplied for the upstream assets, so this NOTICE does not
+represent them as independently licensed by Reoteab or imply endorsement by
+the people shown.
 
 THIRD-PARTY MATERIAL
 --------------------

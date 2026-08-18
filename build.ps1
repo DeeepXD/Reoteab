@@ -1,4 +1,4 @@
-# CoteabMacro Build Script
+# Reoteab Build Script
 # Usage: .\build.ps1
 # Optional: .\build.ps1 -SkipFrontend  (skip npm build step)
 param(
@@ -49,7 +49,7 @@ if (-not $SkipFrontend) {
 
 # ---- Run PyInstaller via venv Python ----
 Write-Host "`nRunning PyInstaller..." -ForegroundColor Yellow
-& $PYTHON -m PyInstaller --clean --noconfirm "CoteabMacro-onefile.spec"
+& $PYTHON -m PyInstaller --clean --noconfirm "Reoteab-onefile.spec"
 if ($LASTEXITCODE -ne 0) { Write-Error "PyInstaller build failed!"; exit 1 }
 
-Write-Host "`nBuild complete! Output: dist\CoteabMacro.exe" -ForegroundColor Green
+Write-Host "`nBuild complete! Output: dist\Reoteab.exe" -ForegroundColor Green

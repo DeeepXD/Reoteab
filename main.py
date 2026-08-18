@@ -14,9 +14,9 @@ import sys
 # i added this so we can easily change macro version upon releases without having to change multiple back-end & front-end behaviours
 # for future people that is reading the open source code, hello :p
 current_version = "v2.2.0-hotfix1"
-os.environ["COTEAB_MACRO_VERSION"] = current_version
+os.environ["REOTEAB_VERSION"] = current_version
 UPDATE_LATEST_RELEASE_API_URL = "https://api.github.com/repos/DeeepXD/Reoteab/releases/latest"
-os.environ["COTEAB_UPDATE_API_URL"] = UPDATE_LATEST_RELEASE_API_URL
+os.environ["REOTEAB_UPDATE_API_URL"] = UPDATE_LATEST_RELEASE_API_URL
 os.environ["WEBKIT_DISABLE_COMPOSITING_MODE"] = "1"
 import time
 import psutil
@@ -38,7 +38,7 @@ os.environ['WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS'] = '--disable-gpu'
 APPDATA_BASE.mkdir(parents=True, exist_ok=True)
 os.chdir(APPDATA_BASE)
 
-_mutex = ctypes.windll.kernel32.CreateMutexW(None, True, "CoteabMacroSingleInstance")
+_mutex = ctypes.windll.kernel32.CreateMutexW(None, True, "ReoteabSingleInstance")
 if ctypes.windll.kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
     _old_pid_arg = None
     try:
@@ -60,12 +60,12 @@ if ctypes.windll.kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
                 time.sleep(0.5)
 
         ctypes.windll.kernel32.CloseHandle(_mutex)
-        _mutex = ctypes.windll.kernel32.CreateMutexW(None, True, "CoteabMacroSingleInstance")
+        _mutex = ctypes.windll.kernel32.CreateMutexW(None, True, "ReoteabSingleInstance")
         if ctypes.windll.kernel32.GetLastError() == 183:
-            ctypes.windll.user32.MessageBoxW(0, "Coteab Macro is already running!\n\nPlease close the existing instance before opening a new one.", "Coteab Macro", 0x30)
+            ctypes.windll.user32.MessageBoxW(0, "Reoteab is already running!\n\nPlease close the existing instance before opening a new one.", "Reoteab", 0x30)
             sys.exit(0)
     else:
-        ctypes.windll.user32.MessageBoxW(0, "Coteab Macro is already running!\n\nPlease close the existing instance before opening a new one.", "Coteab Macro", 0x30)
+        ctypes.windll.user32.MessageBoxW(0, "Reoteab is already running!\n\nPlease close the existing instance before opening a new one.", "Reoteab", 0x30)
         sys.exit(0)
 
 try:
@@ -75,7 +75,7 @@ except Exception as e:
     err_text = str(e)
     if "numpy" in err_text.lower() or "c-extension" in err_text.lower() or "dll" in err_text.lower():
         msg = (
-            "Coteab Macro failed to load required components.\n\n"
+            "Reoteab failed to load required components.\n\n"
             "This is because your computer is missing the standard 'Visual C++ Redistributable (x64)' (i think so).\n\n"
             "Please download and install it from Microsoft's official website and try open the macro again!\n\n"
             f"Error details: {err_text}"
@@ -93,10 +93,7 @@ except Exception as e:
  
 
 
-_wv2_user_data_base = os.path.join(
-    os.environ.get("LOCALAPPDATA", os.path.expanduser("~")),
-    "CoteabMacro", "WebView2UserData"
-)
+_wv2_user_data_base = os.path.join(APPDATA_BASE, "WebView2UserData")
 try:
     if os.path.exists(_wv2_user_data_base):
         for _f in os.listdir(_wv2_user_data_base):
@@ -158,7 +155,7 @@ def get_frontend_entry():
             except Exception as e:
                 print(f"Error reading local index.html: {e}")
 
-    frontend_url = "https://raw.githubusercontent.com/xVapure/Noteab-Macro/refs/heads/main/assets/index.html"
+    frontend_url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/lib/dist/index.html"
     try:
         from biome_tracker.config import APPDATA_BASE
         appdata_dist = os.path.join(str(APPDATA_BASE), "dist")
@@ -468,7 +465,7 @@ class Api:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    def export_theme(self, theme_data, filename="coteab_theme.json"):
+    def export_theme(self, theme_data, filename="reoteab_theme.json"):
         try:
             if not self._window:
                 return {"success": False, "error": "Window not available"}
@@ -1286,7 +1283,7 @@ def launch_app(api_class, tracker=None):
 
     fe = get_frontend_entry()
     win_args = {
-        "title": f"Coteab Macro {current_version}",
+        "title": f"Reoteab {current_version}",
         "js_api": api,
         "width": 985, "height": 550,
         "min_size": (550, 500),
@@ -1384,7 +1381,7 @@ def main():
     try:
         fe = get_frontend_entry()
         win_args = {
-            "title": f"Coteab Macro {current_version}",
+            "title": f"Reoteab {current_version}",
             "js_api": api,
             "width": 985, "height": 550,
             "min_size": (550, 500),
@@ -1401,7 +1398,7 @@ def main():
             try:
                 from biome_tracker.core import BiomeTracker
                 tracker = BiomeTracker()
-                canonical = _read_cli_value("--coteab-target", "CoteabMacro.exe")
+                canonical = _read_cli_value("--coteab-target", "Reoteab.exe")
                 old_pid_raw = _read_cli_value("--coteab-old-pid", "")
                 try: old_pid = int(old_pid_raw) if old_pid_raw else None
                 except Exception: old_pid = None

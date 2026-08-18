@@ -10,7 +10,7 @@ Reoteab is not affiliated with or endorsed by the Noteab or Coteab developers.
 
 This repository is based on the complete Coteab v2.2.0 source snapshot. It includes the Python backend, React frontend, built frontend used by the desktop application, build scripts, and runtime assets.
 
-Internal Coteab names, paths, endpoints, and behavior remain unchanged in this baseline so future maintenance can start from the released implementation.
+The application and build now use the Reoteab identity while preserving the upstream source lineage and compatibility with existing user data.
 
 ## Installation
 
@@ -28,7 +28,13 @@ npm install
 npm run build
 ```
 
-The application loads the built frontend from `lib/dist/`. See the inherited developer note and build script for the original build process.
+Build the complete application with:
+
+```powershell
+.\build.ps1
+```
+
+The application loads the built frontend from `lib/dist/`, and the packaged executable is written to `dist/Reoteab.exe`.
 
 ## Requirements
 
@@ -36,23 +42,19 @@ The application loads the built frontend from `lib/dist/`. See the inherited dev
 - Python and the packages listed in `requirements.txt`
 - Node.js and npm when rebuilding the frontend
 
-The development setup and build have not yet been independently verified as Reoteab.
-
 ## Usage
 
-For development, start the inherited application with:
+For development, start the application with:
 
 ```powershell
 python main.py
 ```
 
-Review the configuration and calibrations before enabling automation. Reoteab does not yet publish its own executable release.
+Review the configuration and calibrations before enabling automation.
 
 ## Project status
 
-Reoteab is currently in the early maintenance stage. This baseline imports the complete Coteab v2.2.0 source before further fixes and features are added.
-
-The inherited publishing scripts still refer to Coteab repositories and must not be used to publish Reoteab without review.
+Reoteab is currently in the early maintenance stage. It is based on the complete Coteab v2.2.0 source and is being updated through focused maintenance changes.
 
 ## Credits
 

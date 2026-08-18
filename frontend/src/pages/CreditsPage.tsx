@@ -3,7 +3,7 @@ export default function CreditsPage() {
         <>
             <div className="page-header">
                 <h2>Credits</h2>
-                <p>The people behind Coteab Macro</p>
+                <p>Reoteab and upstream contributors</p>
             </div>
 
 
@@ -38,12 +38,8 @@ export default function CreditsPage() {
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", marginTop: "16px" }}>
-                    <a href="https://discord.gg/coteab" target="_blank" rel="noreferrer"
-                        style={{ color: "var(--accent)", textDecoration: "underline" }}>
-                        Join the Coteab Discord server!!!
-                    </a>
                     <a href="https://github.com/xVapure/Noteab-Macro" target="_blank" rel="noreferrer" style={{ color: "var(--accent)", fontSize: "13px" }}>
-                        GitHub: Coteab Macro!
+                        Upstream Coteab source
                     </a>
                 </div>
             </div>
@@ -102,7 +98,7 @@ export default function CreditsPage() {
             </div>
 
             <div className="info-banner" style={{ marginTop: "16px" }}>
-                🌐 <a href="https://discord.gg/coteab" target="_blank" rel="noreferrer">JOIN OUR DEVELOPMENT SERVER</a> to keep in touch with the latest Coteab Macro updates!
+                <a href="https://github.com/DeeepXD/Reoteab" target="_blank" rel="noreferrer">Reoteab on GitHub</a>
             </div>
         </>
     );

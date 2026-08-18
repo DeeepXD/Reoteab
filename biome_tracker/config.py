@@ -22,7 +22,15 @@ EXE_CONFIG = BASE_PATH / "config.json"
 DEV_CONFIG_DIR = BASE_PATH / "config_folder"
 DEV_CONFIG = DEV_CONFIG_DIR / "config.json"
 
-APPDATA_BASE = Path(_os.environ.get("LOCALAPPDATA", _os.path.expanduser("~"))) / "CoteabMacro"
+_LOCAL_APPDATA = Path(_os.environ.get("LOCALAPPDATA", _os.path.expanduser("~")))
+REOTEAB_APPDATA = _LOCAL_APPDATA / "Reoteab"
+LEGACY_APPDATA = _LOCAL_APPDATA / "CoteabMacro"
+if REOTEAB_APPDATA.exists():
+    APPDATA_BASE = REOTEAB_APPDATA
+elif LEGACY_APPDATA.exists():
+    APPDATA_BASE = LEGACY_APPDATA
+else:
+    APPDATA_BASE = REOTEAB_APPDATA
 APPDATA_CONFIG = APPDATA_BASE / "config.json"
 
 DEFAULT_AUTO_POP_BUFFS = [

@@ -75,8 +75,8 @@ def verify_access():
     return False
 
 def show_auth_popup():
-    if ctypes.windll.user32.MessageBoxW(0, "This is a beta version of Coteab Macro.\n\nYou need to verify your Discord account to continue.\nClick 'Yes' to open Discord login in your browser.\n\nMake sure you are in the Coteab Discord server\nand have the beta access role!!!!!!", "Coteab Macro \u2014 Beta Access", 0x44) != 6:
-        ctypes.windll.user32.MessageBoxW(0, "Authentication cancelled.\nThe macro will now close.", "Coteab Macro", 0x40); return False
+    if ctypes.windll.user32.MessageBoxW(0, "This is a beta version of Reoteab.\n\nYou need to verify your Discord account to continue.\nClick 'Yes' to open Discord login in your browser.", "Reoteab \u2014 Beta Access", 0x44) != 6:
+        ctypes.windll.user32.MessageBoxW(0, "Authentication cancelled.\nThe macro will now close.", "Reoteab", 0x40); return False
     if not verify_access():
-        ctypes.windll.user32.MessageBoxW(0, "You do not have beta access.\n\nMake sure you:\n\u2022 Are in the Coteab Discord server\n\u2022 Have the beta access role!!!!!!\n\nJoin: https://discord.gg/coteab", "Coteab Macro \u2014 Access Denied", 0x10); return False
+        ctypes.windll.user32.MessageBoxW(0, "You do not have Reoteab beta access.\n\nContact the Reoteab maintainers if you believe this is an error.", "Reoteab \u2014 Access Denied", 0x10); return False
     return True

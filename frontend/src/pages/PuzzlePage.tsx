@@ -18,7 +18,7 @@ const PUZZLES = [
         icon: "❓",
         subtitle: "Numbers hold the final answer.",
         description: "A sequence of numbers was left behind. Each one points to a letter. Decode them and you'll have the final key. "
-            + "The hint is somewhere out there... check the Coteab Server on discord!",
+            + "The hint is somewhere out there... check the Reoteab repository!",
         answer: "dawnbreaker",
         solvedMsg: "Fragment decoded. Final key obtained.",
     },
@@ -180,10 +180,10 @@ export default function PuzzlePage() {
                         Both puzzles solved
                     </h3>
                     <p style={{ color: "var(--text-secondary)", fontSize: "13px", marginBottom: "14px" }}>
-                        Screenshot this and send it to <strong>@akiitosama</strong> on Coteab Development discord server to claim your role
+                        Screenshot this and share it with the Reoteab maintainers.
                     </p>
                     <div style={{ fontFamily: "monospace", fontSize: "10px", opacity: 0.3, wordBreak: "break-all" }}>
-                        {btoa(Date.now().toString(36) + "-coteab-" + Math.random().toString(36).slice(2, 6))}
+                        {btoa(Date.now().toString(36) + "-reoteab-" + Math.random().toString(36).slice(2, 6))}
                     </div>
                 </div>
             )}

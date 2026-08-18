@@ -4,7 +4,7 @@ from pathlib import Path
 
 
 CONFIG_PATH = Path(__file__).parents[1] / "biome_tracker" / "config.py"
-SPEC = importlib.util.spec_from_file_location("coteab_config", CONFIG_PATH)
+SPEC = importlib.util.spec_from_file_location("reoteab_config", CONFIG_PATH)
 CONFIG_MODULE = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader is not None
 SPEC.loader.exec_module(CONFIG_MODULE)

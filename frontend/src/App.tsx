@@ -326,7 +326,7 @@ function App() {
       if (!cancelled) {
         setMacroVersion(version);
       }
-      document.title = `Coteab Macro ${version}`;
+      document.title = `Reoteab ${version}`;
       return true;
     };
 
@@ -436,14 +436,14 @@ function App() {
       
       {/* Global Custom CSS Injection from Theme */}
       {theme === 'custom' && config?.custom_theme_data?.custom_css ? (
-        <style id="coteab-custom-css">{config.custom_theme_data.custom_css}</style>
+        <style id="reoteab-custom-css">{config.custom_theme_data.custom_css}</style>
       ) : config?.custom_css && (
-        <style id="coteab-custom-css">{config.custom_css}</style>
+        <style id="reoteab-custom-css">{config.custom_css}</style>
       )}
 
       {/* Global Custom Font Injection */}
       {theme === 'custom' && config?.custom_theme_data?.raw_font_url && (
-        <style id="coteab-custom-font">{`
+        <style id="reoteab-custom-font">{`
           @font-face {
               font-family: 'ThemeCustomFontGlobal';
               src: url('${config.custom_theme_data.raw_font_url.trim()}');

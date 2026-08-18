@@ -1,0 +1,9 @@
+# Reoteab
+
+Reoteab is an unofficial community-maintained continuation based on Coteab v2.2.0.
+
+## Current status
+
+- Early maintenance release
+- Report reproducible issues through the Reoteab repository
+- Review configuration and calibrations before enabling automation

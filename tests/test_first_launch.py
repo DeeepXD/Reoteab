@@ -21,7 +21,7 @@ class FirstLaunchTests(unittest.TestCase):
     def test_auto_update_ignores_older_release(self):
         release = {
             "tag_name": "v2.2.0",
-            "assets": [{"name": "CoteabMacro.exe", "browser_download_url": "https://example.invalid/CoteabMacro.exe"}],
+            "assets": [{"name": "Reoteab.exe", "browser_download_url": "https://example.invalid/Reoteab.exe"}],
         }
         with (
             mock.patch.object(sys, "frozen", True, create=True),
@@ -34,7 +34,7 @@ class FirstLaunchTests(unittest.TestCase):
     def test_auto_update_still_applies_newer_release(self):
         release = {
             "tag_name": "v2.2.1",
-            "assets": [{"name": "CoteabMacro.exe", "browser_download_url": "https://example.invalid/CoteabMacro.exe"}],
+            "assets": [{"name": "Reoteab.exe", "browser_download_url": "https://example.invalid/Reoteab.exe"}],
         }
         with (
             mock.patch.object(sys, "frozen", True, create=True),
@@ -60,8 +60,8 @@ class FirstLaunchTests(unittest.TestCase):
 
     def test_updater_payload_still_finalizes_to_canonical_executable(self):
         with tempfile.TemporaryDirectory() as directory:
-            current_exe = Path(directory) / "CoteabMacro1.exe"
-            canonical_exe = Path(directory) / "CoteabMacro.exe"
+            current_exe = Path(directory) / "Reoteab-update.exe"
+            canonical_exe = Path(directory) / "Reoteab.exe"
             current_exe.write_bytes(b"updated executable")
             with (
                 mock.patch.object(sys, "frozen", True, create=True),

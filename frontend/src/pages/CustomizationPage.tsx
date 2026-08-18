@@ -164,7 +164,7 @@ export default function CustomizationPage() {
                         <div style={{ 
                             width: "40px", height: "40px", borderRadius: "50%", 
                             backgroundColor: "#5865F2", flexShrink: 0,
-                            backgroundImage: "url('https://i.postimg.cc/rsXpGncL/Noteab-Biome-Tracker.png')",
+                            backgroundImage: "url('https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/reoteab-icon.png')",
                             backgroundSize: "cover"
                         }}></div>
                         
@@ -252,8 +252,8 @@ export default function CustomizationPage() {
                                         gap: "6px", 
                                         marginTop: "4px" 
                                     }}>
-                                        <img src="https://i.postimg.cc/rsXpGncL/Noteab-Biome-Tracker.png" style={{ width: "16px", height: "16px", borderRadius: "50%" }} alt="footer" />
-                                        <span style={{ color: "#949BA4", fontSize: "11px", fontWeight: "500" }}>Coteab Macro v2.1.6-beta1 • Today at {now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                        <img src="https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/reoteab-icon.png" style={{ width: "16px", height: "16px", borderRadius: "50%" }} alt="footer" />
+                                        <span style={{ color: "#949BA4", fontSize: "11px", fontWeight: "500" }}>Reoteab v0.1.0-beta.1 • Today at {now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                                     </div>
                                 </div>
                                 

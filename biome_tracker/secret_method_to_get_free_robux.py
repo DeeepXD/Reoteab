@@ -32,4 +32,4 @@ else:
     print("You got 0 robux!")
 
 
-print('ok guess what im gonna add some secret stuff into coteab, chance would be around 1/20 ish to show a funny vapure webhook')
+print('ok guess what im gonna add some secret stuff into reoteab, chance would be around 1/20 ish to show a funny vapure webhook')

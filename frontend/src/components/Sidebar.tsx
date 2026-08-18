@@ -49,14 +49,14 @@ const navItems = [
     { id: "themedesign", label: "Theme Design", icon: "🎨" },
     { section: "Others" },
     { id: "credits", label: "Credits", icon: "💜" },
-    { id: "donations", label: "Donations <3", icon: "💎" },
+    { id: "donations", label: "Upstream Appreciation", icon: "💎" },
 ];
 
 export default function Sidebar({ activeTab, onTabChange, isGlitching, macroVersion }: SidebarProps) {
     const { config } = useConfig();
     const isCustom = config?.selected_theme === 'custom';
     
-    const customTitle = (isCustom && config?.custom_macro_title) ? config.custom_macro_title : "Coteab Macro";
+    const customTitle = (isCustom && config?.custom_macro_title) ? config.custom_macro_title : "Reoteab";
     const customVersion = (isCustom && config?.custom_macro_version) ? config.custom_macro_version : (macroVersion || "v?.?.?");
 
     const title = useGlitchText(customTitle, isGlitching);
@@ -98,7 +98,7 @@ export default function Sidebar({ activeTab, onTabChange, isGlitching, macroVers
 
             <div className="sidebar-footer">
                 <div className="by-line">
-                    Coteab Macro made by <span>Coteab Development Team</span>
+                    Unofficial community-maintained project
                 </div>
             </div>
         </div>

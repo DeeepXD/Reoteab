@@ -401,7 +401,7 @@ class DetectionMixin:
         #     if not is_verified():
         #         print("Verification required.")
         #         messagebox.showwarning(
-        #             "Coteab Macro — Beta Access",
+        #             "Reoteab — Beta Access",
         #             "Verification required to use this beta version.\n\nPlease ensure you have authenticated your Discord account!"
         #         )
         #         return
@@ -444,7 +444,7 @@ class DetectionMixin:
         self.config["session_window_start"] = self.session_window_start.isoformat()
         self.config["macro_last_start"] = now.isoformat()
         self.save_config()
-        self.set_title_threadsafe(f"""Coteab Macro {current_ver} (Running)""")
+        self.set_title_threadsafe(f"""Reoteab {current_ver} (Running)""")
         self.send_webhook_status("Macro started!", color=0x64ff5e)
 
         threads = [
@@ -522,7 +522,7 @@ class DetectionMixin:
         self.saved_session += elapsed_time
         self.start_time = None
         self.stop_sent = True
-        self.set_title_threadsafe(f"Coteab Macro {current_ver} (Stopped)")
+        self.set_title_threadsafe(f"Reoteab {current_ver} (Stopped)")
         self.send_macro_summary(last24h_seconds)
         print("closed", self.current_session)
         self.save_config()
@@ -1078,7 +1078,7 @@ class DetectionMixin:
             self.just_reconnected = True
             self._roblox_fullscreened = False
             self.reconnect_confirm_deadline = time.monotonic() + 60
-            self.set_title_threadsafe(f"""Coteab Macro {current_ver} (Running)""")
+            self.set_title_threadsafe(f"""Reoteab {current_ver} (Running)""")
             self.save_config()
         except Exception as e:
             self.error_logging(e, "_resume_timer_after_reconnect")

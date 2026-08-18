@@ -386,7 +386,7 @@ body, * {
     const exportTheme = () => {
         const exportData = generateThemeData();
 
-        const safeFilename = (themeName.trim() || "coteab_theme").toLowerCase().replace(/[^a-z0-9_-]/g, '_') + ".json";
+        const safeFilename = (themeName.trim() || "reoteab_theme").toLowerCase().replace(/[^a-z0-9_-]/g, '_') + ".json";
 
         if ((window as any).pywebview?.api?.export_theme) {
             (window as any).pywebview.api.export_theme(exportData, safeFilename)
@@ -446,7 +446,7 @@ body, * {
                 <h3 style={{ fontSize: "15px", fontWeight: 600 }}>Theme Designer</h3>
             </div>
             <p style={{ color: "var(--text-secondary)", marginBottom: "20px", fontSize: "13px" }}>
-                Design your custom Coteab Macro theme! The colors will update in real-time. Export the theme to save it!
+                Design your custom Reoteab theme. The colors update in real time; export the theme to save it.
             </p>
 
             <div style={{ display: "grid", gap: "20px", marginBottom: "25px" }}>
@@ -598,7 +598,7 @@ body, * {
                                 type="text" 
                                 value={customTitle} 
                                 onChange={(e) => setCustomTitle(e.target.value)}
-                                placeholder="Coteab Macro"
+                                placeholder="Reoteab"
                                 style={{ width: "100%", height: "30px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: "4px", color: "var(--text-primary)", padding: "0 10px" }}
                             />
                         </div>
@@ -861,7 +861,7 @@ body, * {
                                         
                                         alert("Theme imported successfully!");
                                     } catch(e) {
-                                        alert("Invalid theme file! Make sure it's a valid Coteab theme JSON.");
+                                        alert("Invalid theme file. Make sure it is a valid Reoteab theme JSON.");
                                     }
                                 };
                                 reader.readAsText(file);
