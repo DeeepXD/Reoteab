@@ -1,4 +1,5 @@
 from .base_support import *
+from .config import validate_merchant_settings
 import numpy as np
 from PIL import Image
 import io
@@ -3452,13 +3453,17 @@ class ActionsMixin:
             if _cancelled():
                 return False
 
+            merchant_settings, merchant_setting_warnings = validate_merchant_settings(self.config)
+            for warning in merchant_setting_warnings:
+                self.append_log(f"[Merchant Config] {warning}")
+
             self.on_auto_merchant_state = True
             merchant_name_ocr_pos = self.config["merchant_name_ocr_pos"]
             merchant_open_button = self.config["merchant_open_button"]
             first_item_slot_pos = self.config.get("first_item_merchant_slot_pos", [954, 696])
             item_name_ocr_pos = self.config["item_name_ocr_pos"]
             merchant_dialogue_box = self.config["merchant_dialogue_box"]
-            merchant_extra_slot = int(self.config.get("merchant_extra_slot", "0"))
+            merchant_extra_slot = merchant_settings["merchant_extra_slot"]
 
             merchant_name = ""
             ocrMisdetect_Key = {
@@ -3577,8 +3582,8 @@ class ActionsMixin:
 
                 is_jester_exchange = False
                 if merchant_name == "Jester":
-                    j_count = int(self.config.get("jester_exchange_count", 0)) + 1
-                    if self.config.get("enable_jester_exchange", False) and j_count >= int(self.config.get("jester_exchange_threshold", 3)):
+                    j_count = merchant_settings["jester_exchange_count"] + 1
+                    if self.config.get("enable_jester_exchange", False) and j_count >= merchant_settings["jester_exchange_threshold"]:
                         is_jester_exchange = True
 
                 print(f"Opening merchant interface for {merchant_name}")
@@ -3590,7 +3595,7 @@ class ActionsMixin:
                     btn_pos = merchant_open_button
 
                 autoit.mouse_click("left", btn_pos[0], btn_pos[1], 3)
-                inventory_click_delay = int(self.config.get("inventory_click_delay", "0")) / 1000.0
+                inventory_click_delay = merchant_settings["inventory_click_delay"] / 1000.0
                 exchange_extra_wait = 4.0 if is_jester_exchange else 0.0
                 if not self._sleep_with_cancel(7 + exchange_extra_wait + inventory_click_delay): return
 
@@ -3612,11 +3617,9 @@ class ActionsMixin:
                 self.append_log(f"[Merchant Detection] {merchant_name} count: {self.config['merchant_counts'][merchant_name]}")
 
                 if is_jester_exchange:
-                    auto_buy_items = self.config.get("Jester_Exchange_Items", {})
+                    auto_buy_items = merchant_settings["Jester_Exchange_Items"]
                 else:
-                    auto_buy_items = self.config.get(f"{merchant_name}_Items", {})
-                if not isinstance(auto_buy_items, dict):
-                    auto_buy_items = {}
+                    auto_buy_items = merchant_settings.get(f"{merchant_name}_Items", {})
                 purchased_items = {}
 
                 merchant_slot_positions = [
