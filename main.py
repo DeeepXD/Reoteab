@@ -1079,7 +1079,7 @@ class Api:
             latest_version = str(latest_release.get("tag_name", "")).strip()
             if not latest_version:
                 return None
-            if self._tracker._is_same_version(latest_version, current_version):
+            if not self._tracker._is_newer_version(latest_version, current_version):
                 return None
 
             _asset_name, download_url = self._tracker._pick_update_exe_asset(latest_release)

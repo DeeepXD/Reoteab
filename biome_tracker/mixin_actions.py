@@ -190,6 +190,22 @@ class ActionsMixin:
     def _is_same_version(self, a, b):
         return self._normalize_version(a) == self._normalize_version(b)
 
+    def _is_newer_version(self, candidate, current):
+        pattern = r"^(\d+(?:\.\d+)*)(?:-hotfix(\d+))?$"
+        candidate_match = re.fullmatch(pattern, self._normalize_version(candidate))
+        current_match = re.fullmatch(pattern, self._normalize_version(current))
+        if not candidate_match or not current_match:
+            return not self._is_same_version(candidate, current)
+
+        candidate_parts = [int(part) for part in candidate_match.group(1).split(".")]
+        current_parts = [int(part) for part in current_match.group(1).split(".")]
+        width = max(len(candidate_parts), len(current_parts))
+        candidate_key = tuple(candidate_parts + [0] * (width - len(candidate_parts)))
+        current_key = tuple(current_parts + [0] * (width - len(current_parts)))
+        if candidate_key != current_key:
+            return candidate_key > current_key
+        return int(candidate_match.group(2) or 0) > int(current_match.group(2) or 0)
+
     def _fetch_latest_release(self):
         try:
             response = requests.get(self._get_update_api_url(), timeout=12)
@@ -323,6 +339,9 @@ class ActionsMixin:
                         pass
                 return False
 
+            if "--coteab-finalize-update" not in sys.argv:
+                return False
+
             deadline = time.monotonic() + 120.0
             while time.monotonic() < deadline:
                 if old_pid and self._is_pid_alive(old_pid):
@@ -385,7 +404,7 @@ class ActionsMixin:
                 return False
 
             latest_version = str(latest_release.get("tag_name", "")).strip()
-            if not latest_version or self._is_same_version(latest_version, current_ver):
+            if not latest_version or not self._is_newer_version(latest_version, current_ver):
                 return False
 
             asset_name, download_url = self._pick_update_exe_asset(latest_release)
@@ -411,7 +430,7 @@ class ActionsMixin:
                 return
 
             latest_version = str(latest_release.get("tag_name", "")).strip()
-            if latest_version and not self._is_same_version(latest_version, current_version):
+            if latest_version and self._is_newer_version(latest_version, current_version):
                 asset_name, download_url = self._pick_update_exe_asset(latest_release)
                 if not download_url:
                     return
