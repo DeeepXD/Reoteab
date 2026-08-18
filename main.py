@@ -459,7 +459,18 @@ class Api:
             if not isinstance(imported, dict):
                 return {"success": False, "error": "Invalid calibration file: must be a JSON object"}
 
-            return {"success": True, "calibrations": imported}
+            if "presets" in imported:
+                presets = imported["presets"]
+                if not isinstance(presets, list) or not presets or not isinstance(presets[0], dict):
+                    return {"success": False, "error": "Invalid calibration file: missing preset"}
+                imported = presets[0].get("calibrations")
+            elif "calibrations" in imported:
+                imported = imported["calibrations"]
+
+            if not isinstance(imported, dict) or not imported:
+                return {"success": False, "error": "Invalid calibration file: missing calibrations"}
+
+            return {"success": True, "data": imported}
         except json.JSONDecodeError:
             return {"success": False, "error": "Invalid JSON file"}
         except Exception as e:
