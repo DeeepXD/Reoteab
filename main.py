@@ -15,7 +15,7 @@ import sys
 # for future people that is reading the open source code, hello :p
 current_version = "v2.2.0-hotfix1"
 os.environ["COTEAB_MACRO_VERSION"] = current_version
-UPDATE_LATEST_RELEASE_API_URL = "https://api.github.com/repos/xVapure/Noteab-Macro/releases/latest"
+UPDATE_LATEST_RELEASE_API_URL = "https://api.github.com/repos/DeeepXD/Reoteab/releases/latest"
 os.environ["COTEAB_UPDATE_API_URL"] = UPDATE_LATEST_RELEASE_API_URL
 os.environ["WEBKIT_DISABLE_COMPOSITING_MODE"] = "1"
 import time

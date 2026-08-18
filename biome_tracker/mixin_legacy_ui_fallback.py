@@ -474,12 +474,12 @@ class GuiMixin:
         update_label.pack(side="top", fill="x", anchor="w", padx=5)
 
         def _open_releases(_=None):
-            webbrowser.open_new("https://github.com/xVapure/Noteab-Macro/releases/latest")
+            webbrowser.open_new("https://github.com/DeeepXD/Reoteab/releases/latest")
 
         def _check_latest():
             current_version = current_ver
             try:
-                response = requests.get("https://api.github.com/repos/xVapure/Noteab-Macro/releases/latest", timeout=10)
+                response = requests.get("https://api.github.com/repos/DeeepXD/Reoteab/releases/latest", timeout=10)
                 response.raise_for_status()
                 latest_release = response.json()
                 latest_version = latest_release.get("tag_name") or latest_release.get("name") or ""

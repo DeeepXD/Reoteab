@@ -175,7 +175,7 @@ class ActionsMixin:
     def _get_update_api_url(self):
         return os.environ.get(
             "COTEAB_UPDATE_API_URL",
-            "https://api.github.com/repos/xVapure/Noteab-Macro/releases/latest",
+            "https://api.github.com/repos/DeeepXD/Reoteab/releases/latest",
         )
 
     def _normalize_version(self, value):
