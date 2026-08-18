@@ -1,0 +1,100 @@
+Reoteab
+
+Reoteab is an unofficial community-maintained continuation of Coteab.
+It is not affiliated with or endorsed by the Noteab or Coteab developers.
+
+Project lineage: Noteab -> Coteab -> Reoteab
+
+This baseline is derived from Coteab v2.2.0 (upstream commit
+1db73aee188412eac7052f0e2e19c080dc670172), maintained by Vapure
+(also identified upstream as xVapure, criticize., or C), Akito/Akitosama,
+and other contributors. Coteab is based on Noteab.
+
+The Apache License 2.0 and the original "Copyright 2025 Noteab" notice are
+preserved in LICENSE. Reoteab's README, NOTICE, and repository-maintenance
+files were added or changed for this continuation. No inherited runtime source
+file was changed in this initial baseline.
+
+The Coteab distribution also contained a document named
+"Notice to people telling me I cannot update Noteab macro.txt". That document
+was a general explanation of Apache 2.0 redistribution obligations, not an
+attribution notice or a separate license. It is not reproduced here.
+
+UPSTREAM NOTEAB NOTICE (PRESERVED VERBATIM)
+-------------------------------------------
+
+== BIOME MACRO SOURCE CODE DISCLAIMER ==
+
+This project contains original work by Noteab himself.
+Any adoption of macro code, functions, or direct copy-pasting of this project's macro-related code is not permitted, even with ATTRIBUTION/PROPER CREDITED.
+
+--> Users must request explicit permission from Noteab and get accepted before using core macro functions and any related asset in the macro.  
+--> Unauthorized use, modification, or redistribution of these functions will be considered a violation.  
+
+END OF UPSTREAM NOTEAB NOTICE
+-----------------------------
+
+The quoted Noteab notice is preserved because it appeared in the original
+Noteab repository. It is not a Reoteab restriction. Its language conflicts
+with the repository's Apache 2.0 designation and with Apache 2.0 section 4(d),
+which says NOTICE contents are informational and do not modify the License.
+The upstream repositories do not resolve that conflict or identify a separate
+license for particular core functions. This baseline does not claim a new
+legal conclusion about that ambiguity.
+
+The files supplied for Coteab v2.2.0 do not include the full core macro source;
+they include a Python bootstrapper that downloads CoteabMacro.exe. The
+bootstrapper and the included data/configuration files were published by the
+Coteab repository under its Apache 2.0 designation.
+
+EXCLUDED UPSTREAM MATERIAL
+--------------------------
+
+The following material from the supplied Coteab archive is intentionally not
+redistributed in this baseline because its copyright or license provenance
+could not be established:
+
+- maxstellar.png and tea.png (Noteab-originated assets covered by the ambiguous
+  Noteab notice quoted above)
+- the entire images/ directory (Coteab-added game-derived art, photographs,
+  profile images, memes, and contributor collages without per-file licenses)
+
+THIRD-PARTY MATERIAL
+--------------------
+
+assets/index.html contains bundled React and React DOM 19.2.4 code:
+
+Copyright (c) Meta Platforms, Inc. and affiliates.
+
+assets/index.html also contains Vite module-preload helper code:
+
+Copyright (c) 2019-present, Yuxi (Evan) You and Vite contributors.
+
+Both are distributed under the MIT License:
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+assets/index.html requests the Inter and Sarpanch fonts from Google Fonts at
+runtime; the font files are not included in this repository. The HTML and
+assets/biomes_data.json also reference externally hosted images. Those remote
+resources are not distributed by this repository and are not covered by
+Reoteab's Apache 2.0 grant.
+
+requirements.txt names third-party Python packages but does not bundle them.
+Each installed package remains subject to its own license.

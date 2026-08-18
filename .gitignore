@@ -1,0 +1,43 @@
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+*.local.json
+credentials.json
+secrets.json
+
+# Runtime and user state
+*.log
+logs/
+cache/
+.cache/
+tmp/
+temp/
+screenshots/
+user_settings.json
+settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Build and packaging output
+build/
+dist/
+*.egg-info/
+*.exe
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+Desktop.ini
