@@ -11,6 +11,11 @@ import pyautogui
 import win32clipboard
 
 try:
+    from .fishing_failsafe import FishingFailsafeTimer
+except ImportError:
+    from fishing_failsafe import FishingFailsafeTimer
+
+try:
     import mss
 except Exception:
     mss = None
@@ -826,8 +831,14 @@ def run_fishing_loop(
         _set_state_flag(name, False)
         return value
 
+    failsafe_timer = FishingFailsafeTimer(60.0)
+
     def _run_merchant_sequence_with_state() -> tuple[bool, bool]:
-        ran = _run_merchant_sequence()
+        ran = bool(failsafe_timer.run_paused(
+            _run_merchant_sequence,
+            time.monotonic,
+            lambda active: _set_state_flag("merchant_sequence_active", active),
+        ))
         return ran, _consume_state_flag("merchant_requires_reset")
 
     fish_caught_count = _state_counter("fish_caught_count")
@@ -835,6 +846,7 @@ def run_fishing_loop(
     fish_caught_since_merchant_ocr = _state_counter("fish_caught_since_merchant_ocr")
     fish_caught_since_br_sc = _state_counter("fish_caught_since_br_sc")
     _set_state_flag("merchant_requires_reset", False)
+    _set_state_flag("merchant_sequence_active", False)
 
     def _persist_runtime_counters() -> None:
         if runtime_state_dict is None:
@@ -846,7 +858,6 @@ def run_fishing_loop(
 
     _persist_runtime_counters()
 
-    last_start_fishing_click_at: float | None = None
     sct = None
     if mss is not None:
         try:
@@ -875,7 +886,7 @@ def run_fishing_loop(
             if not _can_run():
                 _set_busy(False)
                 was_runnable = False
-                last_start_fishing_click_at = None
+                failsafe_timer.clear()
                 time.sleep(0.05)
                 continue
 
@@ -907,7 +918,7 @@ def run_fishing_loop(
                         continue
                     fish_caught_count = 0
                     _persist_runtime_counters()
-                    last_start_fishing_click_at = None
+                    failsafe_timer.clear()
                     was_runnable = False
                     continue
 
@@ -963,7 +974,7 @@ def run_fishing_loop(
                             fish_caught_since_br_sc = 0
                         _persist_runtime_counters()
 
-                    last_start_fishing_click_at = None
+                    failsafe_timer.clear()
                     was_runnable = False
                     continue
 
@@ -986,7 +997,7 @@ def run_fishing_loop(
                             fish_caught_since_br_sc = 0
                         _persist_runtime_counters()
 
-                    last_start_fishing_click_at = None
+                    failsafe_timer.clear()
                     was_runnable = False
                     continue
                     
@@ -1013,7 +1024,7 @@ def run_fishing_loop(
                             fish_caught_since_br_sc = 0
                         _persist_runtime_counters()
 
-                    last_start_fishing_click_at = None
+                    failsafe_timer.clear()
                     was_runnable = False
                     continue
 
@@ -1027,7 +1038,7 @@ def run_fishing_loop(
                         fish_caught_since_br_sc = 0
                     _persist_runtime_counters()
 
-                    last_start_fishing_click_at = None
+                    failsafe_timer.clear()
                     was_runnable = False
                     continue
 
@@ -1067,7 +1078,7 @@ def run_fishing_loop(
 
                 click_x, click_y = cfg["fishing_click_position"]
                 autoit.mouse_click("left", click_x, click_y, speed=3)
-                last_start_fishing_click_at = time.monotonic()
+                failsafe_timer.start(time.monotonic())
                 if not _sleep_interruptible(0.25): continue
                 was_runnable = True
                 _set_busy(False)
@@ -1075,11 +1086,10 @@ def run_fishing_loop(
             if (
                 was_runnable
                 and bool(cfg.get("fishing_failsafe_rejoin", False))
-                and last_start_fishing_click_at is not None
-                and (time.monotonic() - float(last_start_fishing_click_at)) >= 60.0
+                and failsafe_timer.expired(time.monotonic())
             ):
                 if is_failsafe_ignored_cb is not None and is_failsafe_ignored_cb():
-                    last_start_fishing_click_at = time.monotonic()
+                    failsafe_timer.start(time.monotonic())
                     time.sleep(0.1)
                     continue
 
@@ -1106,7 +1116,7 @@ def run_fishing_loop(
                     except Exception as e:
                         print(f"{log_prefix} bugged UI failsafe: failed to click fish button: {e}")
 
-                    last_start_fishing_click_at = time.monotonic()
+                    failsafe_timer.start(time.monotonic())
                     _notify_failsafe_timeout._bugged_ui_attempted = True
                     continue
                 else:
@@ -1115,7 +1125,7 @@ def run_fishing_loop(
                     _notify_failsafe_timeout._bugged_ui_attempted = False
                     _notify_failsafe_timeout()
                     was_runnable = False
-                    last_start_fishing_click_at = None
+                    failsafe_timer.clear()
                     continue
 
             detect_x, detect_y = cfg["fishing_detect_pixel"]
@@ -1127,7 +1137,7 @@ def run_fishing_loop(
             _set_busy(True)
             click_x, click_y = cfg["fishing_click_position"]
             autoit.mouse_click("left", click_x, click_y, speed=3)
-            last_start_fishing_click_at = time.monotonic()
+            failsafe_timer.start(time.monotonic())
             if not _sleep_interruptible(float(cfg.get("fishing_pre_reel_wait", 0.18))):
                 continue
 
@@ -1246,7 +1256,7 @@ def run_fishing_loop(
                         _persist_runtime_counters()
 
                     was_runnable = False
-                    last_start_fishing_click_at = None
+                    failsafe_timer.clear()
                     _set_busy(False)
                     continue
 
@@ -1281,7 +1291,7 @@ def run_fishing_loop(
                     if not _sleep_interruptible(0.4 + _get_fishing_actions_delay_seconds(cfg)):
                         continue
                     was_runnable = False
-                    last_start_fishing_click_at = None
+                    failsafe_timer.clear()
                     continue
 
             if should_use_merchant_ocr and merchant_ocr_check_cb is not None:
@@ -1303,7 +1313,7 @@ def run_fishing_loop(
 
             start_x, start_y = cfg["fishing_click_position"]
             autoit.mouse_click("left", start_x, start_y, speed=3)
-            last_start_fishing_click_at = time.monotonic()
+            failsafe_timer.start(time.monotonic())
             _sleep_interruptible(0.3)
             _set_busy(False)
     finally:
@@ -1333,4 +1343,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-print("Sven is sick") 
+print("Sven is sick")

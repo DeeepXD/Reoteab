@@ -251,6 +251,7 @@ class Api:
             "rejoin_in_progress": False,
             "force_sell_on_next_cycle": False,
             "merchant_requires_reset": False,
+            "merchant_sequence_active": False,
         }
 
         # rare biome pop up confirmation
@@ -899,7 +900,7 @@ class Api:
                         set_fishing_busy_cb=lambda busy: setattr(self._tracker, "_fishing_busy", busy),
                         on_f2_pressed_cb=lambda: (self.set_biome_detection(False), self._emit_shortcut("STOP")),
                         merchant_ocr_check_cb=getattr(self._tracker, "_scheduled_merchant_ocr_check", None),
-                        is_failsafe_ignored_cb=lambda: getattr(self._tracker, "_br_sc_running", False) or getattr(self._tracker, "_mt_running", False) or getattr(self._tracker, "auto_pop_state", False) or getattr(self._tracker, "on_auto_merchant_state", False) or getattr(self._tracker, "_egg_collecting", False),
+                        is_failsafe_ignored_cb=lambda: self._fishing_runtime_state.get("merchant_sequence_active", False) or getattr(self._tracker, "_br_sc_running", False) or getattr(self._tracker, "_mt_running", False) or getattr(self._tracker, "auto_pop_state", False) or getattr(self._tracker, "on_auto_merchant_state", False) or getattr(self._tracker, "_egg_collecting", False),
                     )
                 except Exception as e:
                     print(f"Fishing worker failed: {e}")
