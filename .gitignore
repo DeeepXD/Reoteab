@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+config.json
+config_folder/
 *.local.json
 credentials.json
 secrets.json
@@ -13,9 +15,11 @@ cache/
 .cache/
 tmp/
 temp/
+/images/
 screenshots/
 user_settings.json
 settings.local.json
+crafting_files_do_not_open/potion_[0-9]*.json
 
 # Python
 __pycache__/
@@ -26,18 +30,30 @@ __pycache__/
 .ruff_cache/
 .venv/
 venv/
+venv_build/
+*.egg-info/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo
 
 # Build and packaging output
-build/
-dist/
-*.egg-info/
+/build/
+/build_onefile/
+/dist/
+/dist_onefile/
+*.spec
 *.exe
+*.zip
+*.bak
 
 # Editors and operating systems
 .idea/
 .vscode/
 *.swp
 *.swo
+*.textClipping
 .DS_Store
 Thumbs.db
 Desktop.ini

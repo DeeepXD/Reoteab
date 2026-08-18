@@ -1,0 +1,147 @@
+# Dev Note (In case i forgot something)
+
+> Reoteab note: absolute upstream developer paths were replaced with portable examples. No build behavior was otherwise changed.
+
+> **IMPORTANT (PLEASE DO THIS FIRST LOW-ATTENTION SPAN USER)**
+> You need to get Node.js (for npm command): https://nodejs.org/en/download
+
+## 1. Create Frontend Template
+
+```bash
+cmd.exe /c "npx create-tauri-app@latest . --manager npm --template react-ts -y --force"
+```
+
+No need to create if `frontend` folder already exists.
+
+## 2. Create the Dist Build (Single File)
+
+Run inside the `frontend` folder:
+
+```bash
+npm install
+```
+
+> This installs all the `node_modules` dependencies. You **must** run this at least once before building, or whenever you delete the `node_modules` folder / clone fresh.
+
+Then build (if you have made changes to the frontend .tsx files)
+
+```bash
+npm run build
+```
+
+**What this does:**
+This compiles the modern UI into a **single standalone `index.html` file** (CSS and JS are now inlined). This is much more reliable for the macro.
+
+> **IMPORTANT:** After building, you MUST move the `index.html` from `frontend/dist` to the `lib/dist` folder. 
+
+> **ALWAYS COMPILE THE DIST BUILD FIRST** whenever you change something in the frontend (.tsx files), otherwise the Python code will still be running the old version of the UI!
+
+---
+
+## Useful Commands
+
+### Find any string or function name (in case you're so lost smh)
+
+Run this terminal command inside the `biome_tracker` folder so it would tell you the thing in relevant `.py` files:
+
+```bash
+findstr /s /n /i "stuff u want to find" *.py
+```
+
+---
+
+## Python Setup
+
+- If you haven't installed Python, install it here: https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe
+- Install the Python requirements for macro development **(IMPORTANT/run it inside the development source folder so it could find the requirements.txt)**:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Compile `main.py` to EXE
+
+### Option 1: PyInstaller (must use Python 3.8-3.14)
+
+```bash
+pyinstaller --name="CoteabMacro" --noconsole --onefile --icon="lib/official_release.ico" --add-data "lib;lib" --add-data ".venv\Lib\site-packages\autoit\lib\AutoItX3_x64.dll;autoit\lib" --collect-all webview --collect-all discord --upx-dir "%USERPROFILE%\Tools\upx" main.py
+```
+
+### No UPX flag:
+
+```bash
+pyinstaller --name="CoteabMacro" --noconsole --onefile --noupx --icon="lib/official_release.ico" --add-data "lib;lib" --add-data ".venv\Lib\site-packages\autoit\lib\AutoItX3_x64.dll;autoit\lib" --collect-all webview --collect-all discord main.py
+```
+
+### Option 1.2: PyInstaller in isolated enviroment (aka venv) (must use Python 3.8-3.14)
+
+> This is the recommended method. Using a venv keeps your build dependencies isolated from your system Python (making the macro when compiles to ".exe" in smaller size yippie)
+
+**Step 1:** Fix PowerShell policy (runs this in CMD or powershell, this might prevents "script cannot be loaded" error):
+
+```bash
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+```
+
+**Step 2:** Create the venv (skip if `venv_build` folder already exists):
+
+```bash
+python -m venv venv_build
+```
+
+**Step 3:** Activate the venv:
+
+```bash
+.\venv_build\Scripts\activate
+```
+
+> You should see `(venv_build)` at the start of your terminal prompt. If you don't, the venv is not active!
+
+**Step 4:** Install all dependencies inside the venv (skip if already installed):
+
+```bash
+pip install -r requirements.txt
+pip install pyinstaller
+```
+
+> This installs everything the macro needs + PyInstaller itself into the venv.
+
+**Step 5:** Build the frontend dist (skip if `lib/dist` is already up to date):
+
+```bash
+cd frontend
+npm run build
+```
+
+> Then copy/move the `frontend/dist` folder into the `lib` folder.
+
+**Step 6:** Compile the EXE:
+
+```bash
+pyinstaller --name="CoteabMacro" --noconsole --onefile --icon="lib/official_release.ico" --add-data "lib;lib" --add-data "venv_build\Lib\site-packages\autoit\lib\AutoItX3_x64.dll;autoit\lib" --collect-all webview --collect-all discord --upx-dir "%USERPROFILE%\Tools\upx" main.py
+```
+
+> Adjust the virtual-environment and UPX paths for your development environment. The compiled EXE will be in `dist/CoteabMacro.exe`.
+
+**Step 7:** Deactivate the venv when done (optional):
+
+```bash
+deactivate
+```
+
+> Make sure AutoIt is installed in the venv! Run `pip install autoit` inside the activated venv if it's missing.
+
+### Option 2: Nuitka
+
+```bash
+python -m nuitka --onefile --windows-console-mode=disable --windows-icon-from-ico=lib/official_release.ico --include-data-dir=lib=lib --follow-imports --enable-plugin=pylint-warnings --output-filename=CoteabMacro.exe --remove-output --jobs=0 --lto=yes --static-libpython=no main.py
+```
+
+---
+
+## Optional Flags / Notes
+
+- `--icon="lib/aga.ico"` — You can change `aga.ico` to your desired icon with `.ico` format, the macro will use your custom one!
+- `--upx-dir "%USERPROFILE%\Tools\upx"` — Optional flag for PyInstaller. This flag will compress the EXE size to be as small as possible. Otherwise, remove the `--upx` flag if you don't want to compress it.

@@ -8,38 +8,58 @@ Reoteab is not affiliated with or endorsed by the Noteab or Coteab developers.
 
 ## About
 
-This repository begins with the files distributed for Coteab v2.2.0. The supplied baseline contains Coteab's Python bootstrapper and supporting runtime data; it does not contain the full macro implementation from Coteab's separate `Coteab-Migrated` source branch.
+This repository is based on the complete Coteab v2.2.0 source snapshot. It includes the Python backend, React frontend, built frontend used by the desktop application, build scripts, and runtime assets.
 
-The current bootstrapper still retrieves `CoteabMacro.exe` from the archived Coteab releases. That behavior is preserved for baseline comparison and has not yet been converted into a Reoteab release process.
+Internal Coteab names, paths, endpoints, and behavior remain unchanged in this baseline so future maintenance can start from the released implementation.
 
 ## Installation
 
-There is no Reoteab release package yet. Clone or download the repository to inspect and work on the baseline.
+Install the Python dependencies:
 
-Do not treat executables downloaded by the inherited bootstrapper as Reoteab builds. Review the script and the upstream release before running it.
+```powershell
+pip install -r requirements.txt
+```
+
+To work on the frontend:
+
+```powershell
+cd frontend
+npm install
+npm run build
+```
+
+The application loads the built frontend from `lib/dist/`. See the inherited developer note and build script for the original build process.
 
 ## Requirements
 
 - Windows
-- Python 3 for the inherited bootstrapper
-- An internet connection for the bootstrapper's GitHub release lookup
+- Python and the packages listed in `requirements.txt`
+- Node.js and npm when rebuilding the frontend
 
-The broader Python package list inherited from Coteab is recorded in `requirements.txt`, but the full application source is not part of this baseline and the list has not yet been validated for Reoteab.
+The development setup and build have not yet been independently verified as Reoteab.
 
 ## Usage
 
-The initial repository is intended as a maintenance baseline. Normal Reoteab usage instructions will be added after the application source and build process have been verified.
+For development, start the inherited application with:
+
+```powershell
+python main.py
+```
+
+Review the configuration and calibrations before enabling automation. Reoteab does not yet publish its own executable release.
 
 ## Project status
 
-Reoteab is currently in the early maintenance stage. The initial release establishes a clean baseline from Coteab v2.2.0 before further fixes and features are added.
+Reoteab is currently in the early maintenance stage. This baseline imports the complete Coteab v2.2.0 source before further fixes and features are added.
+
+The inherited publishing scripts still refer to Coteab repositories and must not be used to publish Reoteab without review.
 
 ## Credits
 
 Reoteab is based on Coteab, which is based on Noteab.
 
-Noteab was created by the original Noteab developers. Coteab was maintained by Vapure (also credited upstream as xVapure, criticize., or C), Akito/Akitosama, and other Coteab contributors. See `NOTICE` and the inherited attribution files for details.
+Noteab was created by the original Noteab developers. Coteab was maintained by Vapure (`@criticize.`), Akito, ManasAarohi, Matt, spacedev0572, and other contributors credited in the application. See `NOTICE` for the preserved lineage and third-party notices.
 
 ## License
 
-Apache License 2.0 applies to the inherited Apache-covered material. Some referenced or bundled third-party material has separate terms, and some upstream assets were excluded because their redistribution status could not be established. See `LICENSE` and `NOTICE`.
+Apache License 2.0 applies to the inherited Apache-covered material. Bundled third-party components and fonts retain their separate licenses. See `LICENSE`, `NOTICE`, and `LICENSES/`.

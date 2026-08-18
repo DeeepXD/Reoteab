@@ -5,20 +5,17 @@ It is not affiliated with or endorsed by the Noteab or Coteab developers.
 
 Project lineage: Noteab -> Coteab -> Reoteab
 
-This baseline is derived from Coteab v2.2.0 (upstream commit
-1db73aee188412eac7052f0e2e19c080dc670172), maintained by Vapure
-(also identified upstream as xVapure, criticize., or C), Akito/Akitosama,
-and other contributors. Coteab is based on Noteab.
+This baseline is derived from the complete Coteab v2.2.0 source snapshot.
+Coteab credits Vapure (also identified as @criticize. or xVapure), Akito,
+ManasAarohi, Matt, spacedev0572, and other contributors in its application
+credits. Coteab is based on Noteab.
 
-The Apache License 2.0 and the original "Copyright 2025 Noteab" notice are
-preserved in LICENSE. Reoteab's README, NOTICE, and repository-maintenance
-files were added or changed for this continuation. No inherited runtime source
-file was changed in this initial baseline.
-
-The Coteab distribution also contained a document named
-"Notice to people telling me I cannot update Noteab macro.txt". That document
-was a general explanation of Apache 2.0 redistribution obligations, not an
-attribution notice or a separate license. It is not reproduced here.
+The Apache License 2.0 and the upstream "Copyright 2025 Noteab" notice are
+preserved in LICENSE. Reoteab's README, NOTICE, .gitignore, third-party license
+files, and portable-path edits to the inherited developer note were added or
+changed for this continuation. No inherited Python, TypeScript, JavaScript,
+CSS, JSON runtime data, or compiled frontend behavior was changed in this
+baseline replacement.
 
 UPSTREAM NOTEAB NOTICE (PRESERVED VERBATIM)
 -------------------------------------------
@@ -38,39 +35,33 @@ The quoted Noteab notice is preserved because it appeared in the original
 Noteab repository. It is not a Reoteab restriction. Its language conflicts
 with the repository's Apache 2.0 designation and with Apache 2.0 section 4(d),
 which says NOTICE contents are informational and do not modify the License.
-The upstream repositories do not resolve that conflict or identify a separate
-license for particular core functions. This baseline does not claim a new
-legal conclusion about that ambiguity.
+The upstream materials do not resolve that conflict or identify a separate
+license for particular core functions. Reoteab does not claim a new legal
+conclusion about that ambiguity.
 
-The files supplied for Coteab v2.2.0 do not include the full core macro source;
-they include a Python bootstrapper that downloads CoteabMacro.exe. The
-bootstrapper and the included data/configuration files were published by the
-Coteab repository under its Apache 2.0 designation.
+UPSTREAM ASSETS
+---------------
 
-EXCLUDED UPSTREAM MATERIAL
---------------------------
-
-The following material from the supplied Coteab archive is intentionally not
-redistributed in this baseline because its copyright or license provenance
-could not be established:
-
-- maxstellar.png and tea.png (Noteab-originated assets covered by the ambiguous
-  Noteab notice quoted above)
-- the entire images/ directory (Coteab-added game-derived art, photographs,
-  profile images, memes, and contributor collages without per-file licenses)
+The complete Coteab source snapshot includes Coteab and Noteab names and
+logos, application icons, backgrounds, contributor/profile images, a team
+image, and recorded game automation paths. These files are preserved
+unmodified as upstream runtime or attribution material. No per-file license
+was supplied for those assets, so this NOTICE does not represent them as
+independently licensed by Reoteab or imply endorsement by the people shown.
 
 THIRD-PARTY MATERIAL
 --------------------
 
-assets/index.html contains bundled React and React DOM 19.2.4 code:
+lib/dist/index.html contains bundled React and React DOM code:
 
 Copyright (c) Meta Platforms, Inc. and affiliates.
 
-assets/index.html also contains Vite module-preload helper code:
+It also contains Vite-generated loader code:
 
 Copyright (c) 2019-present, Yuxi (Evan) You and Vite contributors.
 
-Both are distributed under the MIT License:
+Those components are distributed under the MIT License. Their copyright and
+license notices are preserved below.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -90,11 +81,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-assets/index.html requests the Inter and Sarpanch fonts from Google Fonts at
-runtime; the font files are not included in this repository. The HTML and
-assets/biomes_data.json also reference externally hosted images. Those remote
-resources are not distributed by this repository and are not covered by
-Reoteab's Apache 2.0 grant.
+The bundled Inter font is copyright 2016 The Inter Project Authors. The
+bundled Sarpanch fonts are copyright 2014 Indian Type Foundry. Both are
+distributed under the SIL Open Font License 1.1; see LICENSES/OFL-1.1.txt.
 
-requirements.txt names third-party Python packages but does not bundle them.
-Each installed package remains subject to its own license.
+lib/AutoItX3.dll and lib/AutoItX3_x64.dll are AutoIt components by Jonathan
+Bennett and the AutoIt Team. They are separately licensed under the AutoIt
+EULA; see LICENSES/AutoIt-EULA.txt.
+
+requirements.txt and frontend/package-lock.json identify other third-party
+dependencies that are not vendored as source packages here. Each installed
+dependency remains subject to its own license.
+
+External URLs in the source and built frontend may load images, fonts, APIs,
+or other services at runtime. Those remote resources are not distributed by
+this repository and are not covered by Reoteab's Apache 2.0 grant.
