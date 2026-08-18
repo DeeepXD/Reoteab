@@ -1,5 +1,6 @@
 autoit==0.2.6
 py-cord==2.6.1
+audioop-lts==0.2.2; python_version >= "3.13"
 keyboard==0.13.5
 mouse==0.7.1
 mss==10.1.0
