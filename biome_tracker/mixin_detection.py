@@ -1,4 +1,5 @@
 from .base_support import *
+from .biome_transitions import BiomeTransitionDispatcher, biome_webhook_events
 
 class DetectionMixin:
     def load_logs(self):
@@ -882,7 +883,15 @@ class DetectionMixin:
                         if biome != self.current_biome:
                             last_biome = self.current_biome
                             self.current_biome = biome
-                            threading.Thread(target=self.handle_biome_detection, args=(biome, last_biome)).start()
+                            dispatcher = getattr(self, "_biome_transition_dispatcher", None)
+                            if dispatcher is None:
+                                dispatcher = BiomeTransitionDispatcher(
+                                    on_error=lambda exc: self.error_logging(
+                                        exc, "Error dispatching biome transition"
+                                    )
+                                )
+                                self._biome_transition_dispatcher = dispatcher
+                            dispatcher.submit(self.handle_biome_detection, biome, last_biome)
                         return
 
         except Exception as e:
@@ -893,10 +902,13 @@ class DetectionMixin:
             if last_biome is None:
                 last_biome = self.current_biome
 
-            if last_biome and last_biome != biome and last_biome != "NORMAL":
-                prev_message_type = self.config.get("biome_notifier", {}).get(last_biome, "None")
+            webhook_events = biome_webhook_events(last_biome, biome)
+            end_event = next((event for event in webhook_events if event[1] == "end"), None)
+            if end_event is not None:
+                ended_biome = end_event[0]
+                prev_message_type = self.config.get("biome_notifier", {}).get(ended_biome, "None")
                 if prev_message_type != "None":
-                    self.send_webhook(last_biome, prev_message_type, "end")
+                    self.send_webhook(ended_biome, prev_message_type, "end")
 
             biome_info = self.biome_data[biome]
             now = datetime.now(timezone.utc)    
@@ -904,7 +916,6 @@ class DetectionMixin:
             print(f"Detected Biome: {biome}, Color: {biome_info['color']}")
             self.append_log(f"Detected Biome: {biome}")
 
-            self.current_biome = biome
             self.last_sent[biome] = now
             try:
                 self.biome_history.append((now, biome))
@@ -948,7 +959,7 @@ class DetectionMixin:
                 except Exception:
                     pass
 
-            if biome != "NORMAL":
+            if (biome, "start") in webhook_events:
                 popup_window_active = False
                 if getattr(self, "just_reconnected", False):
                     deadline = getattr(self, "reconnect_confirm_deadline", None)

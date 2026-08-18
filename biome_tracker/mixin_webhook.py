@@ -318,7 +318,7 @@ class WebhookMixin:
                         response = requests.post(webhook_url, data=data, files=files, headers=headers, timeout=10)
                 else:
                     payload = {"content": content, "embeds": [embed_copy]}
-                    response = requests.post(webhook_url, json=payload, headers=headers)
+                    response = requests.post(webhook_url, json=payload, headers=headers, timeout=10)
                 response.raise_for_status()
                 self.append_log(f"Sent {message_type} for {biome} - {event_type} to webhook")
             except requests.exceptions.RequestException as e:
