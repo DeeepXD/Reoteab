@@ -9,7 +9,12 @@ class DetectionMixin:
         return []
 
     def load_biome_data(self):
-        url = "https://raw.githubusercontent.com/xVapure/Noteab-Macro/refs/heads/main/assets/biomes_data.json"
+        bundled_path = os.path.join(
+            getattr(sys, "_MEIPASS", os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            "assets",
+            "biomes_data.json",
+        )
+        url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/biomes_data.json"
         eventUrl = "https://raw.githubusercontent.com/xVapure/Noteab-Macro/refs/heads/main/assets/active_events.json"
 
         default_biome_data = {
@@ -72,15 +77,23 @@ class DetectionMixin:
         }
 
         try:
-            r = requests.get(url, timeout=1)
-            r.raise_for_status()
-            data = r.json()
+            with open(bundled_path, "r", encoding="utf-8") as file:
+                data = json.load(file)
             if not isinstance(data, dict) or not data:
-                data = default_biome_data
+                raise ValueError("Bundled biome data is empty or invalid")
         except Exception as e:
-            print(f"Error loading {url}: {e}")
-            self.error_logging(e, f"Error loading biomes_data.json from {url}")
+            print(f"Error loading bundled biomes_data.json: {e}")
+            self.error_logging(e, "Error loading bundled biomes_data.json")
             data = default_biome_data
+
+        try:
+            r = requests.get(url, timeout=5)
+            r.raise_for_status()
+            remote_data = r.json()
+            if isinstance(remote_data, dict) and remote_data:
+                data = remote_data
+        except Exception as e:
+            print(f"Unable to update biomes_data.json from Reoteab; using bundled data: {e}")
 
         try:
             r_events = requests.get(eventUrl, timeout=1)
