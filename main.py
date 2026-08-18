@@ -13,7 +13,7 @@ import sys
 
 # i added this so we can easily change macro version upon releases without having to change multiple back-end & front-end behaviours
 # for future people that is reading the open source code, hello :p
-current_version = "v2.2.0-hotfix1"
+current_version = "v0.1.0-beta.1"
 os.environ["COTEAB_MACRO_VERSION"] = current_version
 UPDATE_LATEST_RELEASE_API_URL = "https://api.github.com/repos/xVapure/Noteab-Macro/releases/latest"
 os.environ["COTEAB_UPDATE_API_URL"] = UPDATE_LATEST_RELEASE_API_URL
