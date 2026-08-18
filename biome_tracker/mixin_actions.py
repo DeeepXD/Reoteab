@@ -3613,7 +3613,7 @@ class ActionsMixin:
                 else:
                     btn_pos = merchant_open_button
 
-                autoit.mouse_click("left", btn_pos[0], btn_pos[1], 3)
+                autoit.mouse_click("left", btn_pos[0], btn_pos[1], 1)
                 inventory_click_delay = merchant_settings["inventory_click_delay"] / 1000.0
                 exchange_extra_wait = 4.0 if is_jester_exchange else 0.0
                 if not self._sleep_with_cancel(7 + exchange_extra_wait + inventory_click_delay): return
@@ -3754,7 +3754,7 @@ class ActionsMixin:
                 merchant_close_button = self.config.get("merchant_close_button", [1086, 342])
                 self.Global_MouseClick(merchant_close_button[0], merchant_close_button[1], click=3)
                 if not self._sleep_with_cancel(0.67): return False
-                self.Global_MouseClick(merchant_open_button[0], merchant_open_button[1], click=3)
+                self.Global_MouseClick(merchant_open_button[0], merchant_open_button[1])
                 return False
 
         except Exception as e:
