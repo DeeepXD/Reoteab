@@ -1495,7 +1495,7 @@ class DetectionMixin:
             current_x, current_y = autoit.mouse_get_pos()
             autoit.mouse_down("right")
             time.sleep(0.1)
-            autoit.mouse_move(current_x, current_y + 75, 0)
+            autoit.mouse_move(current_x, current_y - 75, 0)
             time.sleep(0.1)
             autoit.mouse_up("right")
             time.sleep(0.92)
