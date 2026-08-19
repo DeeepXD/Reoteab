@@ -1498,7 +1498,7 @@ class DetectionMixin:
             autoit.mouse_move(center_x, center_y, 3)
             autoit.mouse_down("right")
             time.sleep(0.1)
-            autoit.mouse_move(center_x, center_y - 350, 10)
+            autoit.mouse_move(center_x, center_y + 350, 10)
             time.sleep(0.1)
             autoit.mouse_up("right")
             time.sleep(0.92)
