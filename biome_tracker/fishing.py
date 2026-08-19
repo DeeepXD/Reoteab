@@ -1222,10 +1222,9 @@ def run_fishing_loop(
                 continue
 
             close_x, close_y = cfg["fishing_close_button_pos"]
-            for _ in range(5):
-                autoit.mouse_click("left", close_x, close_y, speed=3)
-                if not _sleep_interruptible(2.5 + _get_fishing_actions_delay_seconds(cfg)):
-                    break
+            autoit.mouse_click("left", close_x, close_y, speed=3)
+            if not _sleep_interruptible(0.5 + _get_fishing_actions_delay_seconds(cfg)):
+                continue
 
             fish_caught_count += 1
             fish_caught_since_merchant += 1

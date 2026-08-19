@@ -79,6 +79,8 @@ class FishingMerchantFlowRegressionTests(unittest.TestCase):
             "merchant_entry_active": False,
             "restart_active": False,
             "restart_ignored": False,
+            "merchant_started_at": None,
+            "watchdog_started_at": None,
             "restart_at": None,
             "timeout_at": None,
             "raised": None,
@@ -90,7 +92,9 @@ class FishingMerchantFlowRegressionTests(unittest.TestCase):
 
         class FakeAutoIt:
             @staticmethod
-            def mouse_click(*args, **kwargs):
+            def mouse_click(_button, x, y, *_args, **_kwargs):
+                if (x, y) == (862, 843) and not phase["merchant_finished"]:
+                    observations["watchdog_started_at"] = clock.now
                 if phase["merchant_finished"] and not phase["restart_seen"]:
                     clock.now += 90
                     observations["restart_active"] = runtime_state["merchant_sequence_active"]
@@ -104,6 +108,7 @@ class FishingMerchantFlowRegressionTests(unittest.TestCase):
 
         def run_merchant_sequence():
             observations["merchant_entry_active"] = runtime_state["merchant_sequence_active"]
+            observations["merchant_started_at"] = clock.now
             # Navigation and OCR exceed the production timeout before the inner
             # merchant interaction is considered complete.
             clock.now += 90
@@ -168,8 +173,8 @@ class FishingMerchantFlowRegressionTests(unittest.TestCase):
         self.assertFalse(runtime_state["merchant_sequence_active"])
 
         resumed_for = observations["timeout_at"] - observations["restart_at"]
-        self.assertGreater(resumed_for, 30)
-        self.assertLess(resumed_for, 45)
+        elapsed_before_merchant = observations["merchant_started_at"] - observations["watchdog_started_at"]
+        self.assertAlmostEqual(resumed_for, 60 - elapsed_before_merchant, places=2)
 
     def test_top_level_merchant_error_clears_guard_after_fishing_restarts(self):
         observations, runtime_state = self._run_top_level_flow(merchant_error=True)
