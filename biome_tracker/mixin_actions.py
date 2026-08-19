@@ -3754,7 +3754,6 @@ class ActionsMixin:
                 merchant_close_button = self.config.get("merchant_close_button", [1086, 342])
                 self.Global_MouseClick(merchant_close_button[0], merchant_close_button[1], click=3)
                 if not self._sleep_with_cancel(0.67): return False
-                self.Global_MouseClick(merchant_open_button[0], merchant_open_button[1])
                 return False
 
         except Exception as e:

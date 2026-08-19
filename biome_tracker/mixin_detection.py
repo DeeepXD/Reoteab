@@ -1558,6 +1558,9 @@ class DetectionMixin:
 
             if _cancelled(): return
 
+            if not merchant_completed:
+                return
+
             time.sleep(0.33 + inventory_click_delay)
             self.Global_MouseClick(inventory_menu[0], inventory_menu[1])
             time.sleep(0.33 + inventory_click_delay)
