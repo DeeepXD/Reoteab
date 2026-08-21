@@ -13,7 +13,8 @@ import sys
 
 # i added this so we can easily change macro version upon releases without having to change multiple back-end & front-end behaviours
 # for future people that is reading the open source code, hello :p
-current_version = "v2.2.0-hotfix1"
+current_version = "0.1.0-beta.5"
+display_name = "Reoteab Beta 5"
 os.environ["REOTEAB_VERSION"] = current_version
 UPDATE_LATEST_RELEASE_API_URL = "https://api.github.com/repos/DeeepXD/Reoteab/releases/latest"
 os.environ["REOTEAB_UPDATE_API_URL"] = UPDATE_LATEST_RELEASE_API_URL
@@ -1294,7 +1295,7 @@ def launch_app(api_class, tracker=None):
 
     fe = get_frontend_entry()
     win_args = {
-        "title": f"Reoteab {current_version}",
+        "title": display_name,
         "js_api": api,
         "width": 985, "height": 550,
         "min_size": (550, 500),
@@ -1392,7 +1393,7 @@ def main():
     try:
         fe = get_frontend_entry()
         win_args = {
-            "title": f"Reoteab {current_version}",
+            "title": display_name,
             "js_api": api,
             "width": 985, "height": 550,
             "min_size": (550, 500),

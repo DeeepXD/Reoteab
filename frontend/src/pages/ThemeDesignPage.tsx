@@ -67,9 +67,7 @@ const RENAMEABLE_TABS = [
     { id: "potioncraft", label: "Potion Crafting" },
     { id: "otherfeatures", label: "Other Features" },
     { id: "customization", label: "Customizations" },
-    { id: "themedesign", label: "Theme Design" },
-    { id: "credits", label: "Credits" },
-    { id: "donations", label: "Donations <3" }
+    { id: "themedesign", label: "Theme Design" }
 ];
 
 export default function ThemeDesignPage() {
@@ -522,7 +520,7 @@ body, * {
                     {bgType === "image" && (
                         <div style={{ display: "flex", flexDirection: "column", gap: "5px", marginTop: "10px" }}>
                             <label style={{ fontSize: "12px", color: "var(--text-secondary)" }}>Custom Image URL</label>
-                            <input type="text" placeholder="https://example.com/image.png" value={customBgUrl} onChange={(e) => setCustomBgUrl(e.target.value)} style={{ width: "100%", height: "35px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: "4px", color: "var(--text-primary)", padding: "0 10px" }} />
+                            <input type="text" placeholder="https://.../image.png" value={customBgUrl} onChange={(e) => setCustomBgUrl(e.target.value)} style={{ width: "100%", height: "35px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: "4px", color: "var(--text-primary)", padding: "0 10px" }} />
                         </div>
                     )}
 
@@ -608,7 +606,7 @@ body, * {
                                 type="text" 
                                 value={customVersion} 
                                 onChange={(e) => setCustomVersion(e.target.value)}
-                                placeholder="v2.1.8-hotfix1"
+                                placeholder="0.1.0-beta.5"
                                 style={{ width: "100%", height: "30px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: "4px", color: "var(--text-primary)", padding: "0 10px" }}
                             />
                         </div>

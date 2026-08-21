@@ -5,6 +5,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+import requests
+
 from biome_tracker.mixin_actions import ActionsMixin
 
 
@@ -18,9 +20,20 @@ class FirstLaunchTests(unittest.TestCase):
         self.assertTrue(self.actions._is_newer_version("v2.2.0-hotfix2", "v2.2.0-hotfix1"))
         self.assertTrue(self.actions._is_newer_version("v2.2.1", "v2.2.0-hotfix1"))
 
+    def test_release_comparison_orders_beta_prereleases(self):
+        self.assertFalse(self.actions._is_newer_version("v0.1.0-beta.4", "v0.1.0-beta.5"))
+        self.assertTrue(self.actions._is_newer_version("v0.1.0-beta.6", "v0.1.0-beta.5"))
+        self.assertTrue(self.actions._is_newer_version("v0.1.0", "v0.1.0-beta.5"))
+
+    def test_missing_latest_release_is_ignored(self):
+        response = mock.Mock()
+        response.raise_for_status.side_effect = requests.HTTPError("404 Not Found")
+        with mock.patch("biome_tracker.mixin_actions.requests.get", return_value=response):
+            self.assertIsNone(self.actions._fetch_latest_release())
+
     def test_auto_update_ignores_older_release(self):
         release = {
-            "tag_name": "v2.2.0",
+            "tag_name": "v0.1.0-beta.4",
             "assets": [{"name": "Reoteab.exe", "browser_download_url": "https://example.invalid/Reoteab.exe"}],
         }
         with (
@@ -33,7 +46,7 @@ class FirstLaunchTests(unittest.TestCase):
 
     def test_auto_update_still_applies_newer_release(self):
         release = {
-            "tag_name": "v2.2.1",
+            "tag_name": "v0.1.0-beta.6",
             "assets": [{"name": "Reoteab.exe", "browser_download_url": "https://example.invalid/Reoteab.exe"}],
         }
         with (

@@ -82,6 +82,8 @@ export default function NoticePage() {
             )}
 
             <div className="info-banner" style={{ marginTop: "16px" }}>
+                <a href="https://discord.gg/bQNSU3pfPF" target="_blank" rel="noreferrer">Join the Reoteab Discord</a>
+                {" · "}
                 <a href="https://github.com/DeeepXD/Reoteab" target="_blank" rel="noreferrer">Reoteab on GitHub</a>
             </div>
         </>

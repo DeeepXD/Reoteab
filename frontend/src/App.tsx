@@ -15,8 +15,6 @@ import PotionCraftPage from "./pages/PotionCraftPage";
 import StatusPage from "./pages/StatusPage";
 import StatsPage from "./pages/StatsPage";
 import OtherFeaturesPage from "./pages/OtherFeaturesPage";
-import CreditsPage from "./pages/CreditsPage";
-import DonationsPage from "./pages/DonationsPage";
 import RemoteAccessPage from "./pages/RemoteAccessPage";
 import CalibrationOverlay from "./components/CalibrationOverlay";
 import GlitchOverlay from "./components/GlitchOverlay";
@@ -73,8 +71,6 @@ const pages: Record<string, React.FC> = {
   otherfeatures: OtherFeaturesPage,
   customization: CustomizationPage,
   themedesign: ThemeDesignPage,
-  credits: CreditsPage,
-  donations: DonationsPage,
   // puzzle: PuzzlePage,
 };
 

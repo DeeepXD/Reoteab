@@ -1,9 +1,10 @@
-# Reoteab
+# Reoteab Beta 5
 
 Reoteab is an unofficial community-maintained continuation based on Coteab v2.2.0.
 
 ## Current status
 
-- Early maintenance release
-- Report reproducible issues through the Reoteab repository
+- First public pre-release
+- Join the Reoteab Discord: https://discord.gg/bQNSU3pfPF
+- Reoteab on GitHub: https://github.com/DeeepXD/Reoteab
 - Review configuration and calibrations before enabling automation

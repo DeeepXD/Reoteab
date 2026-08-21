@@ -191,7 +191,7 @@ class ActionsMixin:
         return self._normalize_version(a) == self._normalize_version(b)
 
     def _is_newer_version(self, candidate, current):
-        pattern = r"^(\d+(?:\.\d+)*)(?:-hotfix(\d+))?$"
+        pattern = r"^(\d+(?:\.\d+)*)(?:-(hotfix|beta)\.?([0-9]+))?$"
         candidate_match = re.fullmatch(pattern, self._normalize_version(candidate))
         current_match = re.fullmatch(pattern, self._normalize_version(current))
         if not candidate_match or not current_match:
@@ -204,7 +204,12 @@ class ActionsMixin:
         current_key = tuple(current_parts + [0] * (width - len(current_parts)))
         if candidate_key != current_key:
             return candidate_key > current_key
-        return int(candidate_match.group(2) or 0) > int(current_match.group(2) or 0)
+        suffix_order = {"beta": -1, None: 0, "hotfix": 1}
+        candidate_suffix = candidate_match.group(2)
+        current_suffix = current_match.group(2)
+        if suffix_order[candidate_suffix] != suffix_order[current_suffix]:
+            return suffix_order[candidate_suffix] > suffix_order[current_suffix]
+        return int(candidate_match.group(3) or 0) > int(current_match.group(3) or 0)
 
     def _fetch_latest_release(self):
         try:

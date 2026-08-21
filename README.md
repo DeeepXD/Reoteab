@@ -1,10 +1,14 @@
 # Reoteab
 
+![Reoteab icon](assets/reoteab-icon.png)
+
 Reoteab is an unofficial community-maintained continuation of Coteab, which itself is a fork of Noteab.
 
 The goal is to keep the macro working, fix broken functionality, maintain compatibility with current game and client changes, and gradually improve the project.
 
 Reoteab is not affiliated with or endorsed by the Noteab or Coteab developers.
+
+Current pre-release: Reoteab Beta 5 (`0.1.0-beta.5`).
 
 ## About
 
@@ -54,7 +58,14 @@ Review the configuration and calibrations before enabling automation.
 
 ## Project status
 
-Reoteab is currently in the early maintenance stage. It is based on the complete Coteab v2.2.0 source and is being updated through focused maintenance changes.
+Reoteab Beta 5 is the first public pre-release. It is based on the complete Coteab v2.2.0 source and is being updated through focused maintenance changes.
+
+## Community
+
+- [Join the Reoteab Discord](https://discord.gg/bQNSU3pfPF)
+- [Reoteab on GitHub](https://github.com/DeeepXD/Reoteab)
+- [Releases](https://github.com/DeeepXD/Reoteab/releases)
+- [Issues](https://github.com/DeeepXD/Reoteab/issues)
 
 ## Credits
 
@@ -64,4 +75,4 @@ Noteab was created by the original Noteab developers. Coteab was maintained by V
 
 ## License
 
-Apache License 2.0 applies to the inherited Apache-covered material. Bundled third-party components and fonts retain their separate licenses. See `LICENSE`, `NOTICE`, and `LICENSES/`.
+Apache License 2.0 applies to the inherited Apache-covered material. Bundled third-party components and fonts retain their separate licenses. See [LICENSE](LICENSE), [NOTICE](NOTICE), and `LICENSES/`.

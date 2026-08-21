@@ -47,9 +47,6 @@ const navItems = [
     { id: "otherfeatures", label: "Other Features", icon: "🔧" },
     { id: "customization", label: "Customizations", icon: "🔧" },
     { id: "themedesign", label: "Theme Design", icon: "🎨" },
-    { section: "Others" },
-    { id: "credits", label: "Credits", icon: "💜" },
-    { id: "donations", label: "Upstream Appreciation", icon: "💎" },
 ];
 
 export default function Sidebar({ activeTab, onTabChange, isGlitching, macroVersion }: SidebarProps) {

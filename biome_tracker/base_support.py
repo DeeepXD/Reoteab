@@ -16,7 +16,7 @@ import json, requests, time, os, threading, re, webbrowser, random, keyboard, py
     locale, win32gui, win32process, win32con, ctypes, queue, mouse, sys, hashlib, winocr, asyncio, win32api, traceback
 
 
-current_ver = os.environ.get("REOTEAB_VERSION", "v2.2.0-hotfix1")
+current_ver = os.environ.get("REOTEAB_VERSION", "0.1.0-beta.5")
 rare_biomes = ["GLITCHED", "DREAMSPACE", "CYBERSPACE"]
 
 class ConfigVar:

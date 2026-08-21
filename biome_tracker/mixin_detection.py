@@ -1030,7 +1030,7 @@ class DetectionMixin:
 
         except Exception as e:
             self.error_logging(e,
-                               f"Error in handle_biome_detection for biome: {biome}. Hell naw go fix your ass macro noteab! - Wise greenie word")
+                               f"Error in handle_biome_detection for biome: {biome}.")
 
     def biome_loop_check(self):
         last_log_file = None

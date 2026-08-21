@@ -279,7 +279,7 @@ class WebhookMixin:
                     content = f"<@{ping_id}>"
         
         if private_server_link == "":
-            description = f"> ## Biome Started - {biome} \nNo link provided (ManasAarohi ate the link blame him)" if event_type == "start" else f"> ## Biome Ended - {biome}"
+            description = f"> ## Biome Started - {biome} \nNo private server link configured." if event_type == "start" else f"> ## Biome Ended - {biome}"
         else:
             description = f"> ## Biome Started - {biome} \n> ### **[Join Server]({private_server_link})**" if event_type == "start" else f"> ## Biome Ended - {biome}"
         embed = {
@@ -512,7 +512,12 @@ class WebhookMixin:
                     "inline": False
                 })
             fields.append({
-                "name": "Join our Discord:",
+                "name": "Join the Reoteab Discord:",
+                "value": "https://discord.gg/bQNSU3pfPF",
+                "inline": False
+            })
+            fields.append({
+                "name": "Reoteab on GitHub:",
                 "value": "https://github.com/DeeepXD/Reoteab",
                 "inline": False
             })
@@ -566,7 +571,12 @@ class WebhookMixin:
                         "inline": False
                     },
                     {
-                        "name": "Join our Discord:",
+                        "name": "Join the Reoteab Discord:",
+                        "value": "https://discord.gg/bQNSU3pfPF",
+                        "inline": False
+                    },
+                    {
+                        "name": "Reoteab on GitHub:",
                         "value": "https://github.com/DeeepXD/Reoteab",
                         "inline": False
                     }

@@ -171,7 +171,7 @@ export default function CustomizationPage() {
 
                         <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
                             <div style={{ display: "flex", alignItems: "baseline", gap: "6px", marginBottom: "2px", flexWrap: "wrap" }}>
-                                <span style={{ color: "#F2F3F5", fontSize: "15px", fontWeight: "500", lineHeight: "1.2" }}>Your webhook name go here cuz idk</span>
+                                <span style={{ color: "#F2F3F5", fontSize: "15px", fontWeight: "500", lineHeight: "1.2" }}>Webhook Preview</span>
                                 <span style={{ 
                                     backgroundColor: "#5865F2", color: "#FFFFFF", fontSize: "9px", 
                                     padding: "0 4px", borderRadius: "3px", fontWeight: "600",

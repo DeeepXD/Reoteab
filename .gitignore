@@ -58,3 +58,7 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 Desktop.ini
+
+# Local tooling
+.gsd/
+.bg-shell/
