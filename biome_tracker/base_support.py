@@ -527,15 +527,6 @@ class CalibrationManager:
         root.after(100, poll)
         root.mainloop()
 
-def apply_headers(url: str) -> dict:
-    headers = {}
-    if BETA_AUTH_URL in url:
-        headers["x-api-key"] = BETA_AUTH_KEY
-    return headers
-
-BETA_AUTH_URL = "https://authenciation-test.vercel.app/api"
-BETA_AUTH_KEY = "betareleaseauthhello_thisgonnabeimplementinfuturelol"
-
 class ActionScheduler:
     def __init__(self, owner, worker_name="ActionScheduler"):
         self.owner = owner

