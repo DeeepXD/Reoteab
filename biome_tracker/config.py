@@ -22,7 +22,15 @@ EXE_CONFIG = BASE_PATH / "config.json"
 DEV_CONFIG_DIR = BASE_PATH / "config_folder"
 DEV_CONFIG = DEV_CONFIG_DIR / "config.json"
 
-APPDATA_BASE = Path(_os.environ.get("LOCALAPPDATA", _os.path.expanduser("~"))) / "CoteabMacro"
+_LOCAL_APPDATA = Path(_os.environ.get("LOCALAPPDATA", _os.path.expanduser("~")))
+REOTEAB_APPDATA = _LOCAL_APPDATA / "Reoteab"
+LEGACY_APPDATA = _LOCAL_APPDATA / "CoteabMacro"
+if REOTEAB_APPDATA.exists():
+    APPDATA_BASE = REOTEAB_APPDATA
+elif LEGACY_APPDATA.exists():
+    APPDATA_BASE = LEGACY_APPDATA
+else:
+    APPDATA_BASE = REOTEAB_APPDATA
 APPDATA_CONFIG = APPDATA_BASE / "config.json"
 
 DEFAULT_AUTO_POP_BUFFS = [
@@ -46,6 +54,86 @@ DEFAULT_AUTO_POP_BUFFS = [
     "Warp Potion",
     "Xyz Potion",
 ]
+
+
+def validate_merchant_settings(config_data: dict[str, Any]) -> tuple[dict[str, Any], list[str]]:
+    """Return merchant settings that are safe to use before automation starts."""
+    source = config_data if isinstance(config_data, dict) else {}
+    warnings: list[str] = []
+    validated: dict[str, Any] = {}
+
+    def read_int(key: str, default: int, minimum: int) -> int:
+        if key not in source:
+            warnings.append(f"Merchant setting '{key}' is missing; using {default}.")
+            return default
+
+        raw_value = source.get(key)
+        try:
+            value = int(raw_value)
+        except (TypeError, ValueError, OverflowError):
+            display_value = repr(raw_value)
+            if len(display_value) > 40:
+                display_value = display_value[:37] + "..."
+            warnings.append(
+                f"Merchant setting '{key}' has invalid value {display_value}; using {default}."
+            )
+            return default
+
+        if value < minimum:
+            warnings.append(
+                f"Merchant setting '{key}' must be at least {minimum}; using {default}."
+            )
+            return default
+        return value
+
+    validated["merchant_extra_slot"] = read_int("merchant_extra_slot", 0, 0)
+    validated["inventory_click_delay"] = read_int("inventory_click_delay", 0, 0)
+    validated["jester_exchange_count"] = read_int("jester_exchange_count", 0, 0)
+    validated["jester_exchange_threshold"] = read_int("jester_exchange_threshold", 3, 1)
+
+    for config_key in ("Mari_Items", "Jester_Items", "Jester_Exchange_Items", "Rin_Items"):
+        raw_items = source.get(config_key, {})
+        if not isinstance(raw_items, dict):
+            warnings.append(f"Merchant setting '{config_key}' must be an item map; skipping it.")
+            validated[config_key] = {}
+            continue
+
+        items: dict[str, list[Any]] = {}
+        for item_name, raw_values in raw_items.items():
+            setting_name = f"{config_key}.{item_name}.quantity"
+            if not isinstance(raw_values, (list, tuple)):
+                warnings.append(f"Merchant setting '{setting_name}' is malformed; skipping the item.")
+                continue
+
+            values = list(raw_values)
+            if not values:
+                values.append(False)
+
+            if len(values) < 2:
+                warnings.append(f"Merchant setting '{setting_name}' is missing; using 1.")
+                values.append(1)
+            else:
+                raw_quantity = values[1]
+                try:
+                    quantity = int(raw_quantity)
+                except (TypeError, ValueError, OverflowError):
+                    display_value = repr(raw_quantity)
+                    if len(display_value) > 40:
+                        display_value = display_value[:37] + "..."
+                    warnings.append(
+                        f"Merchant setting '{setting_name}' has invalid value {display_value}; using 1."
+                    )
+                    quantity = 1
+
+                if quantity < 1:
+                    warnings.append(f"Merchant setting '{setting_name}' must be at least 1; using 1.")
+                    quantity = 1
+                values[1] = quantity
+
+            items[item_name] = values
+        validated[config_key] = items
+
+    return validated, warnings
 
 DEFAULT_AUTO_POP_BIOMES = [
     "WINDY",

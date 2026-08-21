@@ -1,9 +1,9 @@
 [CmdletBinding()]
 param(
-    [string]$PublicRepo = (Join-Path ([Environment]::GetFolderPath("UserProfile")) "Downloads\Coteab"),
-    [string]$PublicRemote = "https://github.com/mattstellar/Coteab.git",
+    [string]$PublicRepo = (Join-Path ([Environment]::GetFolderPath("UserProfile")) "Downloads\Reoteab"),
+    [string]$PublicRemote = "https://github.com/DeeepXD/Reoteab.git",
     [string]$ExePath = "",
-    [string]$CommitMessage = "Update compiled Coteab executable",
+    [string]$CommitMessage = "Update compiled Reoteab executable",
     [switch]$NoPush
 )
 
@@ -31,12 +31,10 @@ function Resolve-ExePath {
         return (Resolve-Path -LiteralPath $RequestedPath).Path
     }
 
-    $homeDir = [Environment]::GetFolderPath("UserProfile")
     $candidates = @(
-        (Join-Path $SourceRepo "dist\CoteabMacro.exe"),
-        (Join-Path $SourceRepo "dist_onefile\CoteabMacro.exe"),
-        (Join-Path $SourceRepo "CoteabMacro.exe"),
-        (Join-Path $homeDir "Downloads\CoteabShenanigans\CoteabMacro.exe")
+        (Join-Path $SourceRepo "dist\Reoteab.exe"),
+        (Join-Path $SourceRepo "dist_onefile\Reoteab.exe"),
+        (Join-Path $SourceRepo "Reoteab.exe")
     )
 
     foreach ($candidate in $candidates) {
@@ -45,7 +43,7 @@ function Resolve-ExePath {
         }
     }
 
-    throw "Could not find CoteabMacro.exe. Pass -ExePath with the compiled exe path."
+    throw "Could not find Reoteab.exe. Pass -ExePath with the compiled exe path."
 }
 
 function Clear-PublicRepo {
@@ -83,14 +81,14 @@ $originUrl = (& git -C $publicRepoPath remote get-url origin).Trim()
 if ($LASTEXITCODE -ne 0) {
     throw "Could not read public repo origin remote."
 }
-if ($originUrl -notmatch "mattstellar[/:]Coteab(\.git)?$") {
-    throw "Public repo origin is '$originUrl', expected mattstellar/Coteab."
+if ($originUrl -notmatch "DeeepXD[/:]Reoteab(\.git)?$") {
+    throw "Public repo origin is '$originUrl', expected DeeepXD/Reoteab."
 }
 
 $resolvedExe = Resolve-ExePath -SourceRepo $sourceRepo -RequestedPath $ExePath
 
 Clear-PublicRepo -Repo $publicRepoPath
-Copy-Item -LiteralPath $resolvedExe -Destination (Join-Path $publicRepoPath "CoteabMacro.exe") -Force
+Copy-Item -LiteralPath $resolvedExe -Destination (Join-Path $publicRepoPath "Reoteab.exe") -Force
 
 $publicStatus = & git -C $publicRepoPath status --porcelain
 if ($LASTEXITCODE -ne 0) {

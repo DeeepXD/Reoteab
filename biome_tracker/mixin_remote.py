@@ -185,7 +185,7 @@ class RemoteMixin:
                     
                     try:
                         from biome_tracker.base_support import current_version
-                        embed.set_footer(text=f"Coteab Macro {current_version}")
+                        embed.set_footer(text=f"Reoteab {current_version}")
                     except Exception:
                         pass
                         
@@ -368,7 +368,7 @@ class RemoteMixin:
                         pass
 
             try:
-                self.set_title_threadsafe(f"Coteab Macro {current_ver} (Remote bot starting)")
+                self.set_title_threadsafe(f"Reoteab {current_ver} (Remote bot starting)")
             except Exception:
                 pass
             try:

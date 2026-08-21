@@ -9,7 +9,12 @@ class DetectionMixin:
         return []
 
     def load_biome_data(self):
-        url = "https://raw.githubusercontent.com/xVapure/Noteab-Macro/refs/heads/main/assets/biomes_data.json"
+        bundled_path = os.path.join(
+            getattr(sys, "_MEIPASS", os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            "assets",
+            "biomes_data.json",
+        )
+        url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/biomes_data.json"
         eventUrl = "https://raw.githubusercontent.com/xVapure/Noteab-Macro/refs/heads/main/assets/active_events.json"
 
         default_biome_data = {
@@ -72,15 +77,23 @@ class DetectionMixin:
         }
 
         try:
-            r = requests.get(url, timeout=1)
-            r.raise_for_status()
-            data = r.json()
+            with open(bundled_path, "r", encoding="utf-8") as file:
+                data = json.load(file)
             if not isinstance(data, dict) or not data:
-                data = default_biome_data
+                raise ValueError("Bundled biome data is empty or invalid")
         except Exception as e:
-            print(f"Error loading {url}: {e}")
-            self.error_logging(e, f"Error loading biomes_data.json from {url}")
+            print(f"Error loading bundled biomes_data.json: {e}")
+            self.error_logging(e, "Error loading bundled biomes_data.json")
             data = default_biome_data
+
+        try:
+            r = requests.get(url, timeout=5)
+            r.raise_for_status()
+            remote_data = r.json()
+            if isinstance(remote_data, dict) and remote_data:
+                data = remote_data
+        except Exception as e:
+            print(f"Unable to update biomes_data.json from Reoteab; using bundled data: {e}")
 
         try:
             r_events = requests.get(eventUrl, timeout=1)
@@ -401,7 +414,7 @@ class DetectionMixin:
         #     if not is_verified():
         #         print("Verification required.")
         #         messagebox.showwarning(
-        #             "Coteab Macro — Beta Access",
+        #             "Reoteab — Beta Access",
         #             "Verification required to use this beta version.\n\nPlease ensure you have authenticated your Discord account!"
         #         )
         #         return
@@ -444,7 +457,7 @@ class DetectionMixin:
         self.config["session_window_start"] = self.session_window_start.isoformat()
         self.config["macro_last_start"] = now.isoformat()
         self.save_config()
-        self.set_title_threadsafe(f"""Coteab Macro {current_ver} (Running)""")
+        self.set_title_threadsafe(f"""Reoteab {current_ver} (Running)""")
         self.send_webhook_status("Macro started!", color=0x64ff5e)
 
         threads = [
@@ -522,7 +535,7 @@ class DetectionMixin:
         self.saved_session += elapsed_time
         self.start_time = None
         self.stop_sent = True
-        self.set_title_threadsafe(f"Coteab Macro {current_ver} (Stopped)")
+        self.set_title_threadsafe(f"Reoteab {current_ver} (Stopped)")
         self.send_macro_summary(last24h_seconds)
         print("closed", self.current_session)
         self.save_config()
@@ -1017,7 +1030,7 @@ class DetectionMixin:
 
         except Exception as e:
             self.error_logging(e,
-                               f"Error in handle_biome_detection for biome: {biome}. Hell naw go fix your ass macro noteab! - Wise greenie word")
+                               f"Error in handle_biome_detection for biome: {biome}.")
 
     def biome_loop_check(self):
         last_log_file = None
@@ -1078,7 +1091,7 @@ class DetectionMixin:
             self.just_reconnected = True
             self._roblox_fullscreened = False
             self.reconnect_confirm_deadline = time.monotonic() + 60
-            self.set_title_threadsafe(f"""Coteab Macro {current_ver} (Running)""")
+            self.set_title_threadsafe(f"""Reoteab {current_ver} (Running)""")
             self.save_config()
         except Exception as e:
             self.error_logging(e, "_resume_timer_after_reconnect")
@@ -1479,10 +1492,13 @@ class DetectionMixin:
                 self.activate_roblox_window()
                 time.sleep(0.3)
 
-            current_x, current_y = autoit.mouse_get_pos()
+            sw = pyautogui.size()
+            center_x, center_y = sw.width // 2, sw.height // 2
+            
+            autoit.mouse_move(center_x, center_y, 3)
             autoit.mouse_down("right")
             time.sleep(0.1)
-            autoit.mouse_move(current_x, current_y + 75, 0)
+            autoit.mouse_move(center_x, center_y + 350, 10)
             time.sleep(0.1)
             autoit.mouse_up("right")
             time.sleep(0.92)
@@ -1544,6 +1560,9 @@ class DetectionMixin:
             self._last_merchant_sequence_requires_reset = merchant_completed
 
             if _cancelled(): return
+
+            if not merchant_completed:
+                return
 
             time.sleep(0.33 + inventory_click_delay)
             self.Global_MouseClick(inventory_menu[0], inventory_menu[1])

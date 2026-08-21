@@ -1,4 +1,5 @@
 from .base_support import *
+from .config import validate_merchant_settings
 import numpy as np
 from PIL import Image
 import io
@@ -103,7 +104,7 @@ class ActionsMixin:
             return ""
 
     def load_notice_tab(self):
-        url = "https://raw.githubusercontent.com/xVapure/Noteab-Macro/refs/heads/main/assets/noticetabcontents.txt"
+        url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/noticetabcontents.txt"
         data = ""
         try:
             r = requests.get(url, timeout=10)
@@ -173,8 +174,8 @@ class ActionsMixin:
 
     def _get_update_api_url(self):
         return os.environ.get(
-            "COTEAB_UPDATE_API_URL",
-            "https://api.github.com/repos/xVapure/Noteab-Macro/releases/latest",
+            "REOTEAB_UPDATE_API_URL",
+            "https://api.github.com/repos/DeeepXD/Reoteab/releases/latest",
         )
 
     def _normalize_version(self, value):
@@ -188,6 +189,27 @@ class ActionsMixin:
 
     def _is_same_version(self, a, b):
         return self._normalize_version(a) == self._normalize_version(b)
+
+    def _is_newer_version(self, candidate, current):
+        pattern = r"^(\d+(?:\.\d+)*)(?:-(hotfix|beta)\.?([0-9]+))?$"
+        candidate_match = re.fullmatch(pattern, self._normalize_version(candidate))
+        current_match = re.fullmatch(pattern, self._normalize_version(current))
+        if not candidate_match or not current_match:
+            return not self._is_same_version(candidate, current)
+
+        candidate_parts = [int(part) for part in candidate_match.group(1).split(".")]
+        current_parts = [int(part) for part in current_match.group(1).split(".")]
+        width = max(len(candidate_parts), len(current_parts))
+        candidate_key = tuple(candidate_parts + [0] * (width - len(candidate_parts)))
+        current_key = tuple(current_parts + [0] * (width - len(current_parts)))
+        if candidate_key != current_key:
+            return candidate_key > current_key
+        suffix_order = {"beta": -1, None: 0, "hotfix": 1}
+        candidate_suffix = candidate_match.group(2)
+        current_suffix = current_match.group(2)
+        if suffix_order[candidate_suffix] != suffix_order[current_suffix]:
+            return suffix_order[candidate_suffix] > suffix_order[current_suffix]
+        return int(candidate_match.group(3) or 0) > int(current_match.group(3) or 0)
 
     def _fetch_latest_release(self):
         try:
@@ -206,10 +228,10 @@ class ActionsMixin:
             return "", ""
 
         preferred = {
-            "coteabmacro.exe",
-            "coteab macro.exe",
-            "coteab_macro.exe",
-            "coteab-macro.exe",
+            "reoteab.exe",
+            "reoteab macro.exe",
+            "reoteab_macro.exe",
+            "reoteab-macro.exe",
         }
         exe_candidates = []
         for asset in assets:
@@ -248,12 +270,12 @@ class ActionsMixin:
             print(f"Failed to spawn detached EXE: {e}")
             return False
 
-    def _download_and_stage_exe_update(self, download_url, asset_name="CoteabMacro.exe"):
+    def _download_and_stage_exe_update(self, download_url, asset_name="Reoteab.exe"):
         if not getattr(sys, "frozen", False):
             return False
 
         current_dir = os.path.dirname(os.path.abspath(sys.executable))
-        temp_exe = os.path.join(current_dir, "CoteabMacro1.exe")
+        temp_exe = os.path.join(current_dir, "Reoteab-update.exe")
 
         try:
             if os.path.exists(temp_exe):
@@ -272,7 +294,7 @@ class ActionsMixin:
         if not os.path.exists(temp_exe) or os.path.getsize(temp_exe) <= 0:
             raise RuntimeError("Downloaded update file is empty")
 
-        canonical_exe = os.path.join(current_dir, "CoteabMacro.exe")
+        canonical_exe = os.path.join(current_dir, "Reoteab.exe")
         args = [
             "--coteab-finalize-update",
             "--coteab-target",
@@ -294,7 +316,7 @@ class ActionsMixin:
         except Exception:
             return False
 
-    def maybe_self_rename_to_canonical_exe(self, canonical_target="CoteabMacro.exe", old_pid=None):
+    def maybe_self_rename_to_canonical_exe(self, canonical_target="Reoteab.exe", old_pid=None):
         try:
             if not getattr(sys, "frozen", False):
                 return False
@@ -305,7 +327,7 @@ class ActionsMixin:
             if not current_name.lower().endswith(".exe"):
                 return False
 
-            canonical_raw = str(canonical_target or "CoteabMacro.exe").strip() or "CoteabMacro.exe"
+            canonical_raw = str(canonical_target or "Reoteab.exe").strip() or "Reoteab.exe"
             if not canonical_raw.lower().endswith(".exe"):
                 canonical_raw += ".exe"
 
@@ -314,12 +336,15 @@ class ActionsMixin:
 
             if current_exe.lower() == canonical_path.lower():
                 # We are the canonical exe! Clean up any temporary updater executable
-                temp_exe = os.path.join(current_dir, "CoteabMacro1.exe")
+                temp_exe = os.path.join(current_dir, "Reoteab-update.exe")
                 if os.path.exists(temp_exe):
                     try:
                         os.remove(temp_exe)
                     except Exception:
                         pass
+                return False
+
+            if "--coteab-finalize-update" not in sys.argv:
                 return False
 
             deadline = time.monotonic() + 120.0
@@ -349,10 +374,10 @@ class ActionsMixin:
             print(f"Failed to normalize executable name: {e}")
             return False
 
-    def _download_exe_to_folder(self, download_url, target_dir, asset_name="CoteabMacro.exe"):
+    def _download_exe_to_folder(self, download_url, target_dir, asset_name="Reoteab.exe"):
         os.makedirs(target_dir, exist_ok=True)
 
-        base_name = os.path.basename(str(asset_name or "").strip()) or "CoteabMacro.exe"
+        base_name = os.path.basename(str(asset_name or "").strip()) or "Reoteab.exe"
         if not base_name.lower().endswith(".exe"):
             base_name += ".exe"
 
@@ -384,7 +409,7 @@ class ActionsMixin:
                 return False
 
             latest_version = str(latest_release.get("tag_name", "")).strip()
-            if not latest_version or self._is_same_version(latest_version, current_ver):
+            if not latest_version or not self._is_newer_version(latest_version, current_ver):
                 return False
 
             asset_name, download_url = self._pick_update_exe_asset(latest_release)
@@ -392,7 +417,7 @@ class ActionsMixin:
                 print("Update available, but no .exe asset was found in latest release.")
                 return False
 
-            print("hold up downloading the new Coteab Macro update bro")
+            print("Downloading the new Reoteab update...")
             if self._download_and_stage_exe_update(download_url, asset_name=asset_name):
                 print(f"Update {latest_version} downloaded. Restarting into the new executable...")
                 return True
@@ -410,7 +435,7 @@ class ActionsMixin:
                 return
 
             latest_version = str(latest_release.get("tag_name", "")).strip()
-            if latest_version and not self._is_same_version(latest_version, current_version):
+            if latest_version and self._is_newer_version(latest_version, current_version):
                 asset_name, download_url = self._pick_update_exe_asset(latest_release)
                 if not download_url:
                     return
@@ -431,7 +456,7 @@ class ActionsMixin:
             if hasattr(self, "on_update_status") and callable(self.on_update_status):
                 self.on_update_status("downloading")
 
-            guessed_name = os.path.basename(str(download_url).split("?", 1)[0]) or "CoteabMacro.exe"
+            guessed_name = os.path.basename(str(download_url).split("?", 1)[0]) or "Reoteab.exe"
             if getattr(sys, "frozen", False):
                 self._download_and_stage_exe_update(download_url, asset_name=guessed_name)
 
@@ -599,7 +624,7 @@ class ActionsMixin:
             "description": desc,
             "color": color,
             "timestamp": ts_iso,
-            "footer": {"text": "Coteab Macro • Player Logger"},
+            "footer": {"text": "Reoteab • Player Logger"},
             "fields": fields
         }
         return embed
@@ -2864,7 +2889,7 @@ class ActionsMixin:
                                 self.terminate_roblox_processes()
                                 self.send_webhook_status(f"Reconnecting to your server. hold on bro", color=0xffff00)
                                 self.set_title_threadsafe(
-                                    f"""Coteab Macro {current_ver} (Reconnecting)""")
+                                    f"""Reoteab {current_ver} (Reconnecting)""")
                                 launched = False
                                 launch_err = None
                                 for deep_link in reconnect_deep_links:
@@ -2925,7 +2950,7 @@ class ActionsMixin:
     def reconnect_check_start_button(self, old_log_file=None):
         try:
             self.set_title_threadsafe(
-                f"""Coteab Macro {current_ver} (Reconnecting - In Main Menu)""")
+                f"""Reoteab {current_ver} (Reconnecting - In Main Menu)""")
             reconnect_start_button = self.config.get("reconnect_start_button", [954, 876])
 
             for _ in range(10):
@@ -2946,7 +2971,7 @@ class ActionsMixin:
                     self.send_webhook_status("Clicked 'Start' button and you are in the game now!!", color=0x4aff65)
                     print("Game has started, exiting click loop.")
                     self.detection_running = True
-                    self.set_title_threadsafe(f"""Coteab Macro {current_ver} (Running)""")
+                    self.set_title_threadsafe(f"""Reoteab {current_ver} (Running)""")
                     return True  # weii joins!!!!!!!!!!
 
                 time.sleep(click_interval)
@@ -2987,7 +3012,7 @@ class ActionsMixin:
                 self.pause_reason = reason
             self.reconnecting_state = True
             self.set_title_threadsafe(
-                f"""Coteab Macro {current_ver} (Roblox Disconnected :c )""")
+                f"""Reoteab {current_ver} (Roblox Disconnected :c )""")
             if reason and not getattr(self, 'has_sent_disconnected_message', False):
                 try:
                     self.send_webhook_status(reason, color=0xff0000)
@@ -3452,13 +3477,17 @@ class ActionsMixin:
             if _cancelled():
                 return False
 
+            merchant_settings, merchant_setting_warnings = validate_merchant_settings(self.config)
+            for warning in merchant_setting_warnings:
+                self.append_log(f"[Merchant Config] {warning}")
+
             self.on_auto_merchant_state = True
             merchant_name_ocr_pos = self.config["merchant_name_ocr_pos"]
             merchant_open_button = self.config["merchant_open_button"]
             first_item_slot_pos = self.config.get("first_item_merchant_slot_pos", [954, 696])
             item_name_ocr_pos = self.config["item_name_ocr_pos"]
             merchant_dialogue_box = self.config["merchant_dialogue_box"]
-            merchant_extra_slot = int(self.config.get("merchant_extra_slot", "0"))
+            merchant_extra_slot = merchant_settings["merchant_extra_slot"]
 
             merchant_name = ""
             ocrMisdetect_Key = {
@@ -3577,8 +3606,8 @@ class ActionsMixin:
 
                 is_jester_exchange = False
                 if merchant_name == "Jester":
-                    j_count = int(self.config.get("jester_exchange_count", 0)) + 1
-                    if self.config.get("enable_jester_exchange", False) and j_count >= int(self.config.get("jester_exchange_threshold", 3)):
+                    j_count = merchant_settings["jester_exchange_count"] + 1
+                    if self.config.get("enable_jester_exchange", False) and j_count >= merchant_settings["jester_exchange_threshold"]:
                         is_jester_exchange = True
 
                 print(f"Opening merchant interface for {merchant_name}")
@@ -3589,8 +3618,8 @@ class ActionsMixin:
                 else:
                     btn_pos = merchant_open_button
 
-                autoit.mouse_click("left", btn_pos[0], btn_pos[1], 3)
-                inventory_click_delay = int(self.config.get("inventory_click_delay", "0")) / 1000.0
+                autoit.mouse_click("left", btn_pos[0], btn_pos[1], 1)
+                inventory_click_delay = merchant_settings["inventory_click_delay"] / 1000.0
                 exchange_extra_wait = 4.0 if is_jester_exchange else 0.0
                 if not self._sleep_with_cancel(7 + exchange_extra_wait + inventory_click_delay): return
 
@@ -3612,11 +3641,9 @@ class ActionsMixin:
                 self.append_log(f"[Merchant Detection] {merchant_name} count: {self.config['merchant_counts'][merchant_name]}")
 
                 if is_jester_exchange:
-                    auto_buy_items = self.config.get("Jester_Exchange_Items", {})
+                    auto_buy_items = merchant_settings["Jester_Exchange_Items"]
                 else:
-                    auto_buy_items = self.config.get(f"{merchant_name}_Items", {})
-                if not isinstance(auto_buy_items, dict):
-                    auto_buy_items = {}
+                    auto_buy_items = merchant_settings.get(f"{merchant_name}_Items", {})
                 purchased_items = {}
 
                 merchant_slot_positions = [
@@ -3732,7 +3759,6 @@ class ActionsMixin:
                 merchant_close_button = self.config.get("merchant_close_button", [1086, 342])
                 self.Global_MouseClick(merchant_close_button[0], merchant_close_button[1], click=3)
                 if not self._sleep_with_cancel(0.67): return False
-                self.Global_MouseClick(merchant_open_button[0], merchant_open_button[1], click=3)
                 return False
 
         except Exception as e:

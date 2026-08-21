@@ -16,7 +16,7 @@ import json, requests, time, os, threading, re, webbrowser, random, keyboard, py
     locale, win32gui, win32process, win32con, ctypes, queue, mouse, sys, hashlib, winocr, asyncio, win32api, traceback
 
 
-current_ver = os.environ.get("COTEAB_MACRO_VERSION", "v2.2.0-hotfix1")
+current_ver = os.environ.get("REOTEAB_VERSION", "0.1.0-beta.5")
 rare_biomes = ["GLITCHED", "DREAMSPACE", "CYBERSPACE"]
 
 class ConfigVar:
@@ -526,15 +526,6 @@ class CalibrationManager:
 
         root.after(100, poll)
         root.mainloop()
-
-def apply_headers(url: str) -> dict:
-    headers = {}
-    if BETA_AUTH_URL in url:
-        headers["x-api-key"] = BETA_AUTH_KEY
-    return headers
-
-BETA_AUTH_URL = "https://authenciation-test.vercel.app/api"
-BETA_AUTH_KEY = "betareleaseauthhello_thisgonnabeimplementinfuturelol"
 
 class ActionScheduler:
     def __init__(self, owner, worker_name="ActionScheduler"):
