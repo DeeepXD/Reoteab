@@ -114,6 +114,13 @@ export default function OtherFeaturesPage() {
                 />
 
                 <ToggleSwitch
+                    label="Close Roblox Chat After Reconnect"
+                    description="Closes Roblox chat before the post-reconnect Collection cleanup."
+                    checked={config.close_chat_after_reconnect !== false}
+                    onChange={(val) => updateConfig("close_chat_after_reconnect", val)}
+                />
+
+                <ToggleSwitch
                     label="AZERTY Keyboard Mode (experimental)"
                     description="Enable this if you currently using AZERTY keyboard layout :aga:"
                     checked={config.azerty_mode || false}
