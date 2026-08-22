@@ -1095,7 +1095,7 @@ class Api:
             if not download_url:
                 return None
 
-            return {"version": latest_version, "url": download_url}
+            return {"version": latest_version, "url": download_url, "current_version": current_version}
         except Exception as e:
             print(f"Direct update query failed: {e}")
             return None
@@ -1418,11 +1418,6 @@ def main():
                 if tracker.maybe_self_rename_to_canonical_exe(canonical, old_pid=old_pid):
                     window.destroy()
                     return
-
-                if _cfg_bool(getattr(tracker, "config", {}), "auto_update_enabled", True):
-                    if tracker.apply_startup_auto_update():
-                        window.destroy()
-                        return
 
                 api._tracker = tracker
                 tracker.on_stats_update = api._emit_config_update

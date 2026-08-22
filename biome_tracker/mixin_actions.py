@@ -399,33 +399,6 @@ class ActionsMixin:
 
         return target_path
 
-    def apply_startup_auto_update(self):
-        try:
-            if not getattr(sys, "frozen", False):
-                return False
-
-            latest_release = self._fetch_latest_release()
-            if not latest_release:
-                return False
-
-            latest_version = str(latest_release.get("tag_name", "")).strip()
-            if not latest_version or not self._is_newer_version(latest_version, current_ver):
-                return False
-
-            asset_name, download_url = self._pick_update_exe_asset(latest_release)
-            if not download_url:
-                print("Update available, but no .exe asset was found in latest release.")
-                return False
-
-            print("Downloading the new Reoteab update...")
-            if self._download_and_stage_exe_update(download_url, asset_name=asset_name):
-                print(f"Update {latest_version} downloaded. Restarting into the new executable...")
-                return True
-            return False
-        except Exception as e:
-            print(f"Startup auto-update failed: {e}")
-            return False
-
     def check_for_updates(self):
         current_version = current_ver
 

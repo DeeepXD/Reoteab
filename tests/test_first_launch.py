@@ -32,44 +32,61 @@ class FirstLaunchTests(unittest.TestCase):
         with mock.patch("biome_tracker.mixin_actions.requests.get", return_value=response):
             self.assertIsNone(self.actions._fetch_latest_release())
 
-    def test_auto_update_ignores_older_release(self):
+    def test_update_check_ignores_older_release(self):
         release = {
             "tag_name": "v0.1.0-beta.4",
             "assets": [{"name": "Reoteab.exe", "browser_download_url": "https://example.invalid/Reoteab.exe"}],
         }
         with (
-            mock.patch.object(sys, "frozen", True, create=True),
             mock.patch.object(self.actions, "_fetch_latest_release", return_value=release),
             mock.patch.object(self.actions, "_download_and_stage_exe_update") as download,
         ):
-            self.assertFalse(self.actions.apply_startup_auto_update())
+            self.actions.on_update_available = mock.Mock()
+            self.actions.check_for_updates()
         download.assert_not_called()
+        self.actions.on_update_available.assert_not_called()
 
-    def test_auto_update_ignores_matching_v010_release(self):
+    def test_update_check_ignores_matching_v010_release(self):
         release = {
             "tag_name": "v0.1.0",
             "assets": [{"name": "Reoteab.exe", "browser_download_url": "https://example.invalid/Reoteab.exe"}],
         }
         with (
-            mock.patch.object(sys, "frozen", True, create=True),
             mock.patch.object(self.actions, "_fetch_latest_release", return_value=release),
             mock.patch.object(self.actions, "_download_and_stage_exe_update") as download,
         ):
-            self.assertFalse(self.actions.apply_startup_auto_update())
+            self.actions.on_update_available = mock.Mock()
+            self.actions.check_for_updates()
         download.assert_not_called()
+        self.actions.on_update_available.assert_not_called()
 
-    def test_auto_update_still_applies_newer_release(self):
+    def test_update_check_notifies_without_installing(self):
         release = {
             "tag_name": "v0.1.1",
             "assets": [{"name": "Reoteab.exe", "browser_download_url": "https://example.invalid/Reoteab.exe"}],
         }
         with (
-            mock.patch.object(sys, "frozen", True, create=True),
             mock.patch.object(self.actions, "_fetch_latest_release", return_value=release),
-            mock.patch.object(self.actions, "_download_and_stage_exe_update", return_value=True) as download,
+            mock.patch.object(self.actions, "_download_and_stage_exe_update") as download,
+            mock.patch.object(self.actions, "_spawn_detached_exe") as spawn,
         ):
-            self.assertTrue(self.actions.apply_startup_auto_update())
-        download.assert_called_once()
+            self.actions.on_update_available = mock.Mock()
+            self.actions.check_for_updates()
+        self.actions.on_update_available.assert_called_once_with("v0.1.1", "https://example.invalid/Reoteab.exe")
+        download.assert_not_called()
+        spawn.assert_not_called()
+
+    def test_explicit_update_approval_starts_installation(self):
+        self.actions.on_update_status = mock.Mock()
+        with (
+            mock.patch.object(sys, "frozen", True, create=True),
+            mock.patch.object(self.actions, "_download_and_stage_exe_update", return_value=True) as download,
+            mock.patch("biome_tracker.mixin_actions.time.sleep"),
+            mock.patch("biome_tracker.mixin_actions.os._exit") as exit_process,
+        ):
+            self.actions.download_and_apply_update("https://example.invalid/Reoteab.exe", version="v0.1.1")
+        download.assert_called_once_with("https://example.invalid/Reoteab.exe", asset_name="Reoteab.exe")
+        exit_process.assert_called_once_with(0)
 
     def test_normal_renamed_executable_is_not_copied_or_relaunched(self):
         with tempfile.TemporaryDirectory() as directory:

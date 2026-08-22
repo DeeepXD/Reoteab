@@ -3,13 +3,13 @@ import "./UpdateBanner.css";
 
 interface UpdateBannerProps {
     version: string;
+    currentVersion: string;
     downloadUrl: string;
     updateStatus: string | null;
     onDismiss?: () => void;
-    onDontAskAgain?: () => Promise<void>;
 }
 
-export default function UpdateBanner({ version, downloadUrl, updateStatus, onDismiss, onDontAskAgain }: UpdateBannerProps) {
+export default function UpdateBanner({ version, currentVersion, downloadUrl, updateStatus, onDismiss }: UpdateBannerProps) {
     const [isUpdatingLocal, setIsUpdatingLocal] = useState(false);
 
     const handleUpdate = async () => {
@@ -21,6 +21,10 @@ export default function UpdateBanner({ version, downloadUrl, updateStatus, onDis
         } catch (e) {
             setIsUpdatingLocal(false);
         }
+    };
+
+    const handleViewRelease = () => {
+        window.pywebview?.api?.open_url(`https://github.com/DeeepXD/Reoteab/releases/tag/${encodeURIComponent(version)}`);
     };
 
     const failed = updateStatus === "failed";
@@ -45,7 +49,7 @@ export default function UpdateBanner({ version, downloadUrl, updateStatus, onDis
                             ? `Updated! ${doneFilename || "Restarting"}`
                             : isUpdating
                                 ? "Downloading update..."
-                                : `New Reoteab ${version} is available!`
+                                : `Update available from the official Reoteab GitHub release. Current: ${currentVersion}. Latest: ${version}.`
                     }
                 </span>
             </div>
@@ -54,11 +58,11 @@ export default function UpdateBanner({ version, downloadUrl, updateStatus, onDis
                     <button className="update-btn update-btn-primary" onClick={handleUpdate}>
                         {failed ? "Retry Update" : "Update Now"}
                     </button>
-                    <button className="update-btn update-btn-secondary" onClick={onDismiss}>
-                        Dismiss
+                    <button className="update-btn update-btn-secondary" onClick={handleViewRelease}>
+                        View Release
                     </button>
-                    <button className="update-btn update-btn-secondary" onClick={onDontAskAgain}>
-                        Don't Ask Again
+                    <button className="update-btn update-btn-secondary" onClick={onDismiss}>
+                        Later
                     </button>
                 </div>
             )}

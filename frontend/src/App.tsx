@@ -81,11 +81,9 @@ function App() {
   const [theme, setTheme] = useState("midnight");
   const [isGlitching, setIsGlitching] = useState(false);
   const [macroVersion, setMacroVersion] = useState("v?.?.?");
-  const [updateInfo, setUpdateInfo] = useState<{ version: string; url: string } | null>(null);
+  const [updateInfo, setUpdateInfo] = useState<{ version: string; url: string; currentVersion?: string } | null>(null);
   const [updateStatus, setUpdateStatus] = useState<string | null>(null);
-  const autoUpdateTriggerRef = useRef<string | null>(null);
   const startupUpdateCheckRequestedRef = useRef(false);
-  const isAutoUpdateEnabled = config ? (config.auto_update_enabled !== false) : false;
 
 
   const startMacro = async () => {
@@ -233,43 +231,19 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const shouldAutoUpdate = isAutoUpdateEnabled;
-    if (!updateInfo || !shouldAutoUpdate) return;
-
-    const updateKey = `${updateInfo.version}|${updateInfo.url}`;
-    if (autoUpdateTriggerRef.current === updateKey) return;
-    autoUpdateTriggerRef.current = updateKey;
-
-    const applyAutoUpdate = async () => {
-      try {
-        setUpdateStatus("downloading");
-        if (window.pywebview?.api?.apply_update) {
-          await window.pywebview.api.apply_update(updateInfo.url, updateInfo.version);
-        }
-      } catch (err) {
-        console.error("Auto update apply failed:", err);
-        setUpdateStatus("failed");
-        autoUpdateTriggerRef.current = null;
-      }
-    };
-
-    void applyAutoUpdate();
-  }, [updateInfo, isAutoUpdateEnabled]);
-
-  useEffect(() => {
     if (!config) return;
     if (startupUpdateCheckRequestedRef.current) return;
     startupUpdateCheckRequestedRef.current = true;
 
     const requestUpdateCheck = async () => {
       try {
-        if (config && (config as any).dont_ask_for_update) {
+        if (config.auto_update_enabled === false) {
             return;
         }
         if (window.pywebview?.api?.get_update_available) {
           const info = await window.pywebview.api.get_update_available();
           if (info && info.version && info.url) {
-            setUpdateInfo({ version: String(info.version), url: String(info.url) });
+            setUpdateInfo({ version: String(info.version), url: String(info.url), currentVersion: String(info.current_version || macroVersion) });
             return;
           }
         }
@@ -322,7 +296,7 @@ function App() {
       if (!cancelled) {
         setMacroVersion(version);
       }
-      document.title = `Reoteab ${version}`;
+      document.title = `Reoteab v${version.replace(/^v/, "")}`;
       return true;
     };
 
@@ -464,15 +438,10 @@ function App() {
           {updateInfo && (
             <UpdateBanner
               version={updateInfo.version}
+              currentVersion={updateInfo.currentVersion || macroVersion}
               downloadUrl={updateInfo.url}
               updateStatus={updateStatus}
               onDismiss={() => setUpdateInfo(null)}
-              onDontAskAgain={async () => {
-                if (config) {
-                  await saveConfig({ ...config, dont_ask_for_update: true });
-                }
-                setUpdateInfo(null);
-              }}
             />
           )}
           <div className="page-content">

@@ -100,8 +100,8 @@ export default function OtherFeaturesPage() {
                 </div>
 
                 <ToggleSwitch
-                    label="Auto Update (startup)"
-                    description="Automatically download the latest macro update when the app opens"
+                    label="Check for Updates (startup)"
+                    description="Check for a new release when the app opens"
                     checked={config.auto_update_enabled !== false}
                     onChange={(val) => updateConfig("auto_update_enabled", val)}
                 />
