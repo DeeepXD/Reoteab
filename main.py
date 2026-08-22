@@ -13,8 +13,8 @@ import sys
 
 # i added this so we can easily change macro version upon releases without having to change multiple back-end & front-end behaviours
 # for future people that is reading the open source code, hello :p
-current_version = "0.1.0-beta.5"
-display_name = "Reoteab Beta 5"
+current_version = "0.1.0"
+display_name = "Reoteab v0.1.0"
 os.environ["REOTEAB_VERSION"] = current_version
 UPDATE_LATEST_RELEASE_API_URL = "https://api.github.com/repos/DeeepXD/Reoteab/releases/latest"
 os.environ["REOTEAB_UPDATE_API_URL"] = UPDATE_LATEST_RELEASE_API_URL

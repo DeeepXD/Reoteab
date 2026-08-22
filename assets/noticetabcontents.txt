@@ -1,4 +1,4 @@
-# Reoteab Beta 5
+# Reoteab v0.1.0
 
 Reoteab is an unofficial community-maintained continuation based on Coteab v2.2.0.
 

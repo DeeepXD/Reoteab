@@ -606,7 +606,7 @@ body, * {
                                 type="text" 
                                 value={customVersion} 
                                 onChange={(e) => setCustomVersion(e.target.value)}
-                                placeholder="0.1.0-beta.5"
+                                placeholder="0.1.0"
                                 style={{ width: "100%", height: "30px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: "4px", color: "var(--text-primary)", padding: "0 10px" }}
                             />
                         </div>

@@ -24,6 +24,7 @@ class FirstLaunchTests(unittest.TestCase):
         self.assertFalse(self.actions._is_newer_version("v0.1.0-beta.4", "v0.1.0-beta.5"))
         self.assertTrue(self.actions._is_newer_version("v0.1.0-beta.6", "v0.1.0-beta.5"))
         self.assertTrue(self.actions._is_newer_version("v0.1.0", "v0.1.0-beta.5"))
+        self.assertFalse(self.actions._is_newer_version("v0.1.0", "0.1.0"))
 
     def test_missing_latest_release_is_ignored(self):
         response = mock.Mock()
@@ -44,9 +45,22 @@ class FirstLaunchTests(unittest.TestCase):
             self.assertFalse(self.actions.apply_startup_auto_update())
         download.assert_not_called()
 
+    def test_auto_update_ignores_matching_v010_release(self):
+        release = {
+            "tag_name": "v0.1.0",
+            "assets": [{"name": "Reoteab.exe", "browser_download_url": "https://example.invalid/Reoteab.exe"}],
+        }
+        with (
+            mock.patch.object(sys, "frozen", True, create=True),
+            mock.patch.object(self.actions, "_fetch_latest_release", return_value=release),
+            mock.patch.object(self.actions, "_download_and_stage_exe_update") as download,
+        ):
+            self.assertFalse(self.actions.apply_startup_auto_update())
+        download.assert_not_called()
+
     def test_auto_update_still_applies_newer_release(self):
         release = {
-            "tag_name": "v0.1.0-beta.6",
+            "tag_name": "v0.1.1",
             "assets": [{"name": "Reoteab.exe", "browser_download_url": "https://example.invalid/Reoteab.exe"}],
         }
         with (
