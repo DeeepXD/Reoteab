@@ -1079,7 +1079,7 @@ class Api:
 
     def get_update_available(self):
         if not self._tracker:
-            return None
+            return {"ready": False}
         try:
             latest_release = self._tracker._fetch_latest_release()
             if not isinstance(latest_release, dict):

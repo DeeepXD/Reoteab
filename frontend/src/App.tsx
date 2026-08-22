@@ -234,6 +234,7 @@ function App() {
     if (!config) return;
     if (startupUpdateCheckRequestedRef.current) return;
     startupUpdateCheckRequestedRef.current = true;
+    let retryTimer: ReturnType<typeof setTimeout> | undefined;
 
     const requestUpdateCheck = async () => {
       try {
@@ -242,6 +243,10 @@ function App() {
         }
         if (window.pywebview?.api?.get_update_available) {
           const info = await window.pywebview.api.get_update_available();
+          if (info?.ready === false) {
+            retryTimer = setTimeout(() => void requestUpdateCheck(), 250);
+            return;
+          }
           if (info && info.version && info.url) {
             setUpdateInfo({ version: String(info.version), url: String(info.url), currentVersion: String(info.current_version || macroVersion) });
             return;
@@ -265,12 +270,13 @@ function App() {
     if (window.pywebview?.api || (window as any).isSafeMode) {
       setIsApiReady(true);
       void requestUpdateCheck();
-      return;
+    } else {
+      window.addEventListener("pywebviewready", onReady, { once: true });
     }
 
-    window.addEventListener("pywebviewready", onReady, { once: true });
     return () => {
       window.removeEventListener("pywebviewready", onReady);
+      if (retryTimer) clearTimeout(retryTimer);
     };
   }, [config]);
 

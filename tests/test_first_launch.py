@@ -7,6 +7,7 @@ from unittest import mock
 
 import requests
 
+from main import Api
 from biome_tracker.mixin_actions import ActionsMixin
 
 
@@ -31,6 +32,29 @@ class FirstLaunchTests(unittest.TestCase):
         response.raise_for_status.side_effect = requests.HTTPError("404 Not Found")
         with mock.patch("biome_tracker.mixin_actions.requests.get", return_value=response):
             self.assertIsNone(self.actions._fetch_latest_release())
+
+    def test_update_query_waits_for_tracker_initialization(self):
+        self.assertEqual(Api().get_update_available(), {"ready": False})
+
+    def test_ready_update_query_detects_without_installing(self):
+        release = {
+            "tag_name": "v0.1.1",
+            "assets": [{"name": "Reoteab.exe", "browser_download_url": "https://example.invalid/Reoteab.exe"}],
+        }
+        api = Api(self.actions)
+        with (
+            mock.patch.object(self.actions, "_fetch_latest_release", return_value=release),
+            mock.patch.object(self.actions, "_download_and_stage_exe_update") as download,
+        ):
+            self.assertEqual(
+                api.get_update_available(),
+                {
+                    "version": "v0.1.1",
+                    "url": "https://example.invalid/Reoteab.exe",
+                    "current_version": "0.1.0",
+                },
+            )
+        download.assert_not_called()
 
     def test_update_check_ignores_older_release(self):
         release = {
