@@ -40,8 +40,6 @@ class ConfigMixin:
             "session_window_start": session_window_start_val,
             "macro_last_start": macro_last_start_val,
             "selected_theme": self.root.style.theme.name if hasattr(self, "root") and self.root is not None and hasattr(self.root, "style") else self.config.get("selected_theme", "solar"),
-            "dont_ask_for_update": self.config.get("dont_ask_for_update", False),
-            "auto_update_enabled": self.auto_update_enabled_var.get() if hasattr(self, "auto_update_enabled_var") else self.config.get("auto_update_enabled", True),
             "anti_afk": self.anti_afk_var.get(),
             "enable_idle_mode": self.macro_idle_mode_var.get() if hasattr(self, "macro_idle_mode_var") else self.config.get("enable_idle_mode", False),
             "auto_roblox_fullscreen": self.auto_roblox_fullscreen_var.get() if hasattr(self, "auto_roblox_fullscreen_var") else self.config.get("auto_roblox_fullscreen", False),
@@ -359,8 +357,6 @@ class ConfigMixin:
                     "WINDY": { "color": "0xF2F6FF", "thumbnail_url": "https://maxstellar.github.io/biome_thumb/WINDY.png" }
                 },
                 "cyberspace_only_warp": False,
-                "dont_ask_for_update": False,
-                "auto_update_enabled": True,
                 "enable_aura_detection": False,
                 "enable_aura_record": False,
                 "enable_auto_obby": False,
@@ -671,7 +667,6 @@ class ConfigMixin:
             self.anti_afk_var.set(config.get("anti_afk", True))
             if hasattr(self, "rare_biome_screenshot_var"): self.rare_biome_screenshot_var.set(config.get("rare_biome_screenshot", False))
             if hasattr(self, "auto_roblox_fullscreen_var"): self.auto_roblox_fullscreen_var.set(config.get("auto_roblox_fullscreen", False))
-            if hasattr(self, "auto_update_enabled_var"): self.auto_update_enabled_var.set(config.get("auto_update_enabled", True))
             if hasattr(self, "enable_glitch_effect_var"): self.enable_glitch_effect_var.set(config.get("enable_glitch_effect", False))
             self.click_delay_var.set(config.get("inventory_click_delay", "0"))
             auto_buff_glitched = config.get("auto_buff_glitched", {})

@@ -100,13 +100,6 @@ export default function OtherFeaturesPage() {
                 </div>
 
                 <ToggleSwitch
-                    label="Check for Updates (startup)"
-                    description="Check for a new release when the app opens"
-                    checked={config.auto_update_enabled !== false}
-                    onChange={(val) => updateConfig("auto_update_enabled", val)}
-                />
-
-                <ToggleSwitch
                     label="Enable Idle Mode"
                     description="Disable all automated actions except biome/aura detection and anti-afk."
                     checked={config.enable_idle_mode || false}

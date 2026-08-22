@@ -16,8 +16,6 @@ import sys
 current_version = "0.1.0"
 display_name = "Reoteab v0.1.0"
 os.environ["REOTEAB_VERSION"] = current_version
-UPDATE_LATEST_RELEASE_API_URL = "https://api.github.com/repos/DeeepXD/Reoteab/releases/latest"
-os.environ["REOTEAB_UPDATE_API_URL"] = UPDATE_LATEST_RELEASE_API_URL
 os.environ["WEBKIT_DISABLE_COMPOSITING_MODE"] = "1"
 import time
 import psutil
@@ -41,33 +39,8 @@ os.chdir(APPDATA_BASE)
 
 _mutex = ctypes.windll.kernel32.CreateMutexW(None, True, "ReoteabSingleInstance")
 if ctypes.windll.kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
-    _old_pid_arg = None
-    try:
-        if "--coteab-old-pid" in sys.argv:
-            _idx = sys.argv.index("--coteab-old-pid")
-            if _idx + 1 < len(sys.argv): _old_pid_arg = int(sys.argv[_idx + 1])
-    except Exception:
-        pass
-
-    if _old_pid_arg is not None:
-        for _ in range(90):
-            try:
-                p = psutil.Process(_old_pid_arg)
-                if not p.is_running(): break
-                p.wait(timeout=0.5)
-            except (psutil.NoSuchProcess, psutil.TimeoutExpired):
-                break
-            except Exception:
-                time.sleep(0.5)
-
-        ctypes.windll.kernel32.CloseHandle(_mutex)
-        _mutex = ctypes.windll.kernel32.CreateMutexW(None, True, "ReoteabSingleInstance")
-        if ctypes.windll.kernel32.GetLastError() == 183:
-            ctypes.windll.user32.MessageBoxW(0, "Reoteab is already running!\n\nPlease close the existing instance before opening a new one.", "Reoteab", 0x30)
-            sys.exit(0)
-    else:
-        ctypes.windll.user32.MessageBoxW(0, "Reoteab is already running!\n\nPlease close the existing instance before opening a new one.", "Reoteab", 0x30)
-        sys.exit(0)
+    ctypes.windll.user32.MessageBoxW(0, "Reoteab is already running!\n\nPlease close the existing instance before opening a new one.", "Reoteab", 0x30)
+    sys.exit(0)
 
 try:
     import numpy
@@ -175,16 +148,6 @@ def get_frontend_entry():
         print(f"Failed to fetch frontend from GitHub: {e}")
 
     return {"url": "http://localhost:5173"}
-
-
-def _read_cli_value(flag, default=""):
-    try:
-        if flag not in sys.argv: return default
-        idx = sys.argv.index(flag)
-        if idx + 1 >= len(sys.argv): return default
-        return str(sys.argv[idx + 1]).strip()
-    except Exception:
-        return default
 
 
 def _cfg_bool(cfg, key, default=False):
@@ -962,12 +925,6 @@ class Api:
     def _emit_shortcut(self, key):
         self._safe_eval_js(f'if(window.onShortcutEvent) window.onShortcutEvent("{key}");')
 
-    def _emit_update_available(self, version, url):
-        self._safe_eval_js(f'if(window.onUpdateAvailable) window.onUpdateAvailable("{version}", "{url}");')
-
-    def _emit_update_status(self, status):
-        self._safe_eval_js(f'if(window.onUpdateStatus) window.onUpdateStatus("{status}");')
-
     def _emit_fishing_failsafe_warning(self, msg):
         self._safe_eval_js(f"if(window.onFishingFailsafeWarning) window.onFishingFailsafeWarning({json.dumps(str(msg))});")
 
@@ -1051,54 +1008,6 @@ class Api:
     def confirm_biome_response(self, confirmed: bool):
         self._biome_confirm_result = bool(confirmed)
         self._biome_confirm_evt.set()
-
-    def apply_update(self, download_url: str, version: str = ""):
-        if self._tracker:
-            def _do_update():
-                try:
-                    self._emit_update_status("downloading")
-                    self._tracker.download_and_apply_update(download_url, version=version)
-                except Exception as e:
-                    self._emit_update_status("failed")
-            threading.Thread(target=_do_update, daemon=True).start()
-            return True
-        return False
-
-    def check_for_updates(self):
-        if not self._tracker:
-            return False
-
-        def _do_check():
-            try:
-                self._tracker.check_for_updates()
-            except Exception as e:
-                print(f"Update check failed: {e}")
-
-        threading.Thread(target=_do_check, daemon=True).start()
-        return True
-
-    def get_update_available(self):
-        if not self._tracker:
-            return {"ready": False}
-        try:
-            latest_release = self._tracker._fetch_latest_release()
-            if not isinstance(latest_release, dict):
-                return None
-
-            latest_version = str(latest_release.get("tag_name", "")).strip()
-            if not latest_version:
-                return None
-            if not self._tracker._is_newer_version(latest_version, current_version):
-                return None
-
-            _asset_name, download_url = self._tracker._pick_update_exe_asset(latest_release)
-            if not download_url:
-                return None
-
-            return {"version": latest_version, "url": download_url, "current_version": current_version}
-        except Exception as e:
-            print(f"Direct update query failed: {e}")
-            return None
 
     def send_webhook_status(self, status: str, color: int):
         if self._tracker and hasattr(self._tracker, 'send_webhook_status'):
@@ -1288,8 +1197,6 @@ def launch_app(api_class, tracker=None):
     api = api_class(tracker)
     tracker.on_stats_update = api._emit_config_update
     tracker.on_biome_update = api._emit_biome_update
-    tracker.on_update_available = api._emit_update_available
-    tracker.on_update_status = api._emit_update_status
     tracker.on_biome_confirm_request = api._request_biome_confirm
     tracker.on_status_change = lambda status: api._emit_macro_status()
 
@@ -1410,20 +1317,9 @@ def main():
             try:
                 from biome_tracker.core import BiomeTracker
                 tracker = BiomeTracker()
-                canonical = _read_cli_value("--coteab-target", "Reoteab.exe")
-                old_pid_raw = _read_cli_value("--coteab-old-pid", "")
-                try: old_pid = int(old_pid_raw) if old_pid_raw else None
-                except Exception: old_pid = None
-
-                if tracker.maybe_self_rename_to_canonical_exe(canonical, old_pid=old_pid):
-                    window.destroy()
-                    return
-
                 api._tracker = tracker
                 tracker.on_stats_update = api._emit_config_update
                 tracker.on_biome_update = api._emit_biome_update
-                tracker.on_update_available = api._emit_update_available
-                tracker.on_update_status = api._emit_update_status
                 tracker.on_biome_confirm_request = api._request_biome_confirm
                 tracker.on_status_change = lambda status: api._emit_macro_status()
                 tracker.on_remote_start = lambda: api.set_biome_detection(True)

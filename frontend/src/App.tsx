@@ -18,7 +18,6 @@ import OtherFeaturesPage from "./pages/OtherFeaturesPage";
 import RemoteAccessPage from "./pages/RemoteAccessPage";
 import CalibrationOverlay from "./components/CalibrationOverlay";
 import GlitchOverlay from "./components/GlitchOverlay";
-import UpdateBanner from "./components/UpdateBanner";
 import CustomizationPage from "./pages/CustomizationPage";
 import ThemeDesignPage from "./pages/ThemeDesignPage";
 import MovementsPage from "./pages/MovementsPage";
@@ -81,9 +80,6 @@ function App() {
   const [theme, setTheme] = useState("midnight");
   const [isGlitching, setIsGlitching] = useState(false);
   const [macroVersion, setMacroVersion] = useState("v?.?.?");
-  const [updateInfo, setUpdateInfo] = useState<{ version: string; url: string; currentVersion?: string } | null>(null);
-  const [updateStatus, setUpdateStatus] = useState<string | null>(null);
-  const startupUpdateCheckRequestedRef = useRef(false);
 
 
   const startMacro = async () => {
@@ -121,6 +117,17 @@ function App() {
   // track running state inside event callbacks
   const isRunningRef = useRef(isMacroRunning);
   const processingRef = useRef(false);
+
+  useEffect(() => {
+    if (window.pywebview?.api || (window as any).isSafeMode) {
+      setIsApiReady(true);
+      return;
+    }
+
+    const onReady = () => setIsApiReady(true);
+    window.addEventListener("pywebviewready", onReady, { once: true });
+    return () => window.removeEventListener("pywebviewready", onReady);
+  }, []);
 
   useEffect(() => {
     isRunningRef.current = isMacroRunning;
@@ -211,74 +218,6 @@ function App() {
   }, [config]);
 
 
-
-  // Check Update Listener
-  useEffect(() => {
-    (window as any).onUpdateAvailable = (version: string, url: string) => {
-      console.log("Update available:", version, url);
-      setUpdateInfo({ version, url });
-    };
-
-    (window as any).onUpdateStatus = (status: string) => {
-      console.log("Update status:", status);
-      setUpdateStatus(status);
-    };
-
-    return () => {
-      delete (window as any).onUpdateAvailable;
-      delete (window as any).onUpdateStatus;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!config) return;
-    if (startupUpdateCheckRequestedRef.current) return;
-    startupUpdateCheckRequestedRef.current = true;
-    let retryTimer: ReturnType<typeof setTimeout> | undefined;
-
-    const requestUpdateCheck = async () => {
-      try {
-        if (config.auto_update_enabled === false) {
-            return;
-        }
-        if (window.pywebview?.api?.get_update_available) {
-          const info = await window.pywebview.api.get_update_available();
-          if (info?.ready === false) {
-            retryTimer = setTimeout(() => void requestUpdateCheck(), 250);
-            return;
-          }
-          if (info && info.version && info.url) {
-            setUpdateInfo({ version: String(info.version), url: String(info.url), currentVersion: String(info.current_version || macroVersion) });
-            return;
-          }
-        }
-
-        if (window.pywebview?.api?.check_for_updates) {
-          await window.pywebview.api.check_for_updates();
-        }
-      } catch (err) {
-        console.error("Startup update check failed:", err);
-        startupUpdateCheckRequestedRef.current = false;
-      }
-    };
-
-    const onReady = () => {
-      setIsApiReady(true);
-      void requestUpdateCheck();
-    };
-
-    if (window.pywebview?.api || (window as any).isSafeMode) {
-      setIsApiReady(true);
-      void requestUpdateCheck();
-    } else {
-      window.addEventListener("pywebviewready", onReady, { once: true });
-    }
-
-    return () => {
-      window.removeEventListener("pywebviewready", onReady);
-      if (retryTimer) clearTimeout(retryTimer);
-    };
-  }, [config]);
 
   useEffect(() => {
     (window as any).onNavigateTab = (tabId: string) => {
@@ -441,15 +380,6 @@ function App() {
             isGlitching={isGlitching}
             setActiveTab={setActiveTab}
           />
-          {updateInfo && (
-            <UpdateBanner
-              version={updateInfo.version}
-              currentVersion={updateInfo.currentVersion || macroVersion}
-              downloadUrl={updateInfo.url}
-              updateStatus={updateStatus}
-              onDismiss={() => setUpdateInfo(null)}
-            />
-          )}
           <div className="page-content">
             <div className="fade-in" key={activeTab}>
               <ActivePage />

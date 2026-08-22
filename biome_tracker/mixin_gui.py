@@ -175,7 +175,6 @@ class GuiMixin:
         keyboard.add_hotkey("F1", lambda: (_start_wrapper()))
         keyboard.add_hotkey("F2", lambda: (_stop_wrapper()))
 
-        self.check_for_updates()
         self.root.mainloop()
 
     def open_biome_settings(self):
@@ -469,30 +468,6 @@ class GuiMixin:
         discord_label.configure(font=('Segoe UI', 9, 'underline'))
         discord_label.pack(side="top", fill="x", anchor="w", padx=(0, 10))
         discord_label.bind("<Button-1>", lambda e: webbrowser.open_new(project_link))
-
-        update_label = ttk.Label(bottom_frame, text="Checking for updates...", wraplength=400, cursor="hand2")
-        update_label.pack(side="top", fill="x", anchor="w", padx=5)
-
-        def _open_releases(_=None):
-            webbrowser.open_new("https://github.com/DeeepXD/Reoteab/releases/latest")
-
-        def _check_latest():
-            current_version = current_ver
-            try:
-                response = requests.get("https://api.github.com/repos/DeeepXD/Reoteab/releases/latest", timeout=10)
-                response.raise_for_status()
-                latest_release = response.json()
-                latest_version = latest_release.get("tag_name") or latest_release.get("name") or ""
-                if latest_version and latest_version != current_version:
-                    txt = f"Please update your macro, latest version: {latest_version}. Click here to download!"
-                    update_label.config(text=txt, foreground="blue")
-                    update_label.bind("<Button-1>", _open_releases)
-                else:
-                    update_label.config(text="You're on the latest macro release :D", foreground="green")
-            except Exception:
-                update_label.config(text="Unable to check updates", foreground="red")
-
-        threading.Thread(target=_check_latest, daemon=True).start()
 
     def create_pathing_tab(self, frame):
         path_frame = ttk.LabelFrame(frame, text="Pathing")
