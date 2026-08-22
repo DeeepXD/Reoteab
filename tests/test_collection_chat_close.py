@@ -7,11 +7,11 @@ from biome_tracker import fishing
 class CollectionChatCloseTests(unittest.TestCase):
     def test_chat_close_click_precedes_collection_click(self):
         clicks = []
-        config = {
+        config = fishing.load_fishing_config({
             "chat_close_button": [10, 20],
             "collections_button": [30, 40],
             "exit_collections_button": [50, 60],
-        }
+        })
 
         with (
             mock.patch.object(fishing, "_run_respawn_sequence", return_value=True),
@@ -28,10 +28,10 @@ class CollectionChatCloseTests(unittest.TestCase):
 
     def test_missing_chat_close_calibration_does_not_block_collection(self):
         clicks = []
-        config = {
+        config = fishing.load_fishing_config({
             "collections_button": [30, 40],
             "exit_collections_button": [50, 60],
-        }
+        })
 
         with (
             mock.patch.object(fishing, "_run_respawn_sequence", return_value=True),

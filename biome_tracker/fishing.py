@@ -43,6 +43,7 @@ DEFAULT_FISHING_CONFIG = {
     "fishing_bugged_ui_pos": [1167, 477],               # bugged fishing UI position
     "collections_button": [33, 443],                    # collections menu button
     "exit_collections_button": [385, 164],              # close collections menu button
+    "chat_close_button": [0, 0],                        # Roblox chat close button
     "aura_menu": [1200, 500],                           # aura menu button
     "aura_search_bar": [834, 364],                      # aura search bar
     "first_aura_slot_pos": [0, 0],                      # first aura slot
@@ -171,6 +172,7 @@ def load_fishing_config(raw_config: dict[str, Any] | None = None) -> dict[str, A
         "fishing_confirm_sell_all_button": _coerce_point(raw.get("fishing_confirm_sell_all_button"), DEFAULT_FISHING_CONFIG["fishing_confirm_sell_all_button"]),
         "collections_button": _coerce_point(raw.get("collections_button"), DEFAULT_FISHING_CONFIG["collections_button"]),
         "exit_collections_button": _coerce_point(raw.get("exit_collections_button"), DEFAULT_FISHING_CONFIG["exit_collections_button"]),
+        "chat_close_button": _coerce_point(raw.get("chat_close_button"), DEFAULT_FISHING_CONFIG["chat_close_button"]),
         "aura_menu": _coerce_point(raw.get("aura_menu"), DEFAULT_FISHING_CONFIG["aura_menu"]),
         "aura_search_bar": _coerce_point(raw.get("aura_search_bar"), DEFAULT_FISHING_CONFIG["aura_search_bar"]),
         "first_aura_slot_pos": _coerce_point(raw.get("first_aura_slot_pos"), DEFAULT_FISHING_CONFIG["first_aura_slot_pos"]),
