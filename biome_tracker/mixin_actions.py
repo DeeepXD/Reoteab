@@ -840,6 +840,16 @@ class ActionsMixin:
             # 3. Close chat and then click Collection Buttons
             self.close_chat_if_open()
 
+            chat_close_button = self.config.get("chat_close_button", [0, 0])
+            if chat_close_button and chat_close_button[0]:
+                try:
+                    autoit.mouse_click("left", chat_close_button[0], chat_close_button[1], 1, speed=3)
+                except Exception:
+                    try:
+                        self.Global_MouseClick(chat_close_button[0], chat_close_button[1])
+                    except Exception:
+                        pass
+
             if not self._sleep_with_cancel(0.2): return
             collections_button = self.config.get("collections_button", [0, 0])
             if collections_button and collections_button[0]:
@@ -2130,6 +2140,16 @@ class ActionsMixin:
 
             # 3. Close chat and then click Collection Buttons
             self.close_chat_if_open()
+
+            chat_close_button = self.config.get("chat_close_button", [0, 0])
+            if chat_close_button and chat_close_button[0]:
+                try:
+                    autoit.mouse_click("left", chat_close_button[0], chat_close_button[1], 1, speed=3)
+                except Exception:
+                    try:
+                        self.Global_MouseClick(chat_close_button[0], chat_close_button[1])
+                    except Exception:
+                        pass
 
             if not _eden_sleep(0.2): return
             collections_button = self.config.get("collections_button", [0, 0])

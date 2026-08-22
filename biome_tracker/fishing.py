@@ -412,6 +412,10 @@ def _run_pre_fishing_sequence(
             close_chat_fn()
         except Exception as e:
             print(f"[Fishing] close_chat_fn error: {e}")
+
+    chat_close_x, chat_close_y = cfg.get("chat_close_button", [0, 0])
+    if chat_close_x > 0:
+        autoit.mouse_click("left", chat_close_x, chat_close_y, speed=3)
     if not sleep_interruptible(0.2 + fishing_actions_delay):
         return False
 
@@ -606,6 +610,10 @@ def _run_sell_fish_sequence(
             close_chat_fn()
         except Exception as e:
             print(f"[Fishing] close_chat_fn error before selling: {e}")
+
+    chat_close_x, chat_close_y = cfg.get("chat_close_button", [0, 0])
+    if chat_close_x > 0:
+        autoit.mouse_click("left", chat_close_x, chat_close_y, speed=3)
     if not sleep_interruptible(0.2 + fishing_actions_delay):
         return False
 
