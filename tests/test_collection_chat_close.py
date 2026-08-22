@@ -81,9 +81,9 @@ class CollectionChatCloseTests(unittest.TestCase):
 
         self.assertEqual(clicks[:2], [(30, 40), (50, 60)])
 
-    def test_missing_reconnect_chat_close_setting_defaults_to_enabled(self):
+    def test_missing_reconnect_chat_close_setting_defaults_to_disabled(self):
         config = fishing.load_fishing_config({})
-        self.assertTrue(config["close_chat_after_reconnect"])
+        self.assertFalse(config["close_chat_after_reconnect"])
 
     def test_ordinary_sell_does_not_repeat_post_reconnect_chat_close(self):
         clicks = []

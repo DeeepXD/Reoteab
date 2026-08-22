@@ -173,7 +173,7 @@ def load_fishing_config(raw_config: dict[str, Any] | None = None) -> dict[str, A
         "collections_button": _coerce_point(raw.get("collections_button"), DEFAULT_FISHING_CONFIG["collections_button"]),
         "exit_collections_button": _coerce_point(raw.get("exit_collections_button"), DEFAULT_FISHING_CONFIG["exit_collections_button"]),
         "chat_close_button": _coerce_point(raw.get("chat_close_button"), DEFAULT_FISHING_CONFIG["chat_close_button"]),
-        "close_chat_after_reconnect": bool(raw.get("close_chat_after_reconnect", True)),
+        "close_chat_after_reconnect": bool(raw.get("close_chat_after_reconnect", False)),
         "aura_menu": _coerce_point(raw.get("aura_menu"), DEFAULT_FISHING_CONFIG["aura_menu"]),
         "aura_search_bar": _coerce_point(raw.get("aura_search_bar"), DEFAULT_FISHING_CONFIG["aura_search_bar"]),
         "first_aura_slot_pos": _coerce_point(raw.get("first_aura_slot_pos"), DEFAULT_FISHING_CONFIG["first_aura_slot_pos"]),
@@ -968,7 +968,7 @@ def run_fishing_loop(
                         activate_roblox_cb=activate_roblox_cb,
                         close_chat_fn=close_chat_fn,
                         set_busy_cb=_set_busy,
-                        post_reconnect_cleanup=bool(cfg.get("close_chat_after_reconnect", True)),
+                        post_reconnect_cleanup=bool(cfg.get("close_chat_after_reconnect", False)),
                     ):
                         continue
                     fish_caught_count = 0

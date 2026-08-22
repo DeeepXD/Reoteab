@@ -116,7 +116,7 @@ export default function OtherFeaturesPage() {
                 <ToggleSwitch
                     label="Close Roblox Chat After Reconnect"
                     description="Closes Roblox chat before the post-reconnect Collection cleanup."
-                    checked={config.close_chat_after_reconnect !== false}
+                    checked={config.close_chat_after_reconnect || false}
                     onChange={(val) => updateConfig("close_chat_after_reconnect", val)}
                 />
 
