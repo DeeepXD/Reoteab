@@ -309,10 +309,6 @@ def _run_single_egg_route(
         except Exception as e:
             print(f"{log_prefix} close_chat_fn error: {e}")
 
-    chat_close_x, chat_close_y = cfg.get("chat_close_button", [0, 0])
-    if chat_close_x > 0:
-        autoit.mouse_click("left", chat_close_x, chat_close_y, speed=3)
-
     if not sleep_interruptible(0.5, 0.02): return False
 
     # Click collections button -> exit collections (camera reset)

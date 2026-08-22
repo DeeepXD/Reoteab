@@ -13,12 +13,6 @@ class RecorderMixin:
             print("[Camera] Aligning camera...")
             collections_btn = self.config.get("collections_button", [0, 0])
             exit_collections_btn = self.config.get("exit_collections_button", [0, 0])
-            chat_close_btn = self.config.get("chat_close_button", [0, 0])
-
-            if chat_close_btn[0] > 0:
-                autoit.mouse_click("left", chat_close_btn[0], chat_close_btn[1])
-                time.sleep(0.2)
-
             if collections_btn[0] > 0:
                 autoit.mouse_click("left", collections_btn[0], collections_btn[1])
                 time.sleep(0.3)

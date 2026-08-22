@@ -415,9 +415,6 @@ def _run_pre_fishing_sequence(
         except Exception as e:
             print(f"[Fishing] close_chat_fn error: {e}")
 
-    chat_close_x, chat_close_y = cfg.get("chat_close_button", [0, 0])
-    if chat_close_x > 0:
-        autoit.mouse_click("left", chat_close_x, chat_close_y, speed=3)
     if not sleep_interruptible(0.2 + fishing_actions_delay):
         return False
 
@@ -588,6 +585,7 @@ def _run_sell_fish_sequence(
     activate_roblox_cb: Callable[[], None] | None = None,
     close_chat_fn: Callable[[], None] | None = None,
     set_busy_cb: Callable[[bool], None] | None = None,
+    post_reconnect_cleanup: bool = False,
 ) -> bool:
     if fish_sell_count <= 0:
         return True
@@ -613,9 +611,10 @@ def _run_sell_fish_sequence(
         except Exception as e:
             print(f"[Fishing] close_chat_fn error before selling: {e}")
 
-    chat_close_x, chat_close_y = cfg.get("chat_close_button", [0, 0])
-    if chat_close_x > 0:
-        autoit.mouse_click("left", chat_close_x, chat_close_y, speed=3)
+    if post_reconnect_cleanup:
+        chat_close_x, chat_close_y = cfg.get("chat_close_button", [0, 0])
+        if chat_close_x > 0:
+            autoit.mouse_click("left", chat_close_x, chat_close_y, speed=3)
     if not sleep_interruptible(0.2 + fishing_actions_delay):
         return False
 
@@ -968,6 +967,7 @@ def run_fishing_loop(
                         activate_roblox_cb=activate_roblox_cb,
                         close_chat_fn=close_chat_fn,
                         set_busy_cb=_set_busy,
+                        post_reconnect_cleanup=True,
                     ):
                         continue
                     fish_caught_count = 0
