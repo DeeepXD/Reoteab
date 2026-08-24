@@ -1,6 +1,37 @@
 from .base_support import *
+import re
+from urllib.parse import urlparse
 
 class WebhookMixin:
+    def _get_embed_overrides(self, embed_name):
+        overrides = self.config.get("webhook_embed_overrides", {})
+        if not isinstance(overrides, dict):
+            return {}
+        overrides = overrides.get(embed_name, {})
+        if not isinstance(overrides, dict):
+            return {}
+
+        valid = {}
+        color = overrides.get("color")
+        if isinstance(color, str):
+            color = color.strip().removeprefix("#").removeprefix("0x")
+            if re.fullmatch(r"[0-9a-fA-F]{6}", color):
+                valid["color"] = int(color, 16)
+
+        for field in ("title", "footer_text"):
+            value = overrides.get(field)
+            if isinstance(value, str) and value.strip():
+                valid[field] = value.strip()
+
+        for field in ("footer_icon_url", "thumbnail_url"):
+            value = overrides.get(field)
+            if isinstance(value, str):
+                parsed = urlparse(value.strip())
+                if parsed.scheme in ("http", "https") and parsed.netloc:
+                    valid[field] = value.strip()
+
+        return valid
+
     def send_screen_screenshot_webhook(self, screenshot_path):
         try:
             urls = self.get_webhook_list()
@@ -363,6 +394,17 @@ class WebhookMixin:
                 "icon_url": icon_url
             }
         }
+        overrides = self._get_embed_overrides("merchant")
+        if "color" in overrides:
+            embed["color"] = overrides["color"]
+        if "title" in overrides:
+            embed["title"] = overrides["title"]
+        if "thumbnail_url" in overrides:
+            embed["thumbnail"] = {"url": overrides["thumbnail_url"]}
+        if "footer_text" in overrides:
+            embed["footer"]["text"] = overrides["footer_text"]
+        if "footer_icon_url" in overrides:
+            embed["footer"]["icon_url"] = overrides["footer_icon_url"]
         try:
             if screenshot_path and os.path.exists(screenshot_path):
                 for webhook_url in urls:
@@ -444,6 +486,17 @@ class WebhookMixin:
             },
             "timestamp": current_utc_time
         }
+        overrides = self._get_embed_overrides("aura")
+        if "color" in overrides:
+            embed["color"] = overrides["color"]
+        if "title" in overrides:
+            embed["title"] = overrides["title"]
+        if "thumbnail_url" in overrides:
+            embed["thumbnail"] = {"url": overrides["thumbnail_url"]}
+        if "footer_text" in overrides:
+            embed["footer"]["text"] = overrides["footer_text"]
+        if "footer_icon_url" in overrides:
+            embed["footer"]["icon_url"] = overrides["footer_icon_url"]
         content = ""
         should_ping = False
         if rarity is not None and 'rarity_value' in locals() and rarity_value >= ping_minimum:

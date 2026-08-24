@@ -9,7 +9,24 @@ export default function CustomizationPage() {
 
     const [biomes, setBiomes] = useState<Record<string, { color: string; thumbnail_url: string; start_description?: string; end_description?: string }>>({});
     const [selectedBiome, setSelectedBiome] = useState<string>("");
+    const [embedOverrides, setEmbedOverrides] = useState<Record<string, Record<string, string>>>({});
     const selectRef = useRef<HTMLSelectElement>(null);
+
+    useEffect(() => {
+        const saved = config?.webhook_embed_overrides;
+        if (!saved || typeof saved !== "object") {
+            setEmbedOverrides({});
+            return;
+        }
+
+        const next: Record<string, Record<string, string>> = {};
+        for (const name of ["merchant", "aura"]) {
+            if (saved[name] && typeof saved[name] === "object") {
+                next[name] = { ...saved[name] };
+            }
+        }
+        setEmbedOverrides(next);
+    }, [config]);
 
     useEffect(() => {
         let isMounted = true;
@@ -90,6 +107,23 @@ export default function CustomizationPage() {
         handleSave({
             ...config,
             custom_biome_overrides: overridesToSave
+        });
+    };
+
+    const handleEmbedChange = (embed: string, field: string, value: string) => {
+        setEmbedOverrides(previous => ({
+            ...previous,
+            [embed]: {
+                ...previous[embed],
+                [field]: value,
+            },
+        }));
+    };
+
+    const saveEmbedOverrides = () => {
+        handleSave({
+            ...config,
+            webhook_embed_overrides: embedOverrides,
         });
     };
 
@@ -342,6 +376,62 @@ export default function CustomizationPage() {
                             Save Configuration (reopen the macro to take effect!)
                         </button>
                     </div>
+
+                <div className="card" style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                    <div>
+                        <h3 style={{ margin: "0 0 4px" }}>Merchant and Aura Embeds</h3>
+                        <p style={{ margin: 0, color: "var(--text-muted)", fontSize: "0.9em" }}>
+                            Leave a field empty to keep its current default.
+                        </p>
+                    </div>
+                    {["merchant", "aura"].map(embed => {
+                        const values = embedOverrides[embed] || {};
+                        const label = embed === "merchant" ? "Merchant" : "Aura";
+                        return (
+                            <div key={embed} style={{ display: "grid", gap: "8px" }}>
+                                <strong>{label}</strong>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    value={values.color || ""}
+                                    onChange={(e) => handleEmbedChange(embed, "color", e.target.value)}
+                                    placeholder="Color (#FFFFFF)"
+                                />
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    value={values.title || ""}
+                                    onChange={(e) => handleEmbedChange(embed, "title", e.target.value)}
+                                    placeholder="Title"
+                                />
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    value={values.footer_text || ""}
+                                    onChange={(e) => handleEmbedChange(embed, "footer_text", e.target.value)}
+                                    placeholder="Footer text"
+                                />
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    value={values.footer_icon_url || ""}
+                                    onChange={(e) => handleEmbedChange(embed, "footer_icon_url", e.target.value)}
+                                    placeholder="Footer icon URL (https://...)"
+                                />
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    value={values.thumbnail_url || ""}
+                                    onChange={(e) => handleEmbedChange(embed, "thumbnail_url", e.target.value)}
+                                    placeholder="Thumbnail URL (https://...)"
+                                />
+                            </div>
+                        );
+                    })}
+                    <button className="btn btn-primary" style={{ backgroundColor: "#d97706" }} onClick={saveEmbedOverrides}>
+                        Save Merchant and Aura Configuration
+                    </button>
+                </div>
                 </div>
             </div>
     );

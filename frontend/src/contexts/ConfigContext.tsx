@@ -11,6 +11,7 @@ export interface AppConfig {
     merchant_counts?: Record<string, number>;
     enable_glitch_effect?: boolean;
     custom_biome_overrides?: Record<string, { color: string; thumbnail_url: string }>;
+    webhook_embed_overrides?: Record<string, Record<string, string>>;
     [key: string]: any;
 }
 
