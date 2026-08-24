@@ -471,7 +471,7 @@ class ActionsMixin:
         except Exception as e:
             self.error_logging(e, "Error in obby_path_loop")
 
-        while self.detection_running:
+        while self._is_detection_session_active():
             try:
                 if self.is_fishing_mode_enabled():
                     time.sleep(2)
@@ -886,7 +886,7 @@ class ActionsMixin:
 
     # ── Easter Egg Collection ─────────────────────────────────────────
     def egg_collect_loop(self):
-        while self.detection_running:
+        while self._is_detection_session_active():
             try:
                 if self.config.get("enable_idle_mode", False):
                     time.sleep(2)
@@ -1037,7 +1037,7 @@ class ActionsMixin:
 
     def eden_ocr_check_loop(self):
         last_check = time.monotonic()
-        while self.detection_running:
+        while self._is_detection_session_active():
             try:
                 if not self.config.get("eden_detection", False):
                     time.sleep(2)
@@ -1255,7 +1255,7 @@ class ActionsMixin:
 
     def merchant_ocr_check_loop(self):
         last_check = time.monotonic()
-        while self.detection_running:
+        while self._is_detection_session_active():
             try:
                 if not self.config.get("merchant_ocr", False):
                     time.sleep(2)
@@ -1476,7 +1476,7 @@ class ActionsMixin:
 
     def egg_ocr_check_loop(self):
         last_check = time.monotonic()
-        while self.detection_running:
+        while self._is_detection_session_active():
             try:
                 if not self.config.get("egg_ocr_detect_special", False):
                     time.sleep(2)
@@ -1769,7 +1769,7 @@ class ActionsMixin:
 
     def quest_claim_loop(self):
         last_claim_time = datetime.min
-        while self.detection_running:
+        while self._is_detection_session_active():
             try:
                 if self.is_fishing_mode_enabled():
                     time.sleep(2)
@@ -1960,7 +1960,7 @@ class ActionsMixin:
         last_contract_time = datetime.min
         last_path_time = datetime.min
 
-        while self.detection_running:
+        while self._is_detection_session_active():
             try:
                 if self.config.get("enable_idle_mode", False):
                     time.sleep(2)
@@ -2546,7 +2546,7 @@ class ActionsMixin:
         if not hasattr(self, 'has_sent_disconnected_message'):
             self.has_sent_disconnected_message = False
 
-        while self.detection_running:
+        while self._is_detection_session_active():
             try:
                 is_process_dead = not self.check_roblox_procs()
                 log_disconnect = False
@@ -3822,7 +3822,7 @@ class ActionsMixin:
                 pass
 
     def anti_afk_loop(self):
-        while self.detection_running:
+        while self._is_detection_session_active():
             try:
                 interval_min = float(self.anti_afk_interval_var.get())
             except Exception:

@@ -1,6 +1,15 @@
 from .base_support import *
+from .biome_transitions import BiomeTransitionDispatcher, biome_webhook_events
 
 class DetectionMixin:
+    def _is_detection_session_active(self, generation=None):
+        if not self.detection_running:
+            return False
+        if generation is None:
+            state = getattr(self, "_detection_thread_state", None)
+            generation = getattr(state, "generation", None)
+        return generation is None or generation == getattr(self, "_detection_generation", generation)
+
     def load_logs(self):
         if os.path.exists('macro_logs.txt'):
             with open('macro_logs.txt', 'r', encoding='utf-8', errors='ignore') as file:
@@ -425,6 +434,18 @@ class DetectionMixin:
             if self.detection_running: return
             now = datetime.now()
             self.detection_running = True
+            self._detection_generation = getattr(self, "_detection_generation", 0) + 1
+            generation = self._detection_generation
+
+        previous_dispatcher = getattr(self, "_biome_transition_dispatcher", None)
+        if previous_dispatcher is not None:
+            previous_dispatcher.stop()
+        self._biome_transition_dispatcher = BiomeTransitionDispatcher(
+            generation,
+            self._is_detection_session_active,
+            on_error=lambda exc: self.error_logging(exc, "Error dispatching biome transition"),
+        )
+        self._detection_workers = [thread for thread in getattr(self, "_detection_workers", []) if thread.is_alive()]
             
         self._start_player_logger_thread()
         self.start_time = now
@@ -474,7 +495,12 @@ class DetectionMixin:
         ]
 
         for thread_func, name in threads:
-            thread = threading.Thread(target=thread_func, name=name, daemon=True)
+            def run_worker(thread_func=thread_func):
+                self._detection_thread_state.generation = generation
+                thread_func()
+
+            thread = threading.Thread(target=run_worker, name=name, daemon=True)
+            self._detection_workers.append(thread)
             thread.start()
 
         # Fire one anti-AFK cycle immediately in background so users
@@ -494,6 +520,14 @@ class DetectionMixin:
         with getattr(self, "lock", threading.Lock()):
             if not getattr(self, "detection_running", False): return
             self.detection_running = False
+
+        dispatcher = getattr(self, "_biome_transition_dispatcher", None)
+        if dispatcher is not None:
+            dispatcher.stop()
+        for thread in getattr(self, "_detection_workers", []):
+            if thread.is_alive() and thread is not threading.current_thread():
+                thread.join(timeout=0.1)
+        self._detection_workers = [thread for thread in getattr(self, "_detection_workers", []) if thread.is_alive()]
             
         if hasattr(self, "on_status_change") and callable(self.on_status_change):
             try:
@@ -734,6 +768,8 @@ class DetectionMixin:
 
     def check_aura_in_logs(self, log_file_path):
         try:
+            if not self._is_detection_session_active():
+                return
             if self.reconnecting_state: return
 
             if not hasattr(self, 'last_aura_found'):
@@ -811,6 +847,8 @@ class DetectionMixin:
                                 except Exception as e:
                                     self.error_logging(e, "Error taking aura screenshot")
 
+                                if not self._is_detection_session_active():
+                                    return
                                 self.send_aura_webhook(parsed_aura_name, formatted_rarity, biome_message, screenshot_path=screenshot_path)
                                 self.last_aura_found = parsed_aura_name
 
@@ -846,6 +884,8 @@ class DetectionMixin:
                                     self.error_logging(e, "Error taking aura screenshot")
 
                                 biome_message = f"[From {self.current_biome}!]" if getattr(self, "current_biome", None) and getattr(self, "current_biome") != "NORMAL" else ""
+                                if not self._is_detection_session_active():
+                                    return
                                 self.send_aura_webhook(aura, None, biome_message, screenshot_path=screenshot_path)
                                 self.last_aura_found = aura
 
@@ -865,6 +905,8 @@ class DetectionMixin:
 
     def check_biome_in_logs(self):
         try:
+            if not self._is_detection_session_active():
+                return
             log_file_path = self.get_latest_log_file()
             log_lines = self.read_log_file(log_file_path)
 
@@ -895,21 +937,28 @@ class DetectionMixin:
                         if biome != self.current_biome:
                             last_biome = self.current_biome
                             self.current_biome = biome
-                            threading.Thread(target=self.handle_biome_detection, args=(biome, last_biome)).start()
+                            dispatcher = getattr(self, "_biome_transition_dispatcher", None)
+                            if dispatcher is not None:
+                                dispatcher.submit(self.handle_biome_detection, biome, last_biome, self._detection_generation)
                         return
 
         except Exception as e:
             self.error_logging(e, "Error in check_biome_in_logs function :skull:")
 
-    def handle_biome_detection(self, biome, last_biome=None):
+    def handle_biome_detection(self, biome, last_biome=None, generation=None):
         try:
+            if not self._is_detection_session_active(generation):
+                return
             if last_biome is None:
                 last_biome = self.current_biome
 
-            if last_biome and last_biome != biome and last_biome != "NORMAL":
-                prev_message_type = self.config.get("biome_notifier", {}).get(last_biome, "None")
+            webhook_events = biome_webhook_events(last_biome, biome)
+            end_event = next((event for event in webhook_events if event[1] == "end"), None)
+            if end_event is not None:
+                ended_biome = end_event[0]
+                prev_message_type = self.config.get("biome_notifier", {}).get(ended_biome, "None")
                 if prev_message_type != "None":
-                    self.send_webhook(last_biome, prev_message_type, "end")
+                    self.send_webhook(ended_biome, prev_message_type, "end")
 
             biome_info = self.biome_data[biome]
             now = datetime.now(timezone.utc)    
@@ -917,7 +966,6 @@ class DetectionMixin:
             print(f"Detected Biome: {biome}, Color: {biome_info['color']}")
             self.append_log(f"Detected Biome: {biome}")
 
-            self.current_biome = biome
             self.last_sent[biome] = now
             try:
                 self.biome_history.append((now, biome))
@@ -961,7 +1009,7 @@ class DetectionMixin:
                 except Exception:
                     pass
 
-            if biome != "NORMAL":
+            if (biome, "start") in webhook_events:
                 popup_window_active = False
                 if getattr(self, "just_reconnected", False):
                     deadline = getattr(self, "reconnect_confirm_deadline", None)
@@ -1007,6 +1055,8 @@ class DetectionMixin:
                         self.error_logging(e, "Error taking rare biome screenshot")
                         screenshot_path = None
 
+                if not self._is_detection_session_active(generation):
+                    return
                 self.send_webhook(biome, message_type, "start", screenshot_path=screenshot_path)
 
             if last_biome in rare_biomes and biome not in rare_biomes:
@@ -1035,7 +1085,7 @@ class DetectionMixin:
     def biome_loop_check(self):
         last_log_file = None
 
-        while self.detection_running:
+        while self._is_detection_session_active():
             try:
                 current_log_file = self.get_latest_log_file()
                 if current_log_file != last_log_file:
@@ -1051,7 +1101,7 @@ class DetectionMixin:
 
     def aura_loop_check(self):
         last_log_file = None
-        while self.detection_running:
+        while self._is_detection_session_active():
             try:
                 current_log_file = self.get_latest_log_file()
                 if current_log_file != last_log_file:
@@ -1064,7 +1114,7 @@ class DetectionMixin:
                 self.error_logging(e, "Error in aura_loop_check function.")
 
     def biome_itemchange_loop(self):
-        while self.detection_running:
+        while self._is_detection_session_active():
             try:
                 with self.lock:
                     self.auto_biome_change()

@@ -91,6 +91,10 @@ class LifecycleMixin:
         self._stop_player_logger_thread()
         self.detection_thread = None
         self.lock = threading.Lock()
+        self._detection_generation = 0
+        self._detection_thread_state = threading.local()
+        self._detection_workers = []
+        self._biome_transition_dispatcher = None
         self.logs = self.load_logs()
         self.player_log_queue = queue.Queue()
         self.player_log_send_delay = float(self.config.get("player_log_send_delay", 2.0))
