@@ -2,6 +2,8 @@ from .base_support import *
 from .biome_transitions import BiomeTransitionDispatcher, biome_webhook_events
 
 class DetectionMixin:
+    MAX_RUNTIME_LOGS = 1000
+
     def _is_detection_session_active(self, generation=None):
         if not self.detection_running:
             return False
@@ -14,7 +16,7 @@ class DetectionMixin:
         if os.path.exists('macro_logs.txt'):
             with open('macro_logs.txt', 'r', encoding='utf-8', errors='ignore') as file:
                 lines = file.read().splitlines()
-                return lines
+                return lines[-self.MAX_RUNTIME_LOGS:]
         return []
 
     def load_biome_data(self):
@@ -392,10 +394,15 @@ class DetectionMixin:
         filtered_logs = [log for log in self.logs if keyword.lower() in log.lower()]
         self.display_logs(filtered_logs)
 
+    def _append_runtime_log(self, message):
+        self.logs.append(message)
+        if len(self.logs) > self.MAX_RUNTIME_LOGS:
+            del self.logs[:-self.MAX_RUNTIME_LOGS]
+
     def append_log(self, message):
         timestamp = datetime.now().strftime("%d/%m/%y %H:%M:%S")
         stamped = f"[{timestamp}] {message}"
-        self.logs.append(stamped)
+        self._append_runtime_log(stamped)
         try:
             print(f"[log] {stamped}")
         except (UnicodeEncodeError, UnicodeDecodeError):
@@ -1302,7 +1309,7 @@ class DetectionMixin:
                         name, pid = m.group(1), m.group(2)
                         join_biome = self._biome_at(ts)
                         sessions[pid] = {"ts": ts, "biome": join_biome}
-                        self.logs.append(f"[Player] Joined {name} ({pid})")
+                        self._append_runtime_log(f"[Player] Joined {name} ({pid})")
                         self.save_logs()
                         ts_iso = ts.astimezone(timezone.utc).isoformat()
                         embed = self._make_player_embed("join", name, pid, ts_iso, None, join_biome)
@@ -1321,13 +1328,13 @@ class DetectionMixin:
                             m_ = (secs % 3600) // 60
                             s_ = secs % 60
                             dur = f"{h:02d}:{m_:02d}:{s_:02d}"
-                            self.logs.append(f"[Player] Left {name} ({pid}) after {dur}")
+                            self._append_runtime_log(f"[Player] Left {name} ({pid}) after {dur}")
                             self.save_logs()
                             ts_iso = ts.astimezone(timezone.utc).isoformat()
                             embed = self._make_player_embed("leave", name, pid, ts_iso, dur, joined_biome, left_biome)
                             self._enqueue_player_embed(embed)
                         else:
-                            self.logs.append(f"[Player] Left {name} ({pid})")
+                            self._append_runtime_log(f"[Player] Left {name} ({pid})")
                             self.save_logs()
                             ts_iso = ts.astimezone(timezone.utc).isoformat()
                             embed = self._make_player_embed("leave", name, pid, ts_iso, None, None, left_biome)
