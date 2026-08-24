@@ -31,6 +31,7 @@ DEFAULT_FISHING_CONFIG = {
     "fishing_bar_region": [757, 762, 405, 21],          # this is the big ahh fishing bar
     "fishing_detect_pixel": [1176, 836],                # this is the thingy at the corner when a fish gets detected (fishing diamond)
     "fishing_click_position": [862, 843],               # fishing click boom
+    "fishing_pre_fish_close_button": [0, 0],
     "fishing_midbar_sample_pos": [955, 767],            # this is the midbar colour
     "fishing_close_button_pos": [1113, 342],            # fishing close button
     "fishing_flarg_dialogue_box": [1046, 782],          # Captain Flarg dialogue box
@@ -161,6 +162,7 @@ def load_fishing_config(raw_config: dict[str, Any] | None = None) -> dict[str, A
         "fishing_bar_region": _coerce_region(raw.get("fishing_bar_region"), DEFAULT_FISHING_CONFIG["fishing_bar_region"]),
         "fishing_detect_pixel": _coerce_point(raw.get("fishing_detect_pixel"), DEFAULT_FISHING_CONFIG["fishing_detect_pixel"]),
         "fishing_click_position": _coerce_point(start_fishing_button, DEFAULT_FISHING_CONFIG["fishing_click_position"]),
+        "fishing_pre_fish_close_button": _coerce_point(raw.get("fishing_pre_fish_close_button"), DEFAULT_FISHING_CONFIG["fishing_pre_fish_close_button"]),
         "fishing_midbar_sample_pos": _coerce_point(raw.get("fishing_midbar_sample_pos"), DEFAULT_FISHING_CONFIG["fishing_midbar_sample_pos"]),
         "fishing_close_button_pos": _coerce_point(raw.get("fishing_close_button_pos"), DEFAULT_FISHING_CONFIG["fishing_close_button_pos"]),
         "fishing_flarg_dialogue_box": _coerce_point(raw.get("fishing_flarg_dialogue_box"), DEFAULT_FISHING_CONFIG["fishing_flarg_dialogue_box"]),
@@ -789,6 +791,16 @@ def run_fishing_loop(
             time.sleep(min(poll, remaining))
         return _should_continue() and _can_run()
 
+    def _click_fishing_button() -> bool:
+        close_x, close_y = cfg["fishing_pre_fish_close_button"]
+        if close_x > 0 and close_y > 0:
+            autoit.mouse_click("left", close_x, close_y, speed=3)
+            if not _sleep_interruptible(0.2):
+                return False
+        click_x, click_y = cfg["fishing_click_position"]
+        autoit.mouse_click("left", click_x, click_y, speed=3)
+        return True
+
     def _get_due_actions() -> tuple[bool, int, bool, bool, bool]:
         sell_after = max(1, int(cfg.get("fishing_sell_after_x_fish", 30)))
         should_sell = bool(cfg.get("fishing_enable_selling", False)) and (fish_caught_count >= sell_after)
@@ -1136,8 +1148,8 @@ def run_fishing_loop(
                     if not _sleep_interruptible(2): break
                 if not _sleep_interruptible(0.3): continue
 
-                click_x, click_y = cfg["fishing_click_position"]
-                autoit.mouse_click("left", click_x, click_y, speed=3)
+                if not _click_fishing_button():
+                    continue
                 _start_or_resume_fishing_watchdog()
                 if not _sleep_interruptible(0.25): continue
                 was_runnable = True
@@ -1169,8 +1181,8 @@ def run_fishing_loop(
                         print(f"{log_prefix} failsafe: 60s timeout! No bugged UI pos calibrated, retrying fishing click...")
 
                     try:
-                        click_x, click_y = cfg["fishing_click_position"]
-                        autoit.mouse_click("left", click_x, click_y, speed=3)
+                        if not _click_fishing_button():
+                            continue
                         if not _sleep_interruptible(0.3): continue
                         print(f"{log_prefix} bugged UI failsafe: clicked fish button, waiting 60s for fish...")
                     except Exception as e:
@@ -1370,8 +1382,8 @@ def run_fishing_loop(
                     fish_caught_since_br_sc = 0
                 _persist_runtime_counters()
 
-            start_x, start_y = cfg["fishing_click_position"]
-            autoit.mouse_click("left", start_x, start_y, speed=3)
+            if not _click_fishing_button():
+                continue
             _start_or_resume_fishing_watchdog()
             _sleep_interruptible(0.3)
             _set_busy(False)

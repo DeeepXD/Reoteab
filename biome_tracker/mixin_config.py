@@ -554,6 +554,7 @@ class ConfigMixin:
                 "fishing_bar_region": [750, 753, 416, 38],
                 "fishing_detect_pixel": [1175, 836],
                 "fishing_click_position": [846, 835],
+                "fishing_pre_fish_close_button": [0, 0],
                 "fishing_midbar_sample_pos": [942, 765],
                 "fishing_close_button_pos": [1111, 342],
                 "fishing_flarg_dialogue_box": [1046, 782],

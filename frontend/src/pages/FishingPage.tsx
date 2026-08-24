@@ -11,6 +11,7 @@ type FishingCalibrationItem = {
 const FISHING_CALIBRATIONS: FishingCalibrationItem[] = [
     { key: "fishing_detect_pixel", label: "Fishing Detect Pixel", fallback: [1176, 836] },
     { key: "fishing_click_position", label: "Start Fishing Button", fallback: [862, 843] },
+    { key: "fishing_pre_fish_close_button", label: "Fishing Pre-Fish Close Button", fallback: [0, 0] },
     { key: "fishing_midbar_sample_pos", label: "Mid Bar Sample Position", fallback: [955, 767] },
     { key: "fishing_close_button_pos", label: "Fishing Close Button", fallback: [1113, 342] },
     { key: "fishing_bar_region", label: "Fishing Bar Region", isRegion: true, fallback: [757, 762, 405, 21] },
