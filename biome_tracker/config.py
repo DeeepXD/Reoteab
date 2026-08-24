@@ -25,12 +25,7 @@ DEV_CONFIG = DEV_CONFIG_DIR / "config.json"
 _LOCAL_APPDATA = Path(_os.environ.get("LOCALAPPDATA", _os.path.expanduser("~")))
 REOTEAB_APPDATA = _LOCAL_APPDATA / "Reoteab"
 LEGACY_APPDATA = _LOCAL_APPDATA / "CoteabMacro"
-if REOTEAB_APPDATA.exists():
-    APPDATA_BASE = REOTEAB_APPDATA
-elif LEGACY_APPDATA.exists():
-    APPDATA_BASE = LEGACY_APPDATA
-else:
-    APPDATA_BASE = REOTEAB_APPDATA
+APPDATA_BASE = REOTEAB_APPDATA
 APPDATA_CONFIG = APPDATA_BASE / "config.json"
 
 DEFAULT_AUTO_POP_BUFFS = [
@@ -283,6 +278,7 @@ def get_config_file() -> Path:
 
 
 def ensure_workspace_files() -> None:
+    APPDATA_BASE.mkdir(parents=True, exist_ok=True)
     (APPDATA_BASE / "resources").mkdir(exist_ok=True)
     (APPDATA_BASE / "resources" / "paths").mkdir(parents=True, exist_ok=True)
     (APPDATA_BASE / "paths").mkdir(exist_ok=True)
@@ -292,7 +288,6 @@ def ensure_workspace_files() -> None:
     if not getattr(sys, 'frozen', False):
         DEV_CONFIG_DIR.mkdir(exist_ok=True)
 
-    APPDATA_BASE.mkdir(parents=True, exist_ok=True)
     config_file = get_config_file()
     
     # Migrate local config to AppData
@@ -302,6 +297,16 @@ def ensure_workspace_files() -> None:
             shutil.copy2(EXE_CONFIG, config_file)
         except Exception as e:
             print(f"Failed to migrate config.json to AppData: {e}")
+
+    legacy_config = LEGACY_APPDATA / "config.json"
+    if legacy_config.exists() and not config_file.exists():
+        try:
+            legacy_data = json.loads(legacy_config.read_text(encoding="utf-8"))
+            if isinstance(legacy_data, dict):
+                import shutil
+                shutil.copy2(legacy_config, config_file)
+        except Exception as e:
+            print(f"Failed to import legacy config.json: {e}")
 
     if not config_file.exists():
         default = {}
