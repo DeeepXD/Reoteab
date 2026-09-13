@@ -15,8 +15,13 @@ foreach ($candidate in @(
     "$ROOT\.venv\Scripts\python.exe"
 )) {
     if (Test-Path $candidate) {
-        $PYTHON = $candidate
-        break
+        try {
+            & $candidate -c "import sys; print(sys.executable)" *> $null
+            if ($LASTEXITCODE -eq 0) {
+                $PYTHON = $candidate
+                break
+            }
+        } catch { }
     }
 }
 if (-not $PYTHON) {
