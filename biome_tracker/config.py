@@ -9,6 +9,8 @@ from typing import Any
 import os as _os
 import tempfile as _tempfile
 import threading as _threading
+import shutil
+import uuid
 
 _config_lock = _threading.Lock()
 
@@ -27,6 +29,54 @@ REOTEAB_APPDATA = _LOCAL_APPDATA / "Reoteab"
 LEGACY_APPDATA = _LOCAL_APPDATA / "CoteabMacro"
 APPDATA_BASE = REOTEAB_APPDATA
 APPDATA_CONFIG = APPDATA_BASE / "config.json"
+MACRO_PRESETS_FILE = APPDATA_BASE / "macro_presets.json"
+MACRO_PRESET_IMAGES = APPDATA_BASE / "preset_images"
+
+FISHING_PRESET_KEYS = {
+    "fishing_mode",
+    "fishing_actions_delay_ms",
+    "fishing_playback_multiplier",
+    "fishing_failsafe_rejoin",
+    "fishing_bugged_ui_rejoin_failsafe",
+    "fishing_enable_selling",
+    "fishing_sell_after_x_fish",
+    "fishing_sell_how_many_fish",
+    "fishing_equip_aura_before_movement",
+    "fishing_movement_aura_name",
+    "fishing_use_merchant_every_x_fish",
+    "fishing_merchant_every_x_fish",
+    "fishing_use_merchant_ocr_every_x_fish",
+    "fishing_merchant_ocr_every_x_fish_amt",
+    "fishing_use_br_sc_every_x_fish",
+    "fishing_br_sc_every_x_fish",
+}
+
+POTION_PRESET_KEYS = {
+    "enable_potion_crafting",
+    "selected_potion_file",
+    "enable_potion_switching",
+    "potion_switch_interval",
+    "potion_file_1",
+    "potion_file_2",
+    "potion_file_3",
+}
+
+MERCHANT_PRESET_KEYS = {
+    "merchant_teleporter",
+    "merchant_ocr",
+    "merchant_ocr_interval",
+    "mt_duration",
+    "auto_merchant_in_limbo",
+    "merchant_extra_slot",
+    "enable_jester_exchange",
+    "jester_exchange_threshold",
+    "Mari_Items",
+    "Jester_Items",
+    "Rin_Items",
+    "Jester_Exchange_Items",
+}
+
+MACRO_PRESET_KEYS = FISHING_PRESET_KEYS | POTION_PRESET_KEYS | MERCHANT_PRESET_KEYS
 
 DEFAULT_AUTO_POP_BUFFS = [
     "Fortune Potion I",
@@ -369,3 +419,139 @@ def save_config(config_data: dict[str, Any]) -> None:
                 raise
         except Exception as e:
             print(f"Failed to save config: {e}")
+
+
+def _load_macro_presets() -> dict[str, Any]:
+    try:
+        raw = MACRO_PRESETS_FILE.read_text(encoding="utf-8").strip()
+        data = json.loads(raw) if raw else {}
+    except Exception:
+        data = {}
+
+    presets = data.get("presets", []) if isinstance(data, dict) else []
+    if not isinstance(presets, list):
+        presets = []
+
+    return {
+        "active_preset_id": data.get("active_preset_id") if isinstance(data, dict) else None,
+        "presets": [preset for preset in presets if isinstance(preset, dict)],
+    }
+
+
+def _save_macro_presets(data: dict[str, Any]) -> None:
+    APPDATA_BASE.mkdir(parents=True, exist_ok=True)
+    tmp_fd, tmp_path = _tempfile.mkstemp(
+        dir=str(APPDATA_BASE), suffix=".tmp", prefix="macro_presets_"
+    )
+    try:
+        with _os.fdopen(tmp_fd, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4)
+            f.write("\n")
+            f.flush()
+            _os.fsync(f.fileno())
+        _os.replace(tmp_path, str(MACRO_PRESETS_FILE))
+    except Exception:
+        try:
+            _os.unlink(tmp_path)
+        except Exception:
+            pass
+        raise
+
+
+def _macro_preset_summary(preset: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "id": preset.get("id"),
+        "name": preset.get("name"),
+        "image_path": preset.get("image_path"),
+    }
+
+
+def list_macro_presets() -> dict[str, Any]:
+    with _config_lock:
+        data = _load_macro_presets()
+        return {
+            "active_preset_id": data["active_preset_id"],
+            "presets": [_macro_preset_summary(preset) for preset in data["presets"]],
+        }
+
+
+def create_macro_preset(name: Any, config_data: dict[str, Any], image_source: Any = None) -> dict[str, Any]:
+    preset_name = str(name or "").strip()
+    if not preset_name:
+        return {"success": False, "error": "Preset name is required."}
+    if len(preset_name) > 80:
+        return {"success": False, "error": "Preset names must be 80 characters or fewer."}
+
+    with _config_lock:
+        data = _load_macro_presets()
+        if any(str(preset.get("name", "")).casefold() == preset_name.casefold() for preset in data["presets"]):
+            return {"success": False, "error": "A preset with that name already exists."}
+
+        preset_id = uuid.uuid4().hex
+        image_path = None
+        if image_source:
+            source = Path(str(image_source))
+            allowed_extensions = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
+            if not source.is_file() or source.suffix.lower() not in allowed_extensions:
+                return {"success": False, "error": "Choose a PNG, JPG, GIF, or WEBP image."}
+            MACRO_PRESET_IMAGES.mkdir(parents=True, exist_ok=True)
+            destination = MACRO_PRESET_IMAGES / f"{preset_id}{source.suffix.lower()}"
+            shutil.copy2(source, destination)
+            image_path = str(destination)
+
+        source_config = config_data if isinstance(config_data, dict) else {}
+        settings = {
+            key: copy.deepcopy(value)
+            for key, value in source_config.items()
+            if key in MACRO_PRESET_KEYS
+        }
+        preset = {
+            "id": preset_id,
+            "name": preset_name,
+            "image_path": image_path,
+            "settings": settings,
+        }
+        data["presets"].append(preset)
+        data["active_preset_id"] = preset_id
+        _save_macro_presets(data)
+        return {"success": True, "preset": _macro_preset_summary(preset), "active_preset_id": preset_id}
+
+
+def apply_macro_preset(preset_id: Any, config_data: dict[str, Any]) -> dict[str, Any]:
+    with _config_lock:
+        data = _load_macro_presets()
+        preset = next((item for item in data["presets"] if item.get("id") == preset_id), None)
+        if not preset:
+            return {"success": False, "error": "Preset not found."}
+
+        current = dict(config_data) if isinstance(config_data, dict) else {}
+        settings = preset.get("settings", {})
+        if isinstance(settings, dict):
+            current.update(copy.deepcopy(settings))
+        data["active_preset_id"] = preset_id
+        _save_macro_presets(data)
+        return {"success": True, "config": current, "active_preset_id": preset_id}
+
+
+def delete_macro_preset(preset_id: Any) -> dict[str, Any]:
+    with _config_lock:
+        data = _load_macro_presets()
+        preset = next((item for item in data["presets"] if item.get("id") == preset_id), None)
+        if not preset:
+            return {"success": False, "error": "Preset not found."}
+
+        image_path = preset.get("image_path")
+        if image_path:
+            try:
+                image = Path(str(image_path)).resolve()
+                images_dir = MACRO_PRESET_IMAGES.resolve()
+                if images_dir in image.parents:
+                    image.unlink(missing_ok=True)
+            except Exception:
+                pass
+
+        data["presets"] = [item for item in data["presets"] if item.get("id") != preset_id]
+        if data["active_preset_id"] == preset_id:
+            data["active_preset_id"] = None
+        _save_macro_presets(data)
+        return {"success": True, "active_preset_id": data["active_preset_id"]}

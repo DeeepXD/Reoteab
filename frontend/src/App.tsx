@@ -21,6 +21,7 @@ import GlitchOverlay from "./components/GlitchOverlay";
 import CustomizationPage from "./pages/CustomizationPage";
 import ThemeDesignPage from "./pages/ThemeDesignPage";
 import MovementsPage from "./pages/MovementsPage";
+import PresetsPage from "./pages/PresetsPage";
 import RecorderWindow from "./pages/RecorderWindow";
 import BiomeConfirmWindow from "./pages/BiomeConfirmWindow";
 
@@ -64,6 +65,7 @@ const pages: Record<string, React.FC> = {
   autopopbuff: AutoPopBuffPage,
   auras: AurasPage,
   movements: MovementsPage,
+  presets: PresetsPage,
   potioncraft: PotionCraftPage,
   stats: StatsPage,
   status: StatusPage,

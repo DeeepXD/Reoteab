@@ -36,6 +36,7 @@ const navItems = [
     { section: "Macro Settings" },
     { id: "misc", label: "Automated actions", icon: "🤖" },
     { id: "calibrations", label: "Macro Calibrations", icon: "🎯" },
+    { id: "presets", label: "Macro Presets", icon: "" },
     { id: "remoteaccess", label: "Remote Control", icon: "🔑" },
     { section: "Main Features" },
     { id: "fishing", label: "Fishing", icon: "🎣" },

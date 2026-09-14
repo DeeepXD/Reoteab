@@ -237,6 +237,88 @@ body {
   display: flex;
 }
 
+.preset-create-row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.preset-image-picker,
+.preset-thumbnail {
+  width: 64px;
+  height: 64px;
+  border: 1px dashed var(--border-hover);
+  background: var(--bg-input);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 10px;
+  text-align: center;
+}
+
+.preset-image-picker img,
+.preset-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preset-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preset-row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+}
+
+.preset-row.is-active {
+  border-color: var(--success);
+  background: color-mix(in srgb, var(--success) 8%, var(--bg-input));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--success) 45%, transparent);
+}
+
+.preset-name {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preset-name strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preset-name span {
+  color: var(--success);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.preset-message {
+  margin-top: 10px;
+  color: var(--warning);
+}
+
+@media (max-width: 720px) {
+  .preset-create-row,
+  .preset-row {
+    grid-template-columns: 64px minmax(0, 1fr);
+  }
+}
+
 /* ━━━ Sol's RNG Game Window Frame ━━━ */
 .window-frame {
   display: flex;
@@ -723,6 +805,15 @@ body {
   background-color: var(--accent-dim);
   box-shadow: 0 4px 18px rgba(124, 91, 245, 0.4);
   transform: translateY(-1px);
+}
+
+.btn-danger {
+  background-color: var(--danger-dim);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: var(--danger);
 }
 
 .btn:active {

@@ -89,6 +89,10 @@ from biome_tracker.config import (
     load_config,
     save_config,
     normalize_auto_pop_biomes,
+    list_macro_presets,
+    create_macro_preset,
+    apply_macro_preset,
+    delete_macro_preset,
 )
 from biome_tracker.core import BiomeTracker
 
@@ -237,6 +241,45 @@ class Api:
         if t and isinstance(getattr(t, 'config', None), dict) and t.config:
             return t.config
         return load_config()
+
+    def get_macro_presets(self):
+        return list_macro_presets()
+
+    def choose_macro_preset_image(self):
+        try:
+            if not self._window:
+                return {"success": False, "error": "Window not available"}
+            result = self._window.create_file_dialog(
+                webview.FileDialog.OPEN,
+                allow_multiple=False,
+                file_types=("Image Files (*.png;*.jpg;*.jpeg;*.gif;*.webp)",),
+            )
+            if not result:
+                return {"success": False, "error": "No image selected"}
+            path = result[0] if isinstance(result, (list, tuple)) else result
+            return {"success": True, "path": str(path)}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def save_macro_preset(self, name, image_source=None):
+        result = create_macro_preset(name, self.get_config(), image_source)
+        if result.get("success"):
+            result["presets"] = list_macro_presets()
+        return result
+
+    def load_macro_preset(self, preset_id):
+        result = apply_macro_preset(preset_id, self.get_config())
+        if result.get("success"):
+            self.save_config(result["config"])
+            result["config"] = self.get_config()
+            result["presets"] = list_macro_presets()
+        return result
+
+    def delete_macro_preset(self, preset_id):
+        result = delete_macro_preset(preset_id)
+        if result.get("success"):
+            result["presets"] = list_macro_presets()
+        return result
 
     def get_screen_resolution(self):
         try:
