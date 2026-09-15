@@ -1431,15 +1431,20 @@ class ActionsMixin:
 
             if not found_merchant: return
 
+            found_merchant = found_merchant.title()
+            if found_merchant == getattr(self, "_active_merchant_name", None):
+                return
+
             # Skip if merchant recently found
             _MERCHANT_OCR_COOLDOWN_SEC = 1500 # 25 mins
             last_merchant_time = getattr(self, "_last_merchant_ocr_found_time", 0)
             now = time.monotonic()
             if (now - last_merchant_time) < _MERCHANT_OCR_COOLDOWN_SEC: return
             self._last_merchant_ocr_found_time = now
+            self._active_merchant_name = found_merchant
 
-            print(f"[Merchant OCR] {found_merchant.title()} spawn detected!")
-            self.append_log(f"[Merchant OCR] {found_merchant.title()} spawn detected!")
+            print(f"[Merchant OCR] {found_merchant} spawn detected!")
+            self.append_log(f"[Merchant OCR] {found_merchant} spawn detected!")
             screenshot_path = None
             try:
                 if self.is_roblox_focused():
@@ -1455,8 +1460,8 @@ class ActionsMixin:
 
             try:
                 if hasattr(self, "send_merchant_webhook"):
-                    threading.Thread(target=self.send_merchant_webhook, args=(found_merchant.title(),), kwargs={"screenshot_path": screenshot_path, "source": "ocr"}, daemon=True).start()
-                    if hasattr(self, "last_merchant_sent"): self.last_merchant_sent[(found_merchant.title(), 'ocr')] = time.time()
+                    threading.Thread(target=self.send_merchant_webhook, args=(found_merchant,), kwargs={"screenshot_path": screenshot_path, "source": "ocr"}, daemon=True).start()
+                    if hasattr(self, "last_merchant_sent"): self.last_merchant_sent[(found_merchant, 'ocr')] = time.time()
 
             except Exception as e:
                 print(f"[Merchant OCR] Failed to send webhook: {e}")
@@ -3283,9 +3288,10 @@ class ActionsMixin:
 
             if merchant_name:
                 last_sent_time = self.last_merchant_sent.get((merchant_name, 'ocr'), 0)
-                if current_time - last_sent_time < merchant_cooldown_time:
-                    print(f"Merchant {merchant_name} already sent recently lol")
-                    return False
+                merchant_webhook_sent = (
+                    merchant_name == getattr(self, "_active_merchant_name", None)
+                    or current_time - last_sent_time < merchant_cooldown_time
+                )
 
                 is_jester_exchange = False
                 if merchant_name == "Jester":
@@ -3314,8 +3320,10 @@ class ActionsMixin:
                                                f"merchant_{merchant_name.lower()}_{int(current_time)}.png")
                 item_screenshot.save(screenshot_path)
 
-                threading.Thread(target=self.send_merchant_webhook, args=(merchant_name, screenshot_path), kwargs={"source": "ocr"}, daemon=True).start()
-                self.last_merchant_sent[(merchant_name, 'ocr')] = current_time
+                if not merchant_webhook_sent:
+                    threading.Thread(target=self.send_merchant_webhook, args=(merchant_name, screenshot_path), kwargs={"source": "ocr"}, daemon=True).start()
+                    self.last_merchant_sent[(merchant_name, 'ocr')] = current_time
+                self._active_merchant_name = merchant_name
 
                 if "merchant_counts" not in self.config:
                     self.config["merchant_counts"] = {"Jester": 0, "Mari": 0, "Rin": 0}
@@ -3439,6 +3447,7 @@ class ActionsMixin:
 
                 return True
             else:    
+                self._active_merchant_name = None
                 merchant_close_button = self.config.get("merchant_close_button", [1086, 342])
                 self.Global_MouseClick(merchant_close_button[0], merchant_close_button[1], click=3)
                 if not self._sleep_with_cancel(0.67): return False

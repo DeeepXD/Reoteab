@@ -461,6 +461,7 @@ class DetectionMixin:
         self._session_window_reset_performed = False
         self.stop_sent = False
         self.last_egg_collect_time = datetime.min
+        self._active_merchant_name = None
 
         # reset disconnect tracking so the macro doesnt log old disconnect 
         self._disconnect_log_file = None
