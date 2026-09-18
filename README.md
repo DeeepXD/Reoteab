@@ -40,6 +40,8 @@ The project exists because the old macro was still useful even after active deve
 
 The goal is pretty simple: keep the macro practical, keep changes understandable, and avoid rewriting working systems for no reason.
 
+Current source version: **v0.1.3**.
+
 ---
 
 ## Features
@@ -57,11 +59,11 @@ Reoteab currently includes support for:
 - Discord remote control
 - Route and movement automation
 - Obby-related movement
-- Calibration presets
+- Macro presets with optional images
+- Calibration presets and fish-indicator auto-calibration
 - Calibration import/export
 - Recovery and failsafe behavior
 - Configurable timings and macro settings
-- Automatic update support
 
 Some features rely heavily on screen position, OCR, and Roblox UI state, so calibration matters a lot.
 
@@ -84,7 +86,7 @@ Reoteab.exe
 >
 > Random reuploads, modified executables, and unofficial mirrors cannot be verified.
 
-Testing builds may be available before a normal release. If you are not actively testing a new fix, use the latest normal release.
+Testing builds may be available before a normal release. If you are not actively testing a new fix, use the latest normal release. Reoteab updates are installed manually from GitHub Releases.
 
 ---
 
@@ -272,7 +274,7 @@ Screenshot / video:
 Example:
 
 ```text
-Version: Private Beta 5
+Version: v0.1.3
 Feature: Fishing -> Merchant
 Resolution: 1920x1080
 Scaling: 100%
@@ -358,6 +360,10 @@ A fix for one bad click should usually stay a fix for one bad click.
 Avoid turning small bugs into large rewrites unless the existing design genuinely requires it.
 
 Focused commits are easier to review, test, and revert if something behaves differently in-game.
+
+## Development
+
+Reoteab is developed with the assistance of modern development tools, including AI-assisted coding and review. Features and changes are still tested and reviewed before release.
 
 ---
 

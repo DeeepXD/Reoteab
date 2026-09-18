@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import copy
+import base64
 import json
 import sys
 from pathlib import Path
@@ -32,51 +33,13 @@ APPDATA_CONFIG = APPDATA_BASE / "config.json"
 MACRO_PRESETS_FILE = APPDATA_BASE / "macro_presets.json"
 MACRO_PRESET_IMAGES = APPDATA_BASE / "preset_images"
 
-FISHING_PRESET_KEYS = {
-    "fishing_mode",
-    "fishing_actions_delay_ms",
-    "fishing_playback_multiplier",
-    "fishing_failsafe_rejoin",
-    "fishing_bugged_ui_rejoin_failsafe",
-    "fishing_enable_selling",
-    "fishing_sell_after_x_fish",
-    "fishing_sell_how_many_fish",
-    "fishing_equip_aura_before_movement",
-    "fishing_movement_aura_name",
-    "fishing_use_merchant_every_x_fish",
-    "fishing_merchant_every_x_fish",
-    "fishing_use_merchant_ocr_every_x_fish",
-    "fishing_merchant_ocr_every_x_fish_amt",
-    "fishing_use_br_sc_every_x_fish",
-    "fishing_br_sc_every_x_fish",
+MACRO_PRESET_EXCLUDED_KEYS = {
+    "biome_counts",
+    "merchant_counts",
+    "session_time",
+    "session_window_start",
+    "macro_last_start",
 }
-
-POTION_PRESET_KEYS = {
-    "enable_potion_crafting",
-    "selected_potion_file",
-    "enable_potion_switching",
-    "potion_switch_interval",
-    "potion_file_1",
-    "potion_file_2",
-    "potion_file_3",
-}
-
-MERCHANT_PRESET_KEYS = {
-    "merchant_teleporter",
-    "merchant_ocr",
-    "merchant_ocr_interval",
-    "mt_duration",
-    "auto_merchant_in_limbo",
-    "merchant_extra_slot",
-    "enable_jester_exchange",
-    "jester_exchange_threshold",
-    "Mari_Items",
-    "Jester_Items",
-    "Rin_Items",
-    "Jester_Exchange_Items",
-}
-
-MACRO_PRESET_KEYS = FISHING_PRESET_KEYS | POTION_PRESET_KEYS | MERCHANT_PRESET_KEYS
 
 DEFAULT_AUTO_POP_BUFFS = [
     "Fortune Potion I",
@@ -463,7 +426,31 @@ def _macro_preset_summary(preset: dict[str, Any]) -> dict[str, Any]:
         "id": preset.get("id"),
         "name": preset.get("name"),
         "image_path": preset.get("image_path"),
+        "image_data": get_macro_preset_image_data(preset.get("image_path")),
     }
+
+
+def get_macro_preset_image_data(image_path: Any, managed_only: bool = True) -> str | None:
+    if not image_path:
+        return None
+
+    try:
+        image = Path(str(image_path)).resolve()
+        allowed_extensions = {
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".jpeg": "image/jpeg",
+            ".gif": "image/gif",
+            ".webp": "image/webp",
+        }
+        content_type = allowed_extensions.get(image.suffix.lower())
+        if not content_type or not image.is_file():
+            return None
+        if managed_only and MACRO_PRESET_IMAGES.resolve() not in image.parents:
+            return None
+        return f"data:{content_type};base64,{base64.b64encode(image.read_bytes()).decode('ascii')}"
+    except Exception:
+        return None
 
 
 def list_macro_presets() -> dict[str, Any]:
@@ -503,7 +490,7 @@ def create_macro_preset(name: Any, config_data: dict[str, Any], image_source: An
         settings = {
             key: copy.deepcopy(value)
             for key, value in source_config.items()
-            if key in MACRO_PRESET_KEYS
+            if key not in MACRO_PRESET_EXCLUDED_KEYS
         }
         preset = {
             "id": preset_id,

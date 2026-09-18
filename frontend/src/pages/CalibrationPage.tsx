@@ -591,6 +591,38 @@ export default function CalibrationPage() {
     const [pendingPreset, setPendingPreset] = useState<any>(null);
     const [presetStatus, setPresetStatus] = useState<string>("");
     const [exportStatus, setExportStatus] = useState<string>("");
+    const [autoFishingResult, setAutoFishingResult] = useState<any>(null);
+    const [autoFishingStatus, setAutoFishingStatus] = useState<string>("");
+    const [autoFishingBusy, setAutoFishingBusy] = useState(false);
+
+    const autoCalibrateFishing = async () => {
+        try {
+            setAutoFishingBusy(true);
+            setAutoFishingStatus("Looking for the fish indicator...");
+            setAutoFishingResult(null);
+            const result = await window.pywebview?.api?.auto_calibrate_fishing_detect_pixel?.();
+            if (!result?.success || !Array.isArray(result.value)) {
+                throw new Error(result?.error || "Fish indicator was not found.");
+            }
+            setAutoFishingResult(result);
+            setAutoFishingStatus("");
+        } catch (err) {
+            setAutoFishingStatus(String(err instanceof Error ? err.message : err));
+        } finally {
+            setAutoFishingBusy(false);
+        }
+    };
+
+    const applyAutoFishingCalibration = async () => {
+        if (!autoFishingResult || !Array.isArray(autoFishingResult.value)) return;
+        try {
+            await saveConfig({ ...config, fishing_detect_pixel: autoFishingResult.value });
+            setAutoFishingStatus("Fish indicator calibration saved.");
+            setAutoFishingResult(null);
+        } catch (err) {
+            setAutoFishingStatus(`Could not save calibration: ${String(err)}`);
+        }
+    };
 
     const handleAutoDetectAndApply = async (isManualClick = false, availablePresets = presets) => {
         try {
@@ -785,6 +817,45 @@ export default function CalibrationPage() {
                         https://www.youtube.com/watch?v=dZzQytUMlCE
                     </a>
                 </div>
+            </div>
+
+            <div className="card" style={{ marginBottom: "16px" }}>
+                <div className="card-header">
+                    <div className="card-icon">🎣</div>
+                    <div style={{ flex: 1 }}>
+                        <h3>Fishing Auto Calibration</h3>
+                        <p>Detect the Fish Indicator Pixel from the visible fishing indicator.</p>
+                    </div>
+                </div>
+                <p className="form-hint" style={{ marginTop: "12px", marginBottom: "12px" }}>
+                    Keep Roblox open and the fish indicator visible before starting. Nothing is changed until you apply the result.
+                </p>
+                {!autoFishingResult ? (
+                    <button
+                        className="btn btn-accent"
+                        onClick={autoCalibrateFishing}
+                        disabled={autoFishingBusy}
+                    >
+                        {autoFishingBusy ? "Detecting..." : "Auto-Detect Fish Indicator"}
+                    </button>
+                ) : (
+                    <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+                        <div className="coord-box">
+                            <span className="coord-label">X</span>
+                            <span style={{ padding: "4px 8px", fontSize: "12px", color: "var(--text-primary)" }}>{autoFishingResult.value[0]}</span>
+                            <span className="coord-label">Y</span>
+                            <span style={{ padding: "4px 8px", fontSize: "12px", color: "var(--text-primary)" }}>{autoFishingResult.value[1]}</span>
+                        </div>
+                        <span className="form-hint">Confidence {Math.round(Number(autoFishingResult.confidence || 0) * 100)}%</span>
+                        <button className="btn btn-accent" onClick={applyAutoFishingCalibration}>Apply</button>
+                        <button className="btn" onClick={() => { setAutoFishingResult(null); setAutoFishingStatus(""); }}>Discard</button>
+                    </div>
+                )}
+                {autoFishingStatus && (
+                    <div className="form-hint" style={{ marginTop: "10px", color: autoFishingResult ? "var(--text-secondary)" : "#fca5a5" }}>
+                        {autoFishingStatus}
+                    </div>
+                )}
             </div>
 
 

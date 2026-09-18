@@ -6,16 +6,43 @@ export default function NoticePage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch("https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/noticetabcontents.txt")
+        let cancelled = false;
+
+        const loadRemoteNotice = () => fetch("https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/noticetabcontents.txt")
             .then(res => res.text())
             .then(text => {
-                setContent(text);
-                setLoading(false);
+                if (!cancelled) {
+                    setContent(text);
+                    setLoading(false);
+                }
             })
             .catch(err => {
                 console.error("Failed to fetch notice:", err);
-                setLoading(false);
+                if (!cancelled) setLoading(false);
             });
+
+        const loadNotice = async (attempt = 0) => {
+            try {
+                const bundled = await window.pywebview?.api?.get_notice_content?.();
+                if (bundled) {
+                    if (!cancelled) {
+                        setContent(bundled);
+                        setLoading(false);
+                    }
+                    return;
+                }
+            } catch (err) {
+                console.error("Failed to load bundled notice:", err);
+            }
+            if (attempt < 10 && !cancelled) {
+                window.setTimeout(() => { void loadNotice(attempt + 1); }, 300);
+                return;
+            }
+            void loadRemoteNotice();
+        };
+
+        void loadNotice();
+        return () => { cancelled = true; };
     }, []);
 
     const parseNotice = (text: string) => {

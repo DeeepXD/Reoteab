@@ -425,18 +425,6 @@ class DetectionMixin:
         )
 
     def start_detection(self):
-        # try:
-        #     from biome_tracker.beta_auth import is_verified
-        #     if not is_verified():
-        #         print("Verification required.")
-        #         messagebox.showwarning(
-        #             "Reoteab — Beta Access",
-        #             "Verification required to use this beta version.\n\nPlease ensure you have authenticated your Discord account!"
-        #         )
-        #         return
-        # except Exception:
-        #     pass
-        
         with getattr(self, "lock", threading.Lock()):
             if self.detection_running: return
             now = datetime.now()

@@ -13,8 +13,8 @@ import sys
 
 # i added this so we can easily change macro version upon releases without having to change multiple back-end & front-end behaviours
 # for future people that is reading the open source code, hello :p
-current_version = "0.1.0"
-display_name = "Reoteab v0.1.0"
+current_version = "0.1.3"
+display_name = "Reoteab v0.1.3"
 os.environ["REOTEAB_VERSION"] = current_version
 os.environ["WEBKIT_DISABLE_COMPOSITING_MODE"] = "1"
 import time
@@ -93,8 +93,10 @@ from biome_tracker.config import (
     create_macro_preset,
     apply_macro_preset,
     delete_macro_preset,
+    get_macro_preset_image_data,
 )
 from biome_tracker.core import BiomeTracker
+from biome_tracker.mixin_calib import auto_calibrate_fishing_detect_pixel
 
 def get_base_path(): return sys._MEIPASS if hasattr(sys, '_MEIPASS') else os.path.dirname(ORIGINAL_ABS_FILE)
 
@@ -218,7 +220,6 @@ class Api:
             "merchant_requires_reset": False,
             "merchant_sequence_active": False,
         }
-
         # rare biome pop up confirmation
         self._biome_confirm_evt = threading.Event()
         self._biome_confirm_result = None
@@ -257,12 +258,18 @@ class Api:
             if not result:
                 return {"success": False, "error": "No image selected"}
             path = result[0] if isinstance(result, (list, tuple)) else result
-            return {"success": True, "path": str(path)}
+            image_data = get_macro_preset_image_data(path, managed_only=False)
+            if not image_data:
+                return {"success": False, "error": "Could not read the selected image"}
+            return {"success": True, "path": str(path), "image_data": image_data}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    def save_macro_preset(self, name, image_source=None):
-        result = create_macro_preset(name, self.get_config(), image_source)
+    def save_macro_preset(self, name, config_data=None, image_source=None):
+        if not isinstance(config_data, dict) and image_source is None:
+            image_source = config_data
+            config_data = None
+        result = create_macro_preset(name, config_data if isinstance(config_data, dict) else self.get_config(), image_source)
         if result.get("success"):
             result["presets"] = list_macro_presets()
         return result
@@ -552,6 +559,13 @@ class Api:
 
     def get_macro_version(self):
         return current_version
+
+    def get_notice_content(self):
+        try:
+            with open(os.path.join(get_base_path(), "assets", "noticetabcontents.txt"), "r", encoding="utf-8") as file:
+                return file.read()
+        except Exception:
+            return ""
 
     def _setup_emergency_server(self):
         class SafeModeHandler(BaseHTTPRequestHandler):
@@ -1198,6 +1212,9 @@ class Api:
     def create_calibration_window(self, key="unknown", window_type="point"):
         self._calib_mgr.request_calibration(config_key=key, window_type=window_type)
 
+    def auto_calibrate_fishing_detect_pixel(self):
+        return auto_calibrate_fishing_detect_pixel(self._tracker)
+
     def display_calibration_on_screen(self, key: str, label: str = "", duration_ms: int = 2500):
         try:
             self._calib_mgr.request_display(
@@ -1326,16 +1343,6 @@ def stop_app(tracker):
 
 def main():
     ensure_workspace_files()
-
-    # ---- Beta whitelist----
-    # try:
-    #     from biome_tracker.beta_auth import show_auth_popup
-    #     if not show_auth_popup():
-    #         print("[BetaAuth] Access denied or cancelled. Exiting.")
-    #         return 0
-    # except Exception as e:
-    #     print(f"[BetaAuth] Auth module error: {e}")
-    #     traceback.print_exc()
 
     tracker = None
     api = Api(tracker=None)

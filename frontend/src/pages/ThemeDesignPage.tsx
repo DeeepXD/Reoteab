@@ -14,6 +14,7 @@ import StatsPage from "./StatsPage";
 import OtherFeaturesPage from "./OtherFeaturesPage";
 import CustomizationPage from "./CustomizationPage";
 import MovementsPage from "./MovementsPage";
+import PresetsPage from "./PresetsPage";
 
 const pages: Record<string, React.FC> = {
   notice: NoticePage,
@@ -30,6 +31,7 @@ const pages: Record<string, React.FC> = {
   status: StatusPage,
   otherfeatures: OtherFeaturesPage,
   customization: CustomizationPage,
+  presets: PresetsPage,
 };
 
 // Helper to convert hex + opacity to rgba string
@@ -58,6 +60,7 @@ const RENAMEABLE_TABS = [
     { id: "status", label: "Status" },
     { id: "misc", label: "Automated actions" },
     { id: "calibrations", label: "Macro Calibrations" },
+    { id: "presets", label: "Macro Presets" },
     { id: "remoteaccess", label: "Remote Control" },
     { id: "fishing", label: "Fishing" },
     { id: "merchant", label: "Merchant" },
@@ -606,7 +609,7 @@ body, * {
                                 type="text" 
                                 value={customVersion} 
                                 onChange={(e) => setCustomVersion(e.target.value)}
-                                placeholder="0.1.0"
+                                placeholder="0.1.3"
                                 style={{ width: "100%", height: "30px", background: "var(--bg-input)", border: "1px solid var(--border)", borderRadius: "4px", color: "var(--text-primary)", padding: "0 10px" }}
                             />
                         </div>

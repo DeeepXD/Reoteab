@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useConfig } from "../contexts/ConfigContext";
+import macroPresetIcon from "../assets/macro-preset-icon.svg";
 
 type MacroPreset = {
     id: string;
     name: string;
     image_path?: string | null;
+    image_data?: string | null;
 };
 
 type PresetState = {
@@ -12,16 +14,12 @@ type PresetState = {
     presets: MacroPreset[];
 };
 
-function imageUrl(path?: string | null) {
-    if (!path) return "";
-    return `file:///${path.replace(/\\/g, "/")}`;
-}
-
 export default function PresetsPage() {
     const { config, setConfig } = useConfig();
     const [presetState, setPresetState] = useState<PresetState>({ active_preset_id: null, presets: [] });
     const [name, setName] = useState("");
     const [imageSource, setImageSource] = useState<string | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [message, setMessage] = useState("");
 
     const loadPresets = async () => {
@@ -48,6 +46,7 @@ export default function PresetsPage() {
         const result = await window.pywebview?.api?.choose_macro_preset_image?.();
         if (result?.success) {
             setImageSource(result.path);
+            setImagePreview(result.image_data || null);
             setMessage("");
         }
     };
@@ -57,7 +56,7 @@ export default function PresetsPage() {
             setMessage("Enter a preset name first.");
             return;
         }
-        const result = await window.pywebview?.api?.save_macro_preset?.(name.trim(), imageSource);
+        const result = await window.pywebview?.api?.save_macro_preset?.(name.trim(), config, imageSource);
         if (!result?.success) {
             setMessage(result?.error || "Failed to save preset.");
             return;
@@ -65,6 +64,7 @@ export default function PresetsPage() {
         setPresetState(result.presets);
         setName("");
         setImageSource(null);
+        setImagePreview(null);
         setMessage("");
     };
 
@@ -107,13 +107,13 @@ export default function PresetsPage() {
                 <div className="card-header">
                     <div>
                         <h3>Save Current Settings</h3>
-                        <p>Webhooks, remote control, calibration points, and other general settings are not included.</p>
+                        <p>Saves all configurable macro settings. Session time and counters are kept separate.</p>
                     </div>
                 </div>
 
                 <div className="preset-create-row">
                     <div className="preset-image-picker">
-                        {imageSource ? <img src={imageUrl(imageSource)} alt="Selected preset" /> : <span>Optional image</span>}
+                        <img src={imagePreview || macroPresetIcon} alt={imagePreview ? "Selected preset" : ""} />
                     </div>
                     <input
                         className="form-input"
@@ -132,7 +132,7 @@ export default function PresetsPage() {
                 <div className="card-header">
                     <div>
                         <h3>Saved Presets</h3>
-                        <p>Loading a preset updates only its saved macro settings.</p>
+                        <p>Loading a preset applies all of its saved settings.</p>
                     </div>
                 </div>
 
@@ -145,7 +145,11 @@ export default function PresetsPage() {
                             return (
                                 <div key={preset.id} className={`preset-row ${active ? "is-active" : ""}`}>
                                     <div className="preset-thumbnail">
-                                        {preset.image_path ? <img src={imageUrl(preset.image_path)} alt="" /> : <span>Preset</span>}
+                                        <img
+                                            src={preset.image_data || macroPresetIcon}
+                                            alt=""
+                                            onError={(event) => { event.currentTarget.src = macroPresetIcon; }}
+                                        />
                                     </div>
                                     <div className="preset-name">
                                         <strong>{preset.name}</strong>

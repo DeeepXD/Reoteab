@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import ToggleSwitch from "../components/ToggleSwitch";
+import { useConfig } from "../contexts/ConfigContext";
 
 export default function PotionCraftPage() {
+    const { config, saveConfig: saveAppConfig } = useConfig();
 
     const [enableCrafting, setEnableCrafting] = useState(false);
     const [selectedPotion, setSelectedPotion] = useState("");
@@ -13,13 +15,21 @@ export default function PotionCraftPage() {
     const [potion1, setPotion1] = useState("");
     const [potion2, setPotion2] = useState("");
     const [potion3, setPotion3] = useState("");
-    const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
-    const configSnapshotRef = useRef<any>(null);
-
     useEffect(() => {
         refreshFiles();
-        loadConfig();
     }, []);
+
+    useEffect(() => {
+        if (config) {
+            if (typeof config.enable_potion_crafting === 'boolean') setEnableCrafting(config.enable_potion_crafting);
+            setSelectedPotion(config.selected_potion_file ?? "");
+            if (typeof config.enable_potion_switching === 'boolean') setEnableSwitching(config.enable_potion_switching);
+            setSwitchInterval(Number(config.potion_switch_interval ?? 60));
+            setPotion1(config.potion_file_1 ?? "");
+            setPotion2(config.potion_file_2 ?? "");
+            setPotion3(config.potion_file_3 ?? "");
+        }
+    }, [config]);
 
     const refreshFiles = async () => {
         try {
@@ -32,39 +42,10 @@ export default function PotionCraftPage() {
         }
     };
 
-    const loadConfig = async () => {
-        try {
-            if (window.pywebview && window.pywebview.api) {
-                const config: any = await window.pywebview.api.get_config();
-                if (config) {
-                    configSnapshotRef.current = config;
-                    if (typeof config.enable_potion_crafting === 'boolean') setEnableCrafting(config.enable_potion_crafting);
-                    setSelectedPotion(config.selected_potion_file ?? "");
-                    if (typeof config.enable_potion_switching === 'boolean') setEnableSwitching(config.enable_potion_switching);
-                    setSwitchInterval(Number(config.potion_switch_interval ?? 60));
-                    setPotion1(config.potion_file_1 ?? "");
-                    setPotion2(config.potion_file_2 ?? "");
-                    setPotion3(config.potion_file_3 ?? "");
-                }
-            }
-        } catch (e) {
-            console.error("Failed to load config:", e);
-        }
-    };
-
     const saveConfig = (key: string, value: any) => {
-        saveQueueRef.current = saveQueueRef.current
-            .then(async () => {
-                if (window.pywebview && window.pywebview.api) {
-                    const baseConfig: any = configSnapshotRef.current ?? await window.pywebview.api.get_config();
-                    const newConfig = { ...(baseConfig || {}), [key]: value };
-                    configSnapshotRef.current = newConfig;
-                    await window.pywebview.api.save_config(newConfig);
-                }
-            })
-            .catch((e) => {
-                console.error("Failed to save config:", e);
-            });
+        if (config) {
+            saveAppConfig({ ...config, [key]: value });
+        }
     };
 
 

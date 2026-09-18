@@ -7,6 +7,7 @@ interface SidebarProps {
 import GlitchOverlay from "./GlitchOverlay";
 import { useGlitchText } from "../hooks/useGlitchText";
 import { useConfig } from "../contexts/ConfigContext";
+import macroPresetIcon from "../assets/macro-preset-icon.svg";
 
 const SidebarItem = ({ item, isActive, onClick, isGlitching, locked, customLabel, customIcon }: { item: any; isActive: boolean; onClick: () => void; isGlitching: boolean; locked?: boolean; customLabel?: string; customIcon?: string }) => {
     const label = useGlitchText(customLabel || item.label || "", isGlitching);
@@ -19,7 +20,7 @@ const SidebarItem = ({ item, isActive, onClick, isGlitching, locked, customLabel
             title={locked ? "🔒 Locked" : undefined}
         >
             <span className="icon">
-                {locked ? "🔒" : (customIcon ? <img src={customIcon} alt="" style={{width: "18px", height: "18px", objectFit: "contain"}} /> : item.icon)}
+                {locked ? "🔒" : (customIcon || item.iconImage ? <img src={customIcon || item.iconImage} alt="" style={{width: "18px", height: "18px", objectFit: "contain"}} /> : item.icon)}
             </span>
             {label}
             {item.disabled && <span style={{ fontSize: "10px", marginLeft: "auto", opacity: 0.7 }}>(WIP)</span>}
@@ -36,7 +37,7 @@ const navItems = [
     { section: "Macro Settings" },
     { id: "misc", label: "Automated actions", icon: "🤖" },
     { id: "calibrations", label: "Macro Calibrations", icon: "🎯" },
-    { id: "presets", label: "Macro Presets", icon: "" },
+    { id: "presets", label: "Macro Presets", iconImage: macroPresetIcon },
     { id: "remoteaccess", label: "Remote Control", icon: "🔑" },
     { section: "Main Features" },
     { id: "fishing", label: "Fishing", icon: "🎣" },
