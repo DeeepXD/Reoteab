@@ -61,6 +61,12 @@ class DevLabApi(Api):
     def stop_devlab_stress(self):
         return self._devlab.stop_stress()
 
+    def start_devlab_replay(self, lines=None, count=250, interval=0.05):
+        return self._devlab.start_replay(lines, count, interval)
+
+    def stop_devlab_replay(self):
+        return self._devlab.stop_replay()
+
     def set_devlab_webhook_mode(self, mode):
         return self._devlab.set_webhook_mode(mode)
 
@@ -69,6 +75,9 @@ class DevLabApi(Api):
 
     def set_devlab_fault(self, fault=None):
         return self._devlab.set_fault(fault)
+
+    def capture_devlab_thread_stacks(self):
+        return self._devlab.capture_thread_stacks()
 
 
 if __name__ == "__main__":

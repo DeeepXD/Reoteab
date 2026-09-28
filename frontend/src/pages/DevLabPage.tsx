@@ -8,6 +8,8 @@ type Snapshot = {
     transition_queue: number;
     worker_health: Record<string, { state?: string }>;
     pipeline: Array<{ timestamp: string; event: string; state: string; detail: string }>;
+    replay: { active: boolean; events: number; transitions: number; attachments: number; failed: number };
+    thread_stacks: Array<{ thread: string; frames: string[] }>;
     webhook_mode: string;
     fault: string | null;
 };
@@ -34,6 +36,9 @@ function MemoryGraph({ samples }: { samples: Array<Record<string, number | strin
 export default function DevLabPage() {
     const [data, setData] = useState<Snapshot | null>(null);
     const [rate, setRate] = useState(20);
+    const [replayCount, setReplayCount] = useState(250);
+    const [replayInterval, setReplayInterval] = useState(0.05);
+    const [replayLog, setReplayLog] = useState("");
     const [busy, setBusy] = useState(false);
 
     const refresh = async () => {
@@ -92,6 +97,19 @@ export default function DevLabPage() {
             </div>
 
             <div className="card">
+                <div className="card-header"><div className="card-icon">🔁</div><div><h3>Offline session replay</h3><p>Parses sanitized BloxstrapRPC lines through the production transition handler, fixture attachments, mocked Discord delivery, and status updates.</p></div></div>
+                <textarea value={replayLog} onChange={(event) => setReplayLog(event.target.value)} placeholder="Optional sanitized BloxstrapRPC lines. Leave empty for the overnight-style sequence." style={{ width: "100%", minHeight: 72, resize: "vertical", marginBottom: 10 }} />
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                    <label>Events <input type="number" min="1" max="5000" value={replayCount} onChange={(event) => setReplayCount(Number(event.target.value))} style={{ width: 76, marginLeft: 6 }} /></label>
+                    <label>Seconds/event <input type="number" min="0" max="5" step="0.01" value={replayInterval} onChange={(event) => setReplayInterval(Number(event.target.value))} style={{ width: 76, marginLeft: 6 }} /></label>
+                    <button className="primary-button" disabled={busy || !!data?.replay?.active} onClick={() => call("start_devlab_replay", replayLog, replayCount, replayInterval)}>Start replay</button>
+                    <button className="secondary-button" disabled={busy || !data?.replay?.active} onClick={() => call("stop_devlab_replay")}>Stop replay</button>
+                    <button className="secondary-button" disabled={busy} onClick={() => call("capture_devlab_thread_stacks")}>Capture worker stacks</button>
+                </div>
+                <p style={{ marginTop: 12, color: "var(--text-muted)", fontSize: "0.85rem" }}>Replay: {String(data?.replay?.transitions || 0)}/{String(data?.replay?.events || 0)} lines, {String(data?.replay?.attachments || 0)} fixture attachments, {String(data?.replay?.failed || 0)} failures.</p>
+            </div>
+
+            <div className="card">
                 <div className="card-header"><div className="card-icon">🧪</div><div><h3>Biome simulator</h3><p>Exercises the production transition handler with isolated configuration and mock delivery.</p></div></div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button className="secondary-button" disabled={busy} onClick={() => call("simulate_devlab_biome", "WINDY", "NORMAL")}>NORMAL → WINDY</button>
@@ -125,6 +143,9 @@ export default function DevLabPage() {
                     {data?.pipeline?.length ? data.pipeline.slice().reverse().map((event, index) => <div key={`${event.timestamp}-${index}`} style={{ padding: "4px 0", borderBottom: "1px solid var(--border)" }}><span style={{ color: "var(--text-muted)" }}>{event.timestamp}</span> &nbsp;{event.event} — <strong>{event.state}</strong>{event.detail ? ` (${event.detail})` : ""}</div>) : <div style={{ color: "var(--text-muted)" }}>No simulated events yet.</div>}
                 </div>
                 {workers.length > 0 && <p style={{ marginTop: 12, color: "var(--text-muted)", fontSize: "0.82rem" }}>Workers: {workers.map(([name, state]) => `${name}: ${state.state || "unknown"}`).join(" · ")}</p>}
+                {!!data?.thread_stacks?.length && <div style={{ marginTop: 12, fontFamily: "monospace", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+                    {data.thread_stacks.map(stack => <div key={stack.thread}><strong>{stack.thread}</strong><br />{stack.frames.join(" ← ")}</div>)}
+                </div>}
             </div>
         </>
     );

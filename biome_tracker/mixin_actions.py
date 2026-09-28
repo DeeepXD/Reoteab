@@ -28,6 +28,9 @@ class ActionsMixin:
                             continue
                         except Exception:
                             pass
+                    if os.environ.get("REOTEAB_DEVLAB") == "1":
+                        self.append_log(f"DevLab did not fetch missing path file: {filename}")
+                        continue
                     try:
                         response = requests.get(base_url + filename, timeout=5)
                         response.raise_for_status()
