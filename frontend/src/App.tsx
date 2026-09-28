@@ -24,6 +24,7 @@ import MovementsPage from "./pages/MovementsPage";
 import PresetsPage from "./pages/PresetsPage";
 import RecorderWindow from "./pages/RecorderWindow";
 import BiomeConfirmWindow from "./pages/BiomeConfirmWindow";
+import DevLabPage from "./pages/DevLabPage";
 
 // --- Safe Mode (Browser failsafe via HTTP) ---
 const isSafeMode = new URLSearchParams(window.location.search).get("safe_mode");
@@ -74,6 +75,10 @@ const pages: Record<string, React.FC> = {
   themedesign: ThemeDesignPage,
   // puzzle: PuzzlePage,
 };
+
+if (import.meta.env.VITE_REOTEAB_DEVLAB === "true") {
+  pages.devlab = DevLabPage;
+}
 
 function App() {
   const [activeTab, setActiveTab] = useState("notice");

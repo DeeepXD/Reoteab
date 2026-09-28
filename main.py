@@ -10,11 +10,16 @@ import webbrowser
 import webview
 import os
 import sys
+import multiprocessing
+from ui_bridge import UiEventBridge
 
 # i added this so we can easily change macro version upon releases without having to change multiple back-end & front-end behaviours
 # for future people that is reading the open source code, hello :p
 current_version = "0.1.3"
+_is_devlab = os.environ.get("REOTEAB_DEVLAB") == "1"
 display_name = "Reoteab v0.1.3"
+if _is_devlab:
+    display_name = "Reoteab DevLab"
 os.environ["REOTEAB_VERSION"] = current_version
 os.environ["WEBKIT_DISABLE_COMPOSITING_MODE"] = "1"
 import time
@@ -37,7 +42,8 @@ os.environ['WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS'] = '--disable-gpu'
 APPDATA_BASE.mkdir(parents=True, exist_ok=True)
 os.chdir(APPDATA_BASE)
 
-_mutex = ctypes.windll.kernel32.CreateMutexW(None, True, "ReoteabSingleInstance")
+_mutex_name = "ReoteabDevLabSingleInstance" if _is_devlab else "ReoteabSingleInstance"
+_mutex = ctypes.windll.kernel32.CreateMutexW(None, True, _mutex_name)
 if ctypes.windll.kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
     ctypes.windll.user32.MessageBoxW(0, "Reoteab is already running!\n\nPlease close the existing instance before opening a new one.", "Reoteab", 0x30)
     sys.exit(0)
@@ -103,7 +109,18 @@ def get_base_path(): return sys._MEIPASS if hasattr(sys, '_MEIPASS') else os.pat
 def _get_frontend_dist_dirs() -> list[str]:
     base_path = get_base_path()
     from biome_tracker.config import APPDATA_BASE
-    
+
+    if _is_devlab:
+        dirs = [
+            os.path.join(str(APPDATA_BASE), "devlab", "dist"),
+            os.path.join(os.getcwd(), "frontend", "devlab-dist"),
+        ]
+        if getattr(sys, "frozen", False):
+            dirs.append(os.path.join(base_path, "lib", "devlab"))
+        else:
+            dirs.append(os.path.join(base_path, "lib", "devlab"))
+        return [d for d in dirs if os.path.exists(d)]
+
     dirs = [
         os.path.join(str(APPDATA_BASE), "dist"),
         os.path.join(str(APPDATA_BASE), "frontend", "dist"),
@@ -134,6 +151,9 @@ def get_frontend_entry():
                 return {"html": html_content, "url": f"file:///{abs_path}"}
             except Exception as e:
                 print(f"Error reading local index.html: {e}")
+
+    if _is_devlab:
+        return {"html": "<h2>Reoteab DevLab frontend is missing.</h2>", "url": "about:blank"}
 
     frontend_url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/lib/dist/index.html"
     try:
@@ -224,9 +244,11 @@ class Api:
         self._biome_confirm_evt = threading.Event()
         self._biome_confirm_result = None
         self.emergency_port = None
+        self._ui_bridge = UiEventBridge()
 
     def set_window(self, window):
         self._window = window
+        self._ui_bridge.set_window(window)
         if self._calib_mgr is None:
             from biome_tracker.base_support import CalibrationManager
             self._calib_mgr = CalibrationManager()
@@ -671,10 +693,14 @@ class Api:
         
         modules = {}
         det = t.detection_running
+        biome_worker_alive = any(
+            thread.name == "Biome Check" and thread.is_alive()
+            for thread in getattr(t, "_detection_workers", [])
+        )
         
         categories = {
             "Core Features": {
-                "Biome Detection": {"active": det, "enabled": True},
+                "Biome Detection": {"active": det and biome_worker_alive, "enabled": True},
                 "Aura Detection": {"active": det and _cfg_bool(cfg, "enable_aura_detection"), "enabled": _cfg_bool(cfg, "enable_aura_detection")},
                 "Macro Idle Mode": {"active": _cfg_bool(cfg, "enable_idle_mode"), "enabled": _cfg_bool(cfg, "enable_idle_mode")},
                 "Anti-AFK": {"active": det and _cfg_bool(cfg, "anti_afk", True), "enabled": _cfg_bool(cfg, "anti_afk", True)},
@@ -964,26 +990,23 @@ class Api:
 
     # --- frontend event emitters (JS bridge) ---
 
-    def _safe_eval_js(self, js_code):
-        if not self._window: return
-        try:
-            self._window.evaluate_js(js_code)
-        except Exception: pass
+    def _safe_eval_js(self, event, js_code):
+        self._ui_bridge.publish(event, js_code)
 
     def _emit_macro_status(self):
-        self._safe_eval_js(f'if(window.onMacroStatus) window.onMacroStatus("{self.get_macro_status()}");')
+        self._safe_eval_js("macro-status", f'if(window.onMacroStatus) window.onMacroStatus("{self.get_macro_status()}");')
 
     def _emit_config_update(self):
-        self._safe_eval_js('if(window.onConfigUpdated) window.onConfigUpdated();')
+        self._safe_eval_js("config", 'if(window.onConfigUpdated) window.onConfigUpdated();')
 
     def _emit_biome_update(self, biome):
-        self._safe_eval_js(f'if(window.onBiomeUpdate) window.onBiomeUpdate("{biome}");')
+        self._safe_eval_js("biome", f'if(window.onBiomeUpdate) window.onBiomeUpdate("{biome}");')
 
     def _emit_shortcut(self, key):
-        self._safe_eval_js(f'if(window.onShortcutEvent) window.onShortcutEvent("{key}");')
+        self._safe_eval_js("shortcut", f'if(window.onShortcutEvent) window.onShortcutEvent("{key}");')
 
     def _emit_fishing_failsafe_warning(self, msg):
-        self._safe_eval_js(f"if(window.onFishingFailsafeWarning) window.onFishingFailsafeWarning({json.dumps(str(msg))});")
+        self._safe_eval_js("fishing-failsafe", f"if(window.onFishingFailsafeWarning) window.onFishingFailsafeWarning({json.dumps(str(msg))});")
 
     def _request_biome_confirm(self, biome: str):
         self._biome_confirm_evt.clear()
@@ -1202,12 +1225,12 @@ class Api:
              self._tracker.align_camera()
 
     def emit_calibration_result(self, data):
-         if self._window:
-             js_data = json.dumps(data)
-             self._window.evaluate_js(
-                 f"if(window.onCalibrationResult) window.onCalibrationResult({js_data});"
-                 f"if(window.onCalibrationResultMisc) window.onCalibrationResultMisc({js_data});"
-             )
+         js_data = json.dumps(data)
+         self._safe_eval_js(
+             "calibration-result",
+             f"if(window.onCalibrationResult) window.onCalibrationResult({js_data});"
+             f"if(window.onCalibrationResultMisc) window.onCalibrationResultMisc({js_data});"
+         )
 
     def create_calibration_window(self, key="unknown", window_type="point"):
         self._calib_mgr.request_calibration(config_key=key, window_type=window_type)
@@ -1341,11 +1364,11 @@ def launch_app(api_class, tracker=None):
 def stop_app(tracker):
     if tracker and getattr(tracker, "detection_running", False): tracker.stop_detection()
 
-def main():
+def main(api_class=Api):
     ensure_workspace_files()
 
     tracker = None
-    api = Api(tracker=None)
+    api = api_class(tracker=None)
     api._setup_emergency_server()
     api._setup_emergency_hotkey()
     try:
@@ -1369,6 +1392,8 @@ def main():
                 from biome_tracker.core import BiomeTracker
                 tracker = BiomeTracker()
                 api._tracker = tracker
+                if hasattr(api, "on_tracker_ready"):
+                    api.on_tracker_ready(tracker)
                 tracker.on_stats_update = api._emit_config_update
                 tracker.on_biome_update = api._emit_biome_update
                 tracker.on_biome_confirm_request = api._request_biome_confirm
@@ -1442,6 +1467,7 @@ def main():
             except Exception as e2:
                 print(f"[Webview] Default backend also failed: {e2}")
 
+        api._ui_bridge.stop()
         return 0
 
     except KeyboardInterrupt:
@@ -1461,4 +1487,5 @@ def main():
 
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     raise SystemExit(main())
