@@ -533,14 +533,21 @@ class ActionScheduler:
         self._pq = queue.PriorityQueue()
         self._counter = itertools.count()
         self._running = True
-        self._worker_thread = threading.Thread(target=self._worker, name=worker_name, daemon=True)
-        self._worker_thread.start()
         self._action_lock = threading.RLock()
         self._action_active = threading.Event()
+        self._pending_names = set()
+        self._pending_lock = threading.Lock()
+        self._worker_thread = threading.Thread(target=self._worker, name=worker_name, daemon=True)
+        self._worker_thread.start()
 
-    def enqueue_action(self, fn, name=None, priority=5, block=False, timeout=None):
+    def enqueue_action(self, fn, name=None, priority=5, block=False, timeout=None, unique=False):
         idx = next(self._counter)
         qname = name or f"action-{idx}"
+        if unique:
+            with self._pending_lock:
+                if qname in self._pending_names:
+                    return False
+                self._pending_names.add(qname)
         self._pq.put((priority, idx, qname, fn))
         if block:
             start = time.time()
@@ -580,6 +587,8 @@ class ActionScheduler:
                     except Exception:
                         pass
                     self._action_active.clear()
+                    with self._pending_lock:
+                        self._pending_names.discard(name)
 
             except Exception:
                 self._action_active.clear()
@@ -592,7 +601,9 @@ class ActionScheduler:
         self._running = False
         try:
             while not self._pq.empty():
-                self._pq.get_nowait()
+                _, _, name, _ = self._pq.get_nowait()
+                with self._pending_lock:
+                    self._pending_names.discard(name)
         except Exception:
             pass
     

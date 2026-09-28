@@ -38,6 +38,7 @@ class WebhookCustomizationTests(unittest.TestCase):
         self.assertIn("Mari has arrived", embed["description"])
         self.assertEqual(embed["fields"], [{"name": "Detection Source", "value": "OCR"}])
         self.assertEqual(self.post.call_count, 1)
+        self.assertEqual(self.post.call_args.kwargs["timeout"], 10)
 
     def test_merchant_override_keeps_ping_and_screenshot(self):
         self.webhooks.config = {
@@ -77,6 +78,7 @@ class WebhookCustomizationTests(unittest.TestCase):
         self.assertEqual(embed["image"]["url"], f"attachment://{os.path.basename(screenshot_path)}")
         self.assertIn("Mari has arrived", embed["description"])
         self.assertEqual(self.post.call_count, 1)
+        self.assertEqual(self.post.call_args.kwargs["timeout"], 10)
 
     def test_aura_override_keeps_ping_and_generated_description(self):
         self.webhooks.config = {

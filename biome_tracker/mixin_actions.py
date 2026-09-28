@@ -1792,9 +1792,9 @@ class ActionsMixin:
                 with self.lock:
                     if not self.detection_running:
                         break
-                    self._action_scheduler.enqueue_action(self.perform_periodic_aura_screenshot_sync, name="periodical:aura", priority=2)
+                    self._action_scheduler.enqueue_action(self.perform_periodic_aura_screenshot_sync, name="periodical:aura", priority=2, unique=True)
                     time.sleep(0.5)
-                    self._action_scheduler.enqueue_action(self.perform_periodic_inventory_screenshot_sync, name="periodical:inventory", priority=3)
+                    self._action_scheduler.enqueue_action(self.perform_periodic_inventory_screenshot_sync, name="periodical:inventory", priority=3, unique=True)
                     time.sleep(0.5)
                     self._action_scheduler.enqueue_action(self.perform_quest_claim_sequence_sync, name="periodic:quest_claim", priority=4)
                     last_claim_time = datetime.now()
@@ -2733,11 +2733,16 @@ class ActionsMixin:
     def _enqueue_player_embed(self, embed):
         if not hasattr(self, "player_log_queue") or self.player_log_queue is None:
             try:
-                self.player_log_queue = queue.Queue()
+                self.player_log_queue = queue.Queue(maxsize=256)
             except Exception:
                 return
         try:
-            self.player_log_queue.put(embed)
+            self.player_log_queue.put_nowait(embed)
+            self._player_log_queue_overflow_reported = False
+        except queue.Full:
+            if not getattr(self, "_player_log_queue_overflow_reported", False):
+                self._player_log_queue_overflow_reported = True
+                self.append_log("[Player Log] Delivery queue is full; dropping new player-log notification.")
         except Exception:
             pass
 

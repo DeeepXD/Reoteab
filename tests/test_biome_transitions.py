@@ -112,6 +112,76 @@ class BiomeTransitionTests(unittest.TestCase):
             harness.stop()
             self.assertFalse(dispatcher._worker.is_alive())
 
+    def test_blocked_dispatcher_has_bounded_backlog(self):
+        entered = threading.Event()
+        release = threading.Event()
+        overflows = []
+
+        def block():
+            entered.set()
+            release.wait(1)
+
+        dispatcher = BiomeTransitionDispatcher(
+            1,
+            lambda _generation: True,
+            on_overflow=lambda *args: overflows.append(args),
+        )
+        dispatcher.submit(block)
+        self.assertTrue(entered.wait(1))
+
+        accepted = sum(dispatcher.submit(lambda: None) for _ in range(1000))
+        self.assertEqual(accepted, dispatcher.MAX_PENDING - dispatcher.RARE_RESERVED_PENDING)
+        self.assertEqual(dispatcher.pending_count, dispatcher.MAX_PENDING - dispatcher.RARE_RESERVED_PENDING)
+        self.assertTrue(overflows)
+
+        dispatcher.stop()
+        release.set()
+        dispatcher._worker.join(1)
+        self.assertFalse(dispatcher.is_alive)
+
+    def test_cyberspace_transition_uses_reserved_capacity_and_overflow_is_named(self):
+        entered = threading.Event()
+        release = threading.Event()
+        delivered = []
+        overflows = []
+
+        def block():
+            entered.set()
+            release.wait(1)
+
+        dispatcher = BiomeTransitionDispatcher(
+            1,
+            lambda _generation: True,
+            on_overflow=lambda *args: overflows.append(args),
+        )
+        dispatcher.submit(block)
+        self.assertTrue(entered.wait(1))
+
+        for _ in range(dispatcher.MAX_PENDING - dispatcher.RARE_RESERVED_PENDING):
+            self.assertTrue(dispatcher.submit(lambda: None, label="NORMAL -> WINDY"))
+        self.assertFalse(dispatcher.submit(lambda: None, label="WINDY -> RAINY"))
+        self.assertTrue(
+            dispatcher.submit(
+                delivered.append,
+                "CYBERSPACE",
+                critical=True,
+                label="NORMAL -> CYBERSPACE",
+            )
+        )
+
+        for _ in range(dispatcher.RARE_RESERVED_PENDING - 1):
+            self.assertTrue(dispatcher.submit(lambda: None, critical=True, label="rare transition"))
+        self.assertFalse(
+            dispatcher.submit(lambda: None, critical=True, label="CYBERSPACE -> NORMAL")
+        )
+        self.assertEqual(overflows[-1][1:], ("CYBERSPACE -> NORMAL", True))
+
+        release.set()
+        dispatcher.wait_for_idle()
+        self.assertEqual(delivered, ["CYBERSPACE"])
+        dispatcher.stop()
+        dispatcher._worker.join(1)
+
 
 if __name__ == "__main__":
     unittest.main()
