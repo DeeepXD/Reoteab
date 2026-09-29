@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import os
+import threading
 from pathlib import Path
 
 os.environ["REOTEAB_DEVLAB"] = "1"
-os.environ.setdefault("REOTEAB_UI_SAMPLE_SECONDS", "2")
-os.environ.setdefault("REOTEAB_UI_BACKGROUND_IDLE_SECONDS", "2")
-os.environ.setdefault("REOTEAB_UI_COOLDOWN_SECONDS", "2")
+os.environ["REOTEAB_UI_SAMPLE_SECONDS"] = "2"
+os.environ["REOTEAB_UI_FOREGROUND_IDLE_SECONDS"] = "2"
+os.environ["REOTEAB_UI_BACKGROUND_IDLE_SECONDS"] = "2"
+os.environ["REOTEAB_UI_COOLDOWN_SECONDS"] = "2"
 os.environ.setdefault(
     "REOTEAB_RUNTIME_ROOT",
     str(Path(os.environ.get("LOCALAPPDATA", Path.home())) / "Reoteab-DevLab"),
@@ -85,6 +87,13 @@ class DevLabApi(Api):
     def request_devlab_ui_maintenance(self):
         self._ui_maintenance.request_renderer_recovery("DevLab maintenance check")
         return self._ui_maintenance.run_once()
+
+    def schedule_devlab_ui_maintenance(self):
+        self._ui_maintenance.request_renderer_recovery("DevLab controlled maintenance")
+        timer = threading.Timer(12.0, self._ui_maintenance.run_once)
+        timer.daemon = True
+        timer.start()
+        return {"status": "scheduled"}
 
 
 if __name__ == "__main__":

@@ -126,6 +126,13 @@ class UiMaintenanceManager:
             })
             return {"memory": sample, "ui": state}
 
+    def get_restore_state(self):
+        with self._lock:
+            state = dict(self._ui_state)
+        tracker = getattr(self.api, "_tracker", None)
+        state["macro_running"] = bool(getattr(tracker, "detection_running", False))
+        return state
+
     def run_once(self):
         sample = self._memory_sample()
         now = self._clock()
@@ -250,13 +257,11 @@ class UiMaintenanceManager:
                 return {"status": "unavailable"}
             result = {
                 "status": "deferred",
-                "reason": reason,
-                "error": "Automatic WebView reload is unavailable in this pywebview runtime",
+                "reason": "automatic WebView reload is disabled pending packaged validation",
                 "before": before,
             }
             with self._lock:
-                self._last_maintenance = self._clock()
-                self._last_deferred_reason = "safe renderer reload unavailable"
+                self._last_deferred_reason = result["reason"]
                 self._last_result = result
             return result
         finally:

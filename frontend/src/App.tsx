@@ -91,6 +91,35 @@ function App() {
 
   useUiMaintenance(activeTab, theme);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const restoreUiState = async () => {
+      try {
+        const state = await window.pywebview?.api?.get_ui_restore_state?.();
+        if (cancelled || !state) return;
+        if (typeof state.active_page === "string" && pages[state.active_page]) {
+          setActiveTab(state.active_page);
+        }
+        if (typeof state.theme === "string") {
+          setTheme(state.theme);
+        }
+        setMacroRunning(Boolean(state.macro_running));
+        const scrollY = Number(state.scroll_y) || 0;
+        window.setTimeout(() => {
+          if (!cancelled) {
+            document.querySelector<HTMLElement>(".page-content")?.scrollTo({ top: scrollY });
+          }
+        }, 0);
+      } catch {
+        // The initial page is safe when a restore snapshot is unavailable.
+      }
+    };
+
+    if (isApiReady) void restoreUiState();
+    return () => { cancelled = true; };
+  }, [isApiReady, setMacroRunning]);
+
 
   const startMacro = async () => {
     if (isMacroRunning) return;

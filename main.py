@@ -263,6 +263,9 @@ class Api:
     def report_ui_state(self, state):
         return self._ui_maintenance.report_ui_state(state)
 
+    def get_ui_restore_state(self):
+        return self._ui_maintenance.get_restore_state()
+
     def get_config(self):
         t = self._tracker
         if t and isinstance(getattr(t, 'config', None), dict) and t.config:

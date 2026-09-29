@@ -94,6 +94,7 @@ export default function DevLabPage() {
                     <button className="primary-button" disabled={busy || !!data?.recording} onClick={() => call("start_devlab_recording")}>Start recording</button>
                     <button className="secondary-button" disabled={busy || !data?.recording} onClick={() => call("stop_devlab_recording")}>Stop recording</button>
                     <button className="secondary-button" disabled={busy} onClick={() => call("request_devlab_ui_maintenance")}>Check UI maintenance eligibility</button>
+                    <button className="secondary-button" disabled={busy} onClick={() => call("schedule_devlab_ui_maintenance")}>Run idle maintenance cycle</button>
                     <button className="secondary-button" disabled={busy} onClick={() => call("export_devlab_report")}>Export CSV and report</button>
                 </div>
                 <MemoryGraph samples={(data?.samples || []) as Array<Record<string, number | string>>} />
@@ -101,6 +102,7 @@ export default function DevLabPage() {
                     UI maintenance: {maintenance.last_result?.status || "not requested"}
                     {maintenance.pending_reason ? ` · pending ${maintenance.pending_reason}` : ""}
                     {maintenance.last_deferred_reason ? ` · deferred: ${maintenance.last_deferred_reason}` : ""}
+                    {typeof maintenance.seconds_since_interaction === "number" ? ` · idle ${maintenance.seconds_since_interaction.toFixed(1)}s` : ""}
                     {maintenance.last_result?.error ? ` · ${maintenance.last_result.error}` : ""}
                 </p>
             </div>
