@@ -266,6 +266,9 @@ class Api:
     def get_ui_restore_state(self):
         return self._ui_maintenance.get_restore_state()
 
+    def get_ui_events(self):
+        return self._ui_bridge.drain()
+
     def get_config(self):
         t = self._tracker
         if t and isinstance(getattr(t, 'config', None), dict) and t.config:
@@ -1025,23 +1028,23 @@ class Api:
 
     # --- frontend event emitters (JS bridge) ---
 
-    def _safe_eval_js(self, event, js_code):
-        self._ui_bridge.publish(event, js_code)
+    def _publish_ui_event(self, event, payload=None):
+        self._ui_bridge.publish(event, payload)
 
     def _emit_macro_status(self):
-        self._safe_eval_js("macro-status", f'if(window.onMacroStatus) window.onMacroStatus("{self.get_macro_status()}");')
+        self._publish_ui_event("macro-status", self.get_macro_status())
 
     def _emit_config_update(self):
-        self._safe_eval_js("config", 'if(window.onConfigUpdated) window.onConfigUpdated();')
+        self._publish_ui_event("config")
 
     def _emit_biome_update(self, biome):
-        self._safe_eval_js("biome", f'if(window.onBiomeUpdate) window.onBiomeUpdate("{biome}");')
+        self._publish_ui_event("biome", biome)
 
     def _emit_shortcut(self, key):
-        self._safe_eval_js("shortcut", f'if(window.onShortcutEvent) window.onShortcutEvent("{key}");')
+        self._publish_ui_event("shortcut", key)
 
     def _emit_fishing_failsafe_warning(self, msg):
-        self._safe_eval_js("fishing-failsafe", f"if(window.onFishingFailsafeWarning) window.onFishingFailsafeWarning({json.dumps(str(msg))});")
+        self._publish_ui_event("fishing-failsafe", str(msg))
 
     def _request_biome_confirm(self, biome: str):
         self._biome_confirm_evt.clear()
@@ -1261,12 +1264,7 @@ class Api:
 
     def emit_calibration_result(self, data):
          self._ui_maintenance.set_operation("calibration", False)
-         js_data = json.dumps(data)
-         self._safe_eval_js(
-             "calibration-result",
-             f"if(window.onCalibrationResult) window.onCalibrationResult({js_data});"
-             f"if(window.onCalibrationResultMisc) window.onCalibrationResultMisc({js_data});"
-         )
+         self._publish_ui_event("calibration-result", data)
 
     def create_calibration_window(self, key="unknown", window_type="point"):
         self._ui_maintenance.set_operation("calibration", True)

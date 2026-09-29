@@ -95,6 +95,7 @@ export default function DevLabPage() {
                     <button className="secondary-button" disabled={busy || !data?.recording} onClick={() => call("stop_devlab_recording")}>Stop recording</button>
                     <button className="secondary-button" disabled={busy} onClick={() => call("request_devlab_ui_maintenance")}>Check UI maintenance eligibility</button>
                     <button className="secondary-button" disabled={busy} onClick={() => call("schedule_devlab_ui_maintenance")}>Run idle maintenance cycle</button>
+                    <button className="secondary-button" disabled={busy} onClick={() => call("schedule_devlab_renderer_recreation")}>Recreate renderer after idle</button>
                     <button className="secondary-button" disabled={busy} onClick={() => call("export_devlab_report")}>Export CSV and report</button>
                 </div>
                 <MemoryGraph samples={(data?.samples || []) as Array<Record<string, number | string>>} />

@@ -361,7 +361,7 @@ class DevLabDiagnostics:
             index = 0
             while not self._stress_stop.wait(delay):
                 index += 1
-                self.api._safe_eval_js("devlab-status", f"if(window.onDevLabStatus) window.onDevLabStatus({json.dumps(index)});")
+                self.api._publish_ui_event("devlab-status", index)
 
         self._stress_thread = threading.Thread(target=run, name="DevLab WebView Stress", daemon=True)
         self._stress_thread.start()

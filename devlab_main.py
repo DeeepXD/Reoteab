@@ -95,6 +95,12 @@ class DevLabApi(Api):
         timer.start()
         return {"status": "scheduled"}
 
+    def schedule_devlab_renderer_recreation(self):
+        timer = threading.Timer(12.0, self._ui_maintenance.recreate_renderer_for_testing)
+        timer.daemon = True
+        timer.start()
+        return {"status": "scheduled"}
+
 
 if __name__ == "__main__":
     raise SystemExit(main(api_class=DevLabApi))

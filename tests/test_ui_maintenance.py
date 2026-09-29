@@ -73,7 +73,7 @@ def test_active_foreground_ui_defers_maintenance():
     assert calls == []
 
 
-def test_background_ui_keeps_automatic_reload_disabled_after_the_safety_gates_pass():
+def test_background_ui_reaches_controller_recreation_after_the_safety_gates_pass():
     clock = Clock()
     manager, calls = make_manager(clock)
     manager._window_state = lambda: (False, False)
@@ -83,8 +83,10 @@ def test_background_ui_keeps_automatic_reload_disabled_after_the_safety_gates_pa
 
     result = manager.run_once()
 
-    assert result["status"] == "deferred"
-    assert result["reason"] == "automatic WebView reload is disabled pending packaged validation"
+    assert result == {
+        "status": "unavailable",
+        "reason": "Edge controller is unavailable",
+    }
     assert manager._window.loaded_urls == []
     assert calls == []
     assert manager.snapshot()["ui"]["last_deferred_reason"] == result["reason"]
@@ -107,6 +109,23 @@ def test_unsaved_or_calibration_work_blocks_maintenance_even_when_background_idl
     manager.set_operation("saving", True)
     assert manager.run_once()["reason"] == "save operation"
     assert calls == []
+
+
+def test_renderer_recreation_respects_unsafe_ui_operations():
+    clock = Clock()
+    manager, _calls = make_manager(clock)
+    manager._window_state = lambda: (False, True)
+    manager.report_ui_state({"dirty": True})
+    clock.advance(10_000)
+
+    assert manager.recreate_renderer_for_testing() == {
+        "status": "deferred", "reason": "unsaved changes"
+    }
+
+    manager.report_ui_state({"dirty": False, "calibration": True})
+    assert manager.recreate_renderer_for_testing() == {
+        "status": "deferred", "reason": "calibration"
+    }
 
 
 def test_new_interaction_cancels_a_pending_maintenance_request():

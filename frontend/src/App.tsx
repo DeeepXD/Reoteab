@@ -26,6 +26,7 @@ import RecorderWindow from "./pages/RecorderWindow";
 import BiomeConfirmWindow from "./pages/BiomeConfirmWindow";
 import DevLabPage from "./pages/DevLabPage";
 import useUiMaintenance from "./hooks/useUiMaintenance";
+import useUiEvents from "./hooks/useUiEvents";
 
 // --- Safe Mode (Browser failsafe via HTTP) ---
 const isSafeMode = new URLSearchParams(window.location.search).get("safe_mode");
@@ -90,6 +91,7 @@ function App() {
   const [macroVersion, setMacroVersion] = useState("v?.?.?");
 
   useUiMaintenance(activeTab, theme);
+  useUiEvents(isApiReady);
 
   useEffect(() => {
     let cancelled = false;

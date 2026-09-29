@@ -255,17 +255,58 @@ class UiMaintenanceManager:
                 window = self._window
             if window is None:
                 return {"status": "unavailable"}
-            result = {
-                "status": "deferred",
-                "reason": "automatic WebView reload is disabled pending packaged validation",
-                "before": before,
-            }
+            result = self._recreate_renderer(window, reason, before)
             with self._lock:
-                self._last_deferred_reason = result["reason"]
                 self._last_result = result
+                if result.get("status") == "recreating":
+                    self._last_maintenance = now
+                    self._pending_reason = None
+                    self._renderer_failed = False
+                elif result.get("reason"):
+                    self._last_deferred_reason = result["reason"]
             return result
         finally:
             self._maintenance_lock.release()
+
+    def recreate_renderer_for_testing(self):
+        if not self._maintenance_lock.acquire(blocking=False):
+            return {"status": "already running"}
+        try:
+            now = self._clock()
+            allowed, deferred = self._can_maintain(now)
+            if not allowed:
+                return {"status": "deferred", "reason": deferred}
+            with self._lock:
+                window = self._window
+            if window is None:
+                return {"status": "unavailable"}
+            return self._recreate_renderer(window, "DevLab renderer recreation")
+        finally:
+            self._maintenance_lock.release()
+
+    def _recreate_renderer(self, window, reason, before=None):
+        form = getattr(window, "native", None)
+        browser = getattr(form, "browser", None)
+        if form is None or browser is None or not hasattr(browser, "webview"):
+            return {"status": "unavailable", "reason": "Edge controller is unavailable"}
+        try:
+            from System import Func, Object
+            from webview.platforms.edgechromium import EdgeChrome
+
+            def replace_controller():
+                old_browser = form.browser
+                new_browser = EdgeChrome(form, window, old_browser.user_data_folder)
+                new_browser.webview.CoreWebView2InitializationCompleted += lambda *_args: self._attach_renderer_failure_handler(window)
+                form.browser = new_browser
+                form.webview = new_browser.webview
+                form.Controls.Remove(old_browser.webview)
+                old_browser.webview.Dispose()
+                return True
+
+            form.Invoke(Func[Object](replace_controller))
+            return {"status": "recreating", "reason": reason, "before": before}
+        except Exception as exc:
+            return {"status": "failed", "error": str(exc)}
 
     def _attach_renderer_failure_handler(self, window):
         try:
