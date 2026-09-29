@@ -370,7 +370,11 @@ class Api:
         if _cfg_bool(cfg, "fishing_failsafe_rejoin") and not _cfg_bool(cfg, "auto_reconnect"):
             cfg["fishing_failsafe_rejoin"] = False
 
-        save_config(cfg)
+        self._ui_maintenance.set_operation("saving", True)
+        try:
+            save_config(cfg)
+        finally:
+            self._ui_maintenance.set_operation("saving", False)
         if self._tracker:
             if not isinstance(getattr(self._tracker, "config", None), dict):
                 self._tracker.config = {}
@@ -441,7 +445,11 @@ class Api:
             if not isinstance(imported, dict):
                 return {"success": False, "error": "Invalid config file: must be a JSON object"}
 
-            save_config(imported)
+            self._ui_maintenance.set_operation("saving", True)
+            try:
+                save_config(imported)
+            finally:
+                self._ui_maintenance.set_operation("saving", False)
 
             if self._tracker:
                 if not isinstance(getattr(self._tracker, "config", None), dict):

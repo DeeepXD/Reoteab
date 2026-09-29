@@ -96,6 +96,10 @@ def test_unsaved_or_calibration_work_blocks_maintenance_even_when_background_idl
 
     manager.report_ui_state({"dirty": False, "calibration": True})
     assert manager.run_once()["reason"] == "calibration"
+
+    manager.set_operation("calibration", False)
+    manager.set_operation("saving", True)
+    assert manager.run_once()["reason"] == "save operation"
     assert calls == []
 
 
