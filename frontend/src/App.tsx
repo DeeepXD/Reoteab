@@ -25,6 +25,7 @@ import PresetsPage from "./pages/PresetsPage";
 import RecorderWindow from "./pages/RecorderWindow";
 import BiomeConfirmWindow from "./pages/BiomeConfirmWindow";
 import DevLabPage from "./pages/DevLabPage";
+import useUiMaintenance from "./hooks/useUiMaintenance";
 
 // --- Safe Mode (Browser failsafe via HTTP) ---
 const isSafeMode = new URLSearchParams(window.location.search).get("safe_mode");
@@ -87,6 +88,8 @@ function App() {
   const [theme, setTheme] = useState("midnight");
   const [isGlitching, setIsGlitching] = useState(false);
   const [macroVersion, setMacroVersion] = useState("v?.?.?");
+
+  useUiMaintenance(activeTab, theme);
 
 
   const startMacro = async () => {

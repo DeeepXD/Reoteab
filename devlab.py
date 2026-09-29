@@ -422,6 +422,7 @@ class DevLabDiagnostics:
             "sample_count": len(samples),
             "duration_seconds": self._sample_duration(samples),
             "bridge": self.api._ui_bridge.snapshot(),
+            "ui_maintenance": self.api._ui_maintenance.snapshot(),
             "samples": samples,
             "pipeline": pipeline,
             "replay": self._replay,
@@ -459,4 +460,5 @@ class DevLabDiagnostics:
             "fault": self._fault,
             "replay": self._replay,
             "thread_stacks": self._thread_stacks,
+            "ui_maintenance": self.api._ui_maintenance.snapshot(),
         }

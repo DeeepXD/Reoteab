@@ -12,6 +12,7 @@ type Snapshot = {
     thread_stacks: Array<{ thread: string; frames: string[] }>;
     webhook_mode: string;
     fault: string | null;
+    ui_maintenance?: { ui?: { pending_reason?: string | null; last_deferred_reason?: string | null; seconds_since_interaction?: number; last_result?: { status?: string; error?: string } } };
 };
 
 const bytes = (value: unknown) => `${((Number(value) || 0) / 1024 / 1024).toFixed(1)} MB`;
@@ -70,6 +71,7 @@ export default function DevLabPage() {
     const latest = data?.latest || {};
     const bridge = data?.bridge || {};
     const workers = Object.entries(data?.worker_health || {});
+    const maintenance = data?.ui_maintenance?.ui || {};
 
     return (
         <>
@@ -91,9 +93,16 @@ export default function DevLabPage() {
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                     <button className="primary-button" disabled={busy || !!data?.recording} onClick={() => call("start_devlab_recording")}>Start recording</button>
                     <button className="secondary-button" disabled={busy || !data?.recording} onClick={() => call("stop_devlab_recording")}>Stop recording</button>
+                    <button className="secondary-button" disabled={busy} onClick={() => call("request_devlab_ui_maintenance")}>Schedule safe UI maintenance</button>
                     <button className="secondary-button" disabled={busy} onClick={() => call("export_devlab_report")}>Export CSV and report</button>
                 </div>
                 <MemoryGraph samples={(data?.samples || []) as Array<Record<string, number | string>>} />
+                <p style={{ marginTop: 10, color: "var(--text-muted)", fontSize: "0.82rem" }}>
+                    UI maintenance: {maintenance.last_result?.status || "not requested"}
+                    {maintenance.pending_reason ? ` · pending ${maintenance.pending_reason}` : ""}
+                    {maintenance.last_deferred_reason ? ` · deferred: ${maintenance.last_deferred_reason}` : ""}
+                    {maintenance.last_result?.error ? ` · ${maintenance.last_result.error}` : ""}
+                </p>
             </div>
 
             <div className="card">

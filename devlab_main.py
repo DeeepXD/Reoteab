@@ -4,6 +4,9 @@ import os
 from pathlib import Path
 
 os.environ["REOTEAB_DEVLAB"] = "1"
+os.environ.setdefault("REOTEAB_UI_SAMPLE_SECONDS", "2")
+os.environ.setdefault("REOTEAB_UI_BACKGROUND_IDLE_SECONDS", "2")
+os.environ.setdefault("REOTEAB_UI_COOLDOWN_SECONDS", "2")
 os.environ.setdefault(
     "REOTEAB_RUNTIME_ROOT",
     str(Path(os.environ.get("LOCALAPPDATA", Path.home())) / "Reoteab-DevLab"),
@@ -78,6 +81,10 @@ class DevLabApi(Api):
 
     def capture_devlab_thread_stacks(self):
         return self._devlab.capture_thread_stacks()
+
+    def request_devlab_ui_maintenance(self):
+        self._ui_maintenance.request_renderer_recovery("DevLab maintenance check")
+        return self._ui_maintenance.run_once()
 
 
 if __name__ == "__main__":

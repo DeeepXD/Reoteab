@@ -12,6 +12,7 @@ import os
 import sys
 import multiprocessing
 from ui_bridge import UiEventBridge
+from ui_maintenance import UiMaintenanceManager
 
 # i added this so we can easily change macro version upon releases without having to change multiple back-end & front-end behaviours
 # for future people that is reading the open source code, hello :p
@@ -245,6 +246,7 @@ class Api:
         self._biome_confirm_result = None
         self.emergency_port = None
         self._ui_bridge = UiEventBridge()
+        self._ui_maintenance = UiMaintenanceManager(self)
 
     def set_window(self, window):
         self._window = window
@@ -258,6 +260,10 @@ class Api:
             save_fn=save_config,
             emit_fn=self.emit_calibration_result
         )
+        self._ui_maintenance.set_window(window)
+
+    def report_ui_state(self, state):
+        return self._ui_maintenance.report_ui_state(state)
 
     def get_config(self):
         t = self._tracker
@@ -272,11 +278,15 @@ class Api:
         try:
             if not self._window:
                 return {"success": False, "error": "Window not available"}
-            result = self._window.create_file_dialog(
-                webview.FileDialog.OPEN,
-                allow_multiple=False,
-                file_types=("Image Files (*.png;*.jpg;*.jpeg;*.gif;*.webp)",),
-            )
+            self._ui_maintenance.set_operation("file_dialog", True)
+            try:
+                result = self._window.create_file_dialog(
+                    webview.FileDialog.OPEN,
+                    allow_multiple=False,
+                    file_types=("Image Files (*.png;*.jpg;*.jpeg;*.gif;*.webp)",),
+                )
+            finally:
+                self._ui_maintenance.set_operation("file_dialog", False)
             if not result:
                 return {"success": False, "error": "No image selected"}
             path = result[0] if isinstance(result, (list, tuple)) else result
@@ -416,10 +426,14 @@ class Api:
             if not self._window:
                 return {"success": False, "error": "Window not available"}
 
-            result = self._window.create_file_dialog(
-                webview.FileDialog.OPEN, allow_multiple=False,
-                file_types=("JSON Files (*.json)",),
-            )
+            self._ui_maintenance.set_operation("file_dialog", True)
+            try:
+                result = self._window.create_file_dialog(
+                    webview.FileDialog.OPEN, allow_multiple=False,
+                    file_types=("JSON Files (*.json)",),
+                )
+            finally:
+                self._ui_maintenance.set_operation("file_dialog", False)
             if not result:
                 return {"success": False, "error": "No file selected"}
 
@@ -456,7 +470,11 @@ class Api:
 
             downloads_dir = Path(os.path.expanduser("~/Downloads"))
             downloads_dir.mkdir(parents=True, exist_ok=True)
-            selected_dir = FileDialog.askdirectory(initialdir=str(downloads_dir), title="Select Downloads Folder")
+            self._ui_maintenance.set_operation("file_dialog", True)
+            try:
+                selected_dir = FileDialog.askdirectory(initialdir=str(downloads_dir), title="Select Downloads Folder")
+            finally:
+                self._ui_maintenance.set_operation("file_dialog", False)
             if not selected_dir:
                 return {"success": False, "error": "No directory selected"}
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -482,10 +500,14 @@ class Api:
             if not self._window:
                 return {"success": False, "error": "Window not available"}
 
-            result = self._window.create_file_dialog(
-                webview.FileDialog.OPEN, allow_multiple=False,
-                file_types=("JSON Files (*.json)",),
-            )
+            self._ui_maintenance.set_operation("file_dialog", True)
+            try:
+                result = self._window.create_file_dialog(
+                    webview.FileDialog.OPEN, allow_multiple=False,
+                    file_types=("JSON Files (*.json)",),
+                )
+            finally:
+                self._ui_maintenance.set_operation("file_dialog", False)
             if not result:
                 return {"success": False, "error": "No file selected"}
 
@@ -517,10 +539,14 @@ class Api:
             if not self._window:
                 return {"success": False, "error": "Window not available"}
 
-            result = self._window.create_file_dialog(
-                webview.FileDialog.SAVE, save_filename=filename,
-                file_types=("JSON Files (*.json)",)
-            )
+            self._ui_maintenance.set_operation("file_dialog", True)
+            try:
+                result = self._window.create_file_dialog(
+                    webview.FileDialog.SAVE, save_filename=filename,
+                    file_types=("JSON Files (*.json)",)
+                )
+            finally:
+                self._ui_maintenance.set_operation("file_dialog", False)
             if not result:
                 return {"success": False, "error": "Cancelled"}
 
@@ -1225,6 +1251,7 @@ class Api:
              self._tracker.align_camera()
 
     def emit_calibration_result(self, data):
+         self._ui_maintenance.set_operation("calibration", False)
          js_data = json.dumps(data)
          self._safe_eval_js(
              "calibration-result",
@@ -1233,6 +1260,7 @@ class Api:
          )
 
     def create_calibration_window(self, key="unknown", window_type="point"):
+        self._ui_maintenance.set_operation("calibration", True)
         self._calib_mgr.request_calibration(config_key=key, window_type=window_type)
 
     def auto_calibrate_fishing_detect_pixel(self):
@@ -1468,6 +1496,7 @@ def main(api_class=Api):
                 print(f"[Webview] Default backend also failed: {e2}")
 
         api._ui_bridge.stop()
+        api._ui_maintenance.stop()
         return 0
 
     except KeyboardInterrupt:

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import type { ReactNode } from "react";
 // Remove tauri invoke
 
@@ -43,6 +43,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     const [sessionDuration, setSessionDuration] = useState(0);
     const [lastStartTime, setLastStartTime] = useState<number | null>(null);
     const [biomeColors, setBiomeColors] = useState<BiomeColorMap>({});
+    const retryTimerRef = useRef<number | null>(null);
 
     const setMacroRunning = useCallback((running: boolean) => {
         setIsMacroRunningState(running);
@@ -57,14 +58,14 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
     }, [lastStartTime]);
 
     useEffect(() => {
+        let disposed = false;
+        const onReady = () => { if (!disposed) loadConfig(); };
         // Wait for pywebview to be ready if it's not yet
         const initConfig = () => {
             if (window.pywebview && window.pywebview.api) {
                 loadConfig();
             } else {
-                window.addEventListener('pywebviewready', () => {
-                    loadConfig();
-                });
+                window.addEventListener('pywebviewready', onReady, { once: true });
             }
         };
         initConfig();
@@ -78,6 +79,9 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
         };
 
         return () => {
+            disposed = true;
+            window.removeEventListener('pywebviewready', onReady);
+            if (retryTimerRef.current !== null) window.clearTimeout(retryTimerRef.current);
             delete (window as any).onConfigUpdated;
         };
     }, []);
@@ -87,7 +91,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
             console.log("Loading config...");
             if (!window.pywebview || !window.pywebview.api || typeof window.pywebview.api.get_config !== 'function') {
                 console.warn("Pywebview API not available yet, mock or wait.");
-                setTimeout(loadConfig, 100);
+                retryTimerRef.current = window.setTimeout(loadConfig, 100);
                 return;
             }
             const data = await window.pywebview.api.get_config();
@@ -132,6 +136,7 @@ export function ConfigProvider({ children }: { children: ReactNode }) {
             if (window.pywebview && window.pywebview.api) {
                 await window.pywebview.api.save_config(newConfig);
             }
+            window.dispatchEvent(new Event("reoteab:ui-committed"));
             console.log("Config saved successfully");
         } catch (err) {
             console.error("Failed to save config:", err);
