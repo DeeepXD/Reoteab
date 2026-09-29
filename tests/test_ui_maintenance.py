@@ -99,6 +99,20 @@ def test_unsaved_or_calibration_work_blocks_maintenance_even_when_background_idl
     assert calls == []
 
 
+def test_new_interaction_cancels_a_pending_maintenance_request():
+    clock = Clock()
+    manager, _calls = make_manager(clock)
+    manager._window_state = lambda: (False, False)
+    manager._pending_reason = "scheduled maintenance"
+    clock.advance(121)
+
+    assert manager._can_maintain(clock()) == (True, None)
+
+    manager.report_ui_state({"interaction": True})
+    assert manager.snapshot()["ui"]["pending_reason"] is None
+    assert manager._can_maintain(clock()) == (False, "background activity")
+
+
 def test_sustained_growth_requests_maintenance_but_short_spike_does_not():
     clock = Clock()
     manager, _calls = make_manager(clock)

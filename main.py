@@ -145,11 +145,9 @@ def get_frontend_entry():
         index_file = os.path.join(dist_dir, "index.html")
         if os.path.exists(index_file):
             try:
-                abs_path = os.path.abspath(index_file).replace("\\", "/")
-                with open(index_file, "r", encoding="utf-8") as f:
-                    html_content = f.read()
+                abs_path = os.path.abspath(index_file)
                 print(f"Loading frontend from local: {abs_path}")
-                return {"html": html_content, "url": f"file:///{abs_path}"}
+                return {"url": abs_path}
             except Exception as e:
                 print(f"Error reading local index.html: {e}")
 
@@ -168,9 +166,9 @@ def get_frontend_entry():
             if html_content and len(html_content) > 1000:
                 saved_path = os.path.join(appdata_dist, "index.html")
                 with open(saved_path, "w", encoding="utf-8") as f: f.write(html_content)
-                abs_path = os.path.abspath(saved_path).replace("\\", "/")
+                abs_path = os.path.abspath(saved_path)
                 print(f"Fetched frontend from GitHub -> saved to: {abs_path}")
-                return {"html": html_content, "url": f"file:///{abs_path}"}
+                return {"url": abs_path}
     except Exception as e:
         print(f"Failed to fetch frontend from GitHub: {e}")
 
