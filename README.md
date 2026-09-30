@@ -1,431 +1,126 @@
 <p align="center">
-  <img src="assets/reoteab-icon.png" width="140" alt="Reoteab">
+  <img src="assets/reoteab-icon.png" width="132" alt="Reoteab logo">
 </p>
 
 <h1 align="center">Reoteab</h1>
 
 <p align="center">
-  <b>A maintained continuation of the Noteab → Coteab Sol's RNG macro.</b>
+  <strong>A flexible Sol's RNG macro for fishing, merchant checks, biome alerts, and more.</strong><br>
+  Set up the features you use, save your presets, and stay in the loop.
 </p>
 
 <p align="center">
-  <a href="https://github.com/DeeepXD/Reoteab/releases">
-    <img src="https://img.shields.io/github/v/release/DeeepXD/Reoteab?style=flat-square&label=release">
-  </a>
-  <a href="https://github.com/DeeepXD/Reoteab/releases">
-    <img src="https://img.shields.io/github/downloads/DeeepXD/Reoteab/total?style=flat-square&label=downloads">
-  </a>
-  <img src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011-0078D4?style=flat-square&logo=windows11&logoColor=white">
-  <img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square">
-  <a href="https://github.com/DeeepXD/Reoteab/stargazers">
-    <img src="https://img.shields.io/github/stars/DeeepXD/Reoteab?style=flat-square&label=stars">
-  </a>
+  <a href="https://github.com/DeeepXD/Reoteab/releases"><strong>Download Reoteab</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://discord.gg/bQNSU3pfPF">Join the Discord</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/DeeepXD/Reoteab/issues">Report an issue</a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/DeeepXD/Reoteab/releases"><b>Download</b></a>
-  ·
-  <a href="https://github.com/DeeepXD/Reoteab/issues"><b>Report a bug</b></a>
-  ·
-  <a href="https://discord.gg/bQNSU3pfPF"><b>Discord</b></a>
+  <a href="https://github.com/DeeepXD/Reoteab/releases"><img src="https://img.shields.io/github/v/release/DeeepXD/Reoteab?style=flat-square&label=latest%20release" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/platform-Windows%2010%20%2F%2011-0078D4?style=flat-square&logo=windows11&logoColor=white" alt="Windows 10 or 11">
+  <img src="https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square" alt="Apache 2.0 license">
 </p>
 
 ---
 
-## What is Reoteab?
+## Meet Reoteab
 
-Reoteab is a community-maintained continuation of the Sol's RNG macro lineage that started with **Noteab** and later continued through **Coteab**.
+Reoteab is a community-maintained Sol's RNG macro for longer sessions. It continues the Noteab → Coteab lineage with current paths, calibration tools, preset support, and ongoing reliability work.
 
-The project exists because the old macro was still useful even after active development slowed down. Instead of throwing everything away and starting from zero, Reoteab keeps the parts that already work and focuses on fixing bugs, improving reliability, and keeping the macro usable as Roblox and Sol's RNG change.
+Whether you want a focused fishing setup or a more complete session with merchant checks, biome alerts, and Discord notifications, you can enable only the parts you use.
 
-The goal is pretty simple: keep the macro practical, keep changes understandable, and avoid rewriting working systems for no reason.
+> Current public release: **v0.1.3**
 
-Current source version: **v0.1.3**.
+## What you can do
 
----
+| Spend less time repeating setup | Keep an eye on what matters | Make it fit your setup |
+| --- | --- | --- |
+| Fish automatically and continue through normal session flow. | Detect biomes and send Discord webhook notifications. | Calibrate visible Roblox controls for your resolution and layout. |
+| Check supported merchants, read items with OCR, and buy configured items. | Use optional Discord remote control and webhook customization. | Save named macro presets with optional images, then switch setups quickly. |
+| Use current VIP/non-VIP fishing and Captain Flarg routes. | Review activity and logs when something needs attention. | Import/export calibrations and create custom themes. |
 
-## Features
+Reoteab also includes recovery and failsafe behavior for the automation it supports. Roblox UI updates can still change how any macro behaves, so calibration and real-session testing matter.
 
-Reoteab currently includes support for:
+## Get started
 
-- Fishing automation
-- Merchant checks
-- Merchant Teleporter handling
-- Mari, Jester, and Rin interaction
-- Configurable merchant purchases
-- Item-name OCR
-- Biome detection
-- Discord webhook notifications
-- Discord remote control
-- Route and movement automation
-- Obby-related movement
-- Macro presets with optional images
-- Calibration presets and fish-indicator auto-calibration
-- Calibration import/export
-- Recovery and failsafe behavior
-- Configurable timings and macro settings
+### 1. Download the official build
 
-Some features rely heavily on screen position, OCR, and Roblox UI state, so calibration matters a lot.
+Get `Reoteab.exe` from the [Releases page](https://github.com/DeeepXD/Reoteab/releases). Put it in its own folder, then launch it.
 
----
+Only download builds from this repository or an official project link. Avoid reuploads and modified copies you cannot verify.
 
-## Download
+### 2. Set up the features you want
 
-The latest public build can be found on the Releases page:
+Open Reoteab and choose your own mix of fishing, merchant automation, biome detection, webhooks, presets, and other options. You do not need to turn everything on.
 
-### [Download Reoteab →](https://github.com/DeeepXD/Reoteab/releases)
+### 3. Calibrate before a long session
 
-The normal release file is:
+Calibration tells Reoteab where your Roblox UI is. Use the built-in calibration tools, including fish-indicator auto-calibration, or import a trusted calibration that matches your setup.
 
-```text
-Reoteab.exe
-```
+For the most consistent results, use:
 
-> [!IMPORTANT]
-> Download Reoteab from this repository or another source officially linked by the project.
->
-> Random reuploads, modified executables, and unofficial mirrors cannot be verified.
+- Windows 10 or 11
+- Roblox and Microsoft Edge WebView2 Runtime
+- Windows OCR/language components when using OCR-backed features
+- 100% Windows display scaling where possible
+- A calibration made for your resolution, scaling, and Roblox display mode
 
-Testing builds may be available before a normal release. If you are not actively testing a new fix, use the latest normal release. Reoteab updates are installed manually from GitHub Releases.
+If a click lands beside a button, OCR reads the wrong area, or a menu is missed, calibration is the first thing to check.
 
----
+## Make it yours
 
-## Requirements
+### Macro presets
 
-Reoteab is intended for:
+Save complete setups for different ways you play—such as fishing-focused, crafting-focused, or merchant-focused sessions. Give each preset a clear name, optionally add an image, and load it when you want to switch. The active preset is highlighted in the app.
 
-- Windows 10 or Windows 11
-- Roblox
-- Microsoft Edge WebView2 Runtime
-- Windows OCR/language components for OCR-based features
+### Calibration, themes, and settings
 
-For the most predictable calibration behavior:
+Reoteab is designed around your actual screen and preferences. You can save or import calibrations, adjust the macro settings you use, and personalize the interface with built-in or custom themes.
 
-```text
-Windows display scaling: 100%
-```
+### Discord notifications
 
-Other scaling values may work, but screen positions and OCR regions can differ.
+Connect Discord webhooks if you want notifications for supported activity such as biome events. Keep webhook URLs, bot tokens, private-server links, and any other credentials private—replace them if they are exposed.
 
----
+## A few helpful notes
 
-## Getting started
+- **Use a fresh calibration when your setup changes.** Resolution, Windows scaling, fullscreen/windowed mode, and Roblox UI changes can all affect visible targets.
+- **Start simple.** Confirm fishing or the one feature you care about first, then add merchant checks, webhooks, or other options.
+- **Use the logs and a short video when reporting a problem.** They make timing, focus, and click issues much easier to reproduce.
+- **Updates are manual.** Download newer releases from GitHub when you are ready to update.
 
-1. Download `Reoteab.exe` from Releases.
-2. Put it inside its own folder.
-3. Launch Reoteab.
-4. Configure the features you actually want to use.
-5. Import or create a calibration matching your setup.
-6. Configure webhooks or remote control if you want them.
-7. Start the macro.
+## Need help?
 
-You do not need to enable every feature.
-
-If something clicks in the wrong place or OCR reads the wrong part of the screen, check calibration before assuming the macro itself is broken.
-
----
-
-## Calibration
-
-A lot of Reoteab works by interacting with visible Roblox UI elements.
-
-That means a calibration made for one setup may not behave correctly on another.
-
-When sharing or downloading a calibration, pay attention to:
-
-- Resolution
-- Windows scaling
-- Fullscreen or windowed Roblox
-- Windows version
-- Reoteab version
-
-A useful calibration label looks like:
+The [Discord](https://discord.gg/bQNSU3pfPF) is the best place to share tested calibrations and talk with other users. For reproducible bugs, open a [GitHub issue](https://github.com/DeeepXD/Reoteab/issues) and include:
 
 ```text
-1920x1080
-100% Scaling
-Fullscreen
-Windows 11
-TESTED
+Reoteab version
+Feature affected
+Resolution and Windows scaling
+Fullscreen or windowed Roblox
+What happened and what you expected
+Relevant logs and a screenshot/video when possible
 ```
 
-If the macro:
+Please remove webhook URLs, tokens, and private links before sharing anything publicly.
 
-- clicks beside buttons
-- cannot read merchant names
-- cannot find item names
-- opens the wrong menu
-- misses fishing UI elements
+## Running from source
 
-then calibration is one of the first things worth checking.
-
-Community-tested calibrations may also be shared through the Reoteab Discord.
-
----
-
-## Merchant automation
-
-Merchant handling is one of the more timing-sensitive parts of the macro.
-
-Reoteab can:
-
-- use the Merchant Teleporter
-- position the camera before teleporting
-- detect supported merchants
-- interact with merchant dialogue
-- read item names with OCR
-- purchase configured items
-- interrupt fishing for a merchant check
-- return to fishing afterward
-
-Merchant bugs can sometimes look like fishing bugs because the two systems interact.
-
-If you report a merchant issue, include whether it happened during a normal merchant check or while fishing.
-
----
-
-## Fishing
-
-Fishing is designed to work for longer sessions and alongside the rest of Reoteab.
-
-The fishing loop handles things such as:
-
-- casting
-- catch detection
-- post-catch handling
-- restarting the next attempt
-- merchant interruptions
-- returning from merchant checks
-- failsafe recovery
-
-For this type of automation, automated tests are useful but they are not the whole story.
-
-Roblox UI behavior, timing, focus, mouse movement, and loading delays can behave differently in a real session, so important fishing and merchant changes are also tested in Roblox whenever possible.
-
----
-
-## Discord integration
-
-Reoteab supports Discord webhooks for supported notifications such as biome events.
-
-Optional Discord-based remote control is also available.
-
-Never share private credentials when asking for help.
-
-Before uploading a config, log, screenshot, or video, check that it does not contain:
-
-```text
-Discord bot tokens
-Webhook URLs
-Private links
-Authentication information
-Anything else you do not want public
-```
-
-If a token or webhook URL is accidentally exposed, replace it instead of continuing to use the same one.
-
----
-
-## Logs
-
-Logs are useful when something behaves differently from what you expected.
-
-If a bug happens repeatedly, try to save the section of the log around the time it occurred.
-
-For UI issues, a short video is often even more useful because it can show:
-
-- which menu was open
-- where the mouse clicked
-- what the camera was doing
-- whether Roblox had focus
-- what happened immediately before the bug
-
-A good report usually needs less guessing and more reproduction.
-
----
-
-## Reporting a bug
-
-Please include enough information for someone else to reproduce the problem.
-
-A useful report looks like:
-
-```text
-Reoteab version:
-Feature:
-Resolution:
-Windows scaling:
-Roblox mode:
-Windows version:
-
-What I was doing:
-
-What happened:
-
-What should have happened:
-
-Does it happen every time?
-
-Relevant logs:
-
-Screenshot / video:
-```
-
-Example:
-
-```text
-Version: v0.1.3
-Feature: Fishing -> Merchant
-Resolution: 1920x1080
-Scaling: 100%
-Mode: Fullscreen
-
-What happened:
-The merchant wasn't found and the macro reopened inventory before
-returning to fishing.
-
-Expected:
-Finish the merchant check and resume fishing normally.
-
-Reproduced:
-3/3 attempts
-```
-
-Reports like this are much easier to work with than:
-
-```text
-merchant broken
-```
-
-GitHub issues:
-
-### [Report an issue →](https://github.com/DeeepXD/Reoteab/issues)
-
----
-
-## Building from source
-
-The repository is roughly structured like this:
-
-```text
-Reoteab/
-├─ biome_tracker/      Core automation logic
-├─ frontend/           Reoteab interface
-├─ assets/             Runtime assets
-├─ tests/              Automated tests
-├─ main.py             Application entry point
-├─ build.ps1           Windows build script
-├─ LICENSE
-└─ NOTICE
-```
-
-On Windows, the normal build command is:
+Most players should use the release executable. If you want to inspect or build Reoteab yourself, see the project files and run the Windows build script:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\build.ps1
 ```
 
-A successful build should create:
+The finished executable is created at `dist\Reoteab.exe`.
 
-```text
-dist\Reoteab.exe
-```
-
-If you are testing a freshly built executable, check that you are actually launching the new file and not an older copy from somewhere else.
-
----
-
-## Contributing
-
-Contributions, useful bug reports, and tested calibration presets are welcome.
-
-For code changes, the preferred approach is:
-
-```text
-Reproduce the problem
-        ↓
-Trace the actual code path
-        ↓
-Find the cause
-        ↓
-Make the smallest practical fix
-        ↓
-Run relevant tests
-        ↓
-Test in Roblox when needed
-```
-
-A fix for one bad click should usually stay a fix for one bad click.
-
-Avoid turning small bugs into large rewrites unless the existing design genuinely requires it.
-
-Focused commits are easier to review, test, and revert if something behaves differently in-game.
-
-## Development
+## Project notes
 
 Reoteab is developed with the assistance of modern development tools, including AI-assisted coding and review. Features and changes are still tested and reviewed before release.
 
----
-
-## Antivirus detections
-
-Reoteab is automation software packaged as a Windows executable.
-
-Programs that:
-
-- simulate keyboard input
-- move/click the mouse
-- inspect windows
-- automate another application
-
-can sometimes trigger antivirus heuristics.
-
-The source code is available in this repository so users can inspect the project and build it themselves.
-
-This does not mean every antivirus warning should automatically be ignored. Make sure the file came from the official Reoteab project before running it.
-
----
-
-## Project history
-
-Reoteab is not a from-scratch rewrite.
-
-It continues work from the:
-
-```text
-Noteab → Coteab → Reoteab
-```
-
-lineage.
-
-Original licensing, copyright notices, attribution, and other required upstream information remain preserved.
-
-Reoteab being the current project name does not remove the history of the code it came from.
-
-For the actual legal information, see:
-
-- [`LICENSE`](LICENSE)
-- [`NOTICE`](NOTICE)
-
----
-
-## Links
-
-**Releases**  
-https://github.com/DeeepXD/Reoteab/releases
-
-**Issues**  
-https://github.com/DeeepXD/Reoteab/issues
-
-**Source**  
-https://github.com/DeeepXD/Reoteab
-
-**Discord**  
-https://discord.gg/bQNSU3pfPF
-
----
+Reoteab continues the Noteab → Coteab → Reoteab project lineage. Required licensing and attribution are preserved in [LICENSE](LICENSE) and [NOTICE](NOTICE).
 
 <p align="center">
-  <b>Reoteab</b><br>
-  <sub>Community maintained. Not affiliated with Roblox or the Sol's RNG developers.</sub>
+  <sub>Reoteab is community maintained and is not affiliated with Roblox or the Sol's RNG developers.</sub>
 </p>
