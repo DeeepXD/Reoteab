@@ -31,6 +31,7 @@ __pycache__/
 .venv/
 venv/
 venv_build/
+venv-devlab/
 *.egg-info/
 
 # Frontend
@@ -45,6 +46,8 @@ frontend/dist/
 /dist_onefile/
 *.spec
 !Reoteab-onefile.spec
+!Reoteab-DevLab.spec
+lib/devlab/
 *.exe
 *.zip
 *.bak

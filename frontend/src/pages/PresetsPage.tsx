@@ -66,6 +66,7 @@ export default function PresetsPage() {
         setImageSource(null);
         setImagePreview(null);
         setMessage("");
+        window.dispatchEvent(new Event("reoteab:ui-committed"));
     };
 
     const loadPreset = async (preset: MacroPreset) => {

@@ -24,6 +24,9 @@ import MovementsPage from "./pages/MovementsPage";
 import PresetsPage from "./pages/PresetsPage";
 import RecorderWindow from "./pages/RecorderWindow";
 import BiomeConfirmWindow from "./pages/BiomeConfirmWindow";
+import DevLabPage from "./pages/DevLabPage";
+import useUiMaintenance from "./hooks/useUiMaintenance";
+import useUiEvents from "./hooks/useUiEvents";
 
 // --- Safe Mode (Browser failsafe via HTTP) ---
 const isSafeMode = new URLSearchParams(window.location.search).get("safe_mode");
@@ -75,6 +78,10 @@ const pages: Record<string, React.FC> = {
   // puzzle: PuzzlePage,
 };
 
+if (import.meta.env.VITE_REOTEAB_DEVLAB === "true") {
+  pages.devlab = DevLabPage;
+}
+
 function App() {
   const [activeTab, setActiveTab] = useState("notice");
   const { config, saveConfig, isMacroRunning, setMacroRunning } = useConfig();
@@ -82,6 +89,38 @@ function App() {
   const [theme, setTheme] = useState("midnight");
   const [isGlitching, setIsGlitching] = useState(false);
   const [macroVersion, setMacroVersion] = useState("v?.?.?");
+
+  useUiMaintenance(activeTab, theme);
+  useUiEvents(isApiReady);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const restoreUiState = async () => {
+      try {
+        const state = await window.pywebview?.api?.get_ui_restore_state?.();
+        if (cancelled || !state) return;
+        if (typeof state.active_page === "string" && pages[state.active_page]) {
+          setActiveTab(state.active_page);
+        }
+        if (typeof state.theme === "string") {
+          setTheme(state.theme);
+        }
+        setMacroRunning(Boolean(state.macro_running));
+        const scrollY = Number(state.scroll_y) || 0;
+        window.setTimeout(() => {
+          if (!cancelled) {
+            document.querySelector<HTMLElement>(".page-content")?.scrollTo({ top: scrollY });
+          }
+        }, 0);
+      } catch {
+        // The initial page is safe when a restore snapshot is unavailable.
+      }
+    };
+
+    if (isApiReady) void restoreUiState();
+    return () => { cancelled = true; };
+  }, [isApiReady, setMacroRunning]);
 
 
   const startMacro = async () => {

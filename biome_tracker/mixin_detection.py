@@ -1,8 +1,34 @@
+import multiprocessing
+
 from .base_support import *
 from .biome_transitions import BiomeTransitionDispatcher, biome_webhook_events
 
+
+def _capture_rare_biome_screenshot(screenshot_path, result_connection):
+    image = None
+    try:
+        image = pyautogui.screenshot()
+        image.save(screenshot_path)
+        result_connection.send(("ok", ""))
+    except Exception as e:
+        try:
+            result_connection.send(("error", str(e)))
+        except Exception:
+            pass
+    finally:
+        try:
+            if image is not None:
+                image.close()
+        except Exception:
+            pass
+        try:
+            result_connection.close()
+        except Exception:
+            pass
+
 class DetectionMixin:
     MAX_RUNTIME_LOGS = 1000
+    RARE_SCREENSHOT_TIMEOUT = 5.0
 
     def _is_detection_session_active(self, generation=None):
         if not self.detection_running:
@@ -11,6 +37,128 @@ class DetectionMixin:
             state = getattr(self, "_detection_thread_state", None)
             generation = getattr(state, "generation", None)
         return generation is None or generation == getattr(self, "_detection_generation", generation)
+
+    def _set_biome_pipeline_stage(self, stage, detail=None, log=False):
+        self._biome_pipeline_state = {
+            "stage": str(stage),
+            "detail": str(detail or ""),
+            "generation": getattr(self, "_detection_generation", 0),
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+        }
+        if log:
+            message = f"[BiomePipeline] {stage}"
+            if detail:
+                message += f": {detail}"
+            self.append_log(message)
+
+    def _mark_detection_worker(self, name, state):
+        lock = getattr(self, "_detection_health_lock", None)
+        if lock is None:
+            lock = threading.Lock()
+            self._detection_health_lock = lock
+        with lock:
+            health = getattr(self, "_detection_worker_health", None)
+            if not isinstance(health, dict):
+                health = {}
+                self._detection_worker_health = health
+            generation = getattr(self._detection_thread_state, "generation", None)
+            previous = health.get(name, {})
+            previous_generation = previous.get("generation") if isinstance(previous, dict) else None
+            if previous_generation is not None and generation is not None and generation < previous_generation:
+                return
+            health[name] = {
+                "state": state,
+                "generation": generation,
+                "updated_at": datetime.now().isoformat(timespec="seconds"),
+            }
+
+    def _run_detection_worker(self, thread_func, name, generation):
+        self._detection_thread_state.generation = generation
+        self._mark_detection_worker(name, "running")
+        try:
+            thread_func()
+        except Exception as e:
+            self.error_logging(e, f"Detection worker {name} failed")
+        finally:
+            active = self._is_detection_session_active(generation)
+            self._mark_detection_worker(name, "failed" if active else "stopped")
+            if active:
+                self.append_log(f"[Worker] {name} exited unexpectedly; biome session is still running.")
+
+    def _take_rare_biome_screenshot(self, screenshot_path, timeout=None):
+        timeout = self.RARE_SCREENSHOT_TIMEOUT if timeout is None else max(0.01, float(timeout))
+        lock = getattr(self, "_rare_screenshot_lock", None)
+        if lock is None:
+            lock = threading.Lock()
+            self._rare_screenshot_lock = lock
+        if not lock.acquire(blocking=False):
+            self.append_log("[Rare Biome Screenshot] Previous capture is still running; skipping screenshot")
+            return None
+
+        process = None
+        result_connection = None
+        process_lock = getattr(self, "_rare_screenshot_process_lock", None)
+        if process_lock is None:
+            process_lock = threading.Lock()
+            self._rare_screenshot_process_lock = process_lock
+        try:
+            context = multiprocessing.get_context("spawn")
+            result_connection, child_connection = context.Pipe(duplex=False)
+            process = context.Process(
+                target=_capture_rare_biome_screenshot,
+                args=(screenshot_path, child_connection),
+                name="Rare Biome Screenshot",
+            )
+            with process_lock:
+                self._rare_screenshot_process = process
+            process.start()
+            child_connection.close()
+            process.join(timeout)
+            if process.is_alive():
+                process.terminate()
+                process.join(1)
+                self.append_log(f"[Rare Biome Screenshot] Capture timed out after {timeout:g}s; continuing without it")
+                return None
+            if result_connection.poll():
+                status, detail = result_connection.recv()
+                if status == "ok":
+                    return screenshot_path
+                self.error_logging(detail, "Error taking rare biome screenshot")
+                return None
+            self.error_logging("capture process exited without a result", "Error taking rare biome screenshot")
+            return None
+        finally:
+            if result_connection is not None:
+                try:
+                    result_connection.close()
+                except Exception:
+                    pass
+            with process_lock:
+                if getattr(self, "_rare_screenshot_process", None) is process:
+                    self._rare_screenshot_process = None
+            lock.release()
+
+    def _stop_rare_screenshot_capture(self):
+        process_lock = getattr(self, "_rare_screenshot_process_lock", None)
+        if process_lock is None:
+            return
+        with process_lock:
+            process = getattr(self, "_rare_screenshot_process", None)
+            if process is None:
+                return
+            if process.is_alive():
+                process.terminate()
+                process.join(1)
+            self._rare_screenshot_process = None
+
+    @staticmethod
+    def _extract_biome_from_rpc_line(line):
+        if "[BloxstrapRPC]" not in line or '"largeImage"' not in line:
+            return None
+        match = re.search(r'"largeImage"\s*:\s*\{[^}]*"hoverText"\s*:\s*"([^"]+)"', line)
+        if not match:
+            return None
+        return match.group(1).strip().upper()
 
     def load_logs(self):
         if os.path.exists('macro_logs.txt'):
@@ -439,12 +587,17 @@ class DetectionMixin:
             generation,
             self._is_detection_session_active,
             on_error=lambda exc: self.error_logging(exc, "Error dispatching biome transition"),
+            on_overflow=lambda count, label, critical: self.append_log(
+                f"[BiomePipeline] Transition queue limit reached ({count}); "
+                f"{'rare' if critical else 'ordinary'} {label} was not queued."
+            ),
         )
         self._detection_workers = [thread for thread in getattr(self, "_detection_workers", []) if thread.is_alive()]
             
         self._start_player_logger_thread()
         self.start_time = now
         self.current_session = 0
+        self._last_biome_health_log = 0.0
         self.has_started_once = True
         self._session_window_reset_performed = False
         self.stop_sent = False
@@ -491,11 +644,12 @@ class DetectionMixin:
         ]
 
         for thread_func, name in threads:
-            def run_worker(thread_func=thread_func):
-                self._detection_thread_state.generation = generation
-                thread_func()
-
-            thread = threading.Thread(target=run_worker, name=name, daemon=True)
+            thread = threading.Thread(
+                target=self._run_detection_worker,
+                args=(thread_func, name, generation),
+                name=name,
+                daemon=True,
+            )
             self._detection_workers.append(thread)
             thread.start()
 
@@ -510,6 +664,7 @@ class DetectionMixin:
         except Exception:
             pass
         
+        self._set_biome_pipeline_stage("detector started", f"session {generation}", log=True)
         print("Biome detection started.")
 
     def stop_detection(self):
@@ -520,10 +675,15 @@ class DetectionMixin:
         dispatcher = getattr(self, "_biome_transition_dispatcher", None)
         if dispatcher is not None:
             dispatcher.stop()
+        self._stop_rare_screenshot_capture()
+        deadline = time.monotonic() + 2.5
         for thread in getattr(self, "_detection_workers", []):
             if thread.is_alive() and thread is not threading.current_thread():
-                thread.join(timeout=0.1)
+                thread.join(timeout=max(0.0, deadline - time.monotonic()))
         self._detection_workers = [thread for thread in getattr(self, "_detection_workers", []) if thread.is_alive()]
+        if self._detection_workers:
+            names = ", ".join(sorted({thread.name for thread in self._detection_workers}))
+            self.append_log(f"[Worker] Still stopping after timeout: {names}")
             
         if hasattr(self, "on_status_change") and callable(self.on_status_change):
             try:
@@ -907,36 +1067,46 @@ class DetectionMixin:
             log_lines = self.read_log_file(log_file_path)
 
             for line in reversed(log_lines):
-                if "[BloxstrapRPC]" in line and '"largeImage"' in line:
-                    match = re.search(r'"largeImage"\s*:\s*\{[^}]*"hoverText"\s*:\s*"([^"]+)"', line)
-                    if match:
-                        biome = match.group(1).strip().upper()
+                biome = self._extract_biome_from_rpc_line(line)
+                if biome:
+                    if biome not in self.biome_data:
+                        print(f"New unlisted biome detected from RPC: {biome}")
+                        try:
+                            self.append_log(f"Auto-loaded new unlisted biome: {biome}")
+                        except Exception: pass
                         
-                        if biome not in self.biome_data:
-                            print(f"New unlisted biome detected from RPC: {biome}")
-                            try:
-                                self.append_log(f"Auto-loaded new unlisted biome: {biome}")
-                            except Exception: pass
-                            
-                            self.biome_data[biome] = {
-                                "color": "0xffffff",
-                                "thumbnail_url": "https://raw.githubusercontent.com/xVapure/Noteab-Macro/refs/heads/main/images/biome_placeholder.png"
-                            }
-                            
-                        # Set "Message" default for event biome whenever sol dev added to da game 
-                        if biome not in self.config["biome_notifier"] and biome not in rare_biomes and biome != "NORMAL":
-                            self.config["biome_notifier"][biome] = "Message"
-                            try: 
-                                self.save_config()
-                            except Exception: pass
+                        self.biome_data[biome] = {
+                            "color": "0xffffff",
+                            "thumbnail_url": "https://raw.githubusercontent.com/xVapure/Noteab-Macro/refs/heads/main/images/biome_placeholder.png"
+                        }
 
-                        if biome != self.current_biome:
-                            last_biome = self.current_biome
-                            self.current_biome = biome
-                            dispatcher = getattr(self, "_biome_transition_dispatcher", None)
-                            if dispatcher is not None:
-                                dispatcher.submit(self.handle_biome_detection, biome, last_biome, self._detection_generation)
-                        return
+                    # Set "Message" default for event biome whenever sol dev added to da game
+                    if biome not in self.config["biome_notifier"] and biome not in rare_biomes and biome != "NORMAL":
+                        self.config["biome_notifier"][biome] = "Message"
+                        try:
+                            self.save_config()
+                        except Exception: pass
+
+                    if biome != self.current_biome:
+                        last_biome = self.current_biome
+                        self.current_biome = biome
+                        dispatcher = getattr(self, "_biome_transition_dispatcher", None)
+                        if dispatcher is not None:
+                            submitted = dispatcher.submit(
+                                self.handle_biome_detection,
+                                biome,
+                                last_biome,
+                                self._detection_generation,
+                                critical=biome in rare_biomes or last_biome in rare_biomes,
+                                label=f"{last_biome or 'UNKNOWN'} -> {biome}",
+                            )
+                            if submitted:
+                                self._set_biome_pipeline_stage(
+                                    "transition queued",
+                                    f"{last_biome or 'UNKNOWN'} -> {biome} (pending {dispatcher.pending_count})",
+                                    log=True,
+                                )
+                    return
 
         except Exception as e:
             self.error_logging(e, "Error in check_biome_in_logs function :skull:")
@@ -954,7 +1124,10 @@ class DetectionMixin:
                 ended_biome = end_event[0]
                 prev_message_type = self.config.get("biome_notifier", {}).get(ended_biome, "None")
                 if prev_message_type != "None":
+                    self._set_biome_pipeline_stage("webhook send", f"{ended_biome} end", log=True)
                     self.send_webhook(ended_biome, prev_message_type, "end")
+                if not self._is_detection_session_active(generation):
+                    return
 
             biome_info = self.biome_data[biome]
             now = datetime.now(timezone.utc)    
@@ -1044,15 +1217,21 @@ class DetectionMixin:
                             self.append_log(f"[Rare Biome Screenshot] Roblox not focused, skipping screenshot")
                             screenshot_path = None
                         else:
-                            img = pyautogui.screenshot()
-                            img.save(screenshot_path)
-                            self.append_log(f"[Rare Biome Screenshot] Saved screenshot: {screenshot_path}")
+                            self._set_biome_pipeline_stage("screenshot capture", biome, log=True)
+                            screenshot_path = self._take_rare_biome_screenshot(screenshot_path)
+                            if screenshot_path:
+                                self.append_log(f"[Rare Biome Screenshot] Saved screenshot: {screenshot_path}")
                     except Exception as e:
                         self.error_logging(e, "Error taking rare biome screenshot")
                         screenshot_path = None
 
                 if not self._is_detection_session_active(generation):
                     return
+                self._set_biome_pipeline_stage(
+                    "webhook send",
+                    f"{biome} start (screenshot={'yes' if screenshot_path else 'no'})",
+                    log=True,
+                )
                 self.send_webhook(biome, message_type, "start", screenshot_path=screenshot_path)
 
             if last_biome in rare_biomes and biome not in rare_biomes:
@@ -1073,6 +1252,7 @@ class DetectionMixin:
                 with self.lock:
                     if self.config.get("enable_buff_glitched", False) and not self.is_fishing_mode_enabled():
                         threading.Thread(target=self.perform_glitched_enable_buff, daemon=True).start()
+            self._set_biome_pipeline_stage("transition complete", biome, log=True)
 
         except Exception as e:
             self.error_logging(e,
@@ -1087,9 +1267,19 @@ class DetectionMixin:
                 if current_log_file != last_log_file:
                     self.last_position = 0
                     last_log_file = current_log_file
+                    self._set_biome_pipeline_stage("log opened", os.path.basename(current_log_file), log=True)
 
                 self.check_biome_in_logs()
                 self.update_session_time()
+                self._mark_detection_worker("Biome Check", "running")
+                now = time.monotonic()
+                if now - getattr(self, "_last_biome_health_log", 0.0) >= 300:
+                    dispatcher = getattr(self, "_biome_transition_dispatcher", None)
+                    pending = dispatcher.pending_count if dispatcher is not None else 0
+                    self.append_log(
+                        f"[BiomePipeline] detector alive; current={self.current_biome or 'UNKNOWN'}; pending={pending}"
+                    )
+                    self._last_biome_health_log = now
                 time.sleep(1)
 
             except Exception as e:
@@ -1168,7 +1358,7 @@ class DetectionMixin:
             return
         self.player_log_sender_running = True
         if not hasattr(self, "player_log_queue") or self.player_log_queue is None:
-            self.player_log_queue = queue.Queue()
+            self.player_log_queue = queue.Queue(maxsize=256)
         self.player_log_sender_thread = threading.Thread(target=self._player_log_sender_loop, daemon=True)
         self.player_log_sender_thread.start()
 
@@ -1176,7 +1366,9 @@ class DetectionMixin:
         self.player_log_sender_running = False
         try:
             if hasattr(self, "player_log_queue"):
-                self.player_log_queue.put(None)
+                self.player_log_queue.put_nowait(None)
+        except queue.Full:
+            pass
         except Exception:
             pass
 
@@ -1198,14 +1390,17 @@ class DetectionMixin:
                     if getattr(r, "status_code", None) == 429:
                         retry_after = r.headers.get("Retry-After")
                         try:
-                            retry = int(retry_after)
+                            retry = min(max(int(retry_after), 1), 60)
                         except Exception:
                             retry = 5
-                        time.sleep(retry)
-                        try:
-                            requests.post(webhook_url, json=payload, timeout=7)
-                        except Exception:
-                            pass
+                        deadline = time.monotonic() + retry
+                        while getattr(self, "player_log_sender_running", False) and time.monotonic() < deadline:
+                            time.sleep(min(0.1, max(0.0, deadline - time.monotonic())))
+                        if getattr(self, "player_log_sender_running", False):
+                            try:
+                                requests.post(webhook_url, json=payload, timeout=7)
+                            except Exception:
+                                pass
                 except Exception:
                     pass
             delay = getattr(self, "player_log_send_delay", 2.0)
@@ -1348,7 +1543,7 @@ class DetectionMixin:
                 except Exception:
                     interval_min = 5.0
                 if (datetime.now() - getattr(self, "last_aura_screenshot_time", datetime.min)) >= timedelta(minutes=interval_min):
-                    self._action_scheduler.enqueue_action(self.perform_periodic_aura_screenshot_sync, name="periodical:aura", priority=2)
+                    self._action_scheduler.enqueue_action(self.perform_periodic_aura_screenshot_sync, name="periodical:aura", priority=2, unique=True)
         except Exception:
             pass
 
@@ -1362,7 +1557,7 @@ class DetectionMixin:
                 except Exception:
                     interval_min = 5.0
                 if (datetime.now() - getattr(self, "last_inventory_screenshot_time", datetime.min)) >= timedelta(minutes=interval_min):
-                    self._action_scheduler.enqueue_action(self.perform_periodic_inventory_screenshot_sync, name="periodical:inventory", priority=3)
+                    self._action_scheduler.enqueue_action(self.perform_periodic_inventory_screenshot_sync, name="periodical:inventory", priority=3, unique=True)
         except Exception:
             pass
 

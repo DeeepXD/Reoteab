@@ -1,3 +1,8 @@
-﻿from .core import BiomeTracker
-
 __all__ = ["BiomeTracker"]
+
+
+def __getattr__(name):
+    if name == "BiomeTracker":
+        from .core import BiomeTracker
+        return BiomeTracker
+    raise AttributeError(name)

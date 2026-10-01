@@ -10,18 +10,23 @@ import webbrowser
 import webview
 import os
 import sys
+import multiprocessing
+from ui_bridge import UiEventBridge
+from ui_maintenance import UiMaintenanceManager
 
 # i added this so we can easily change macro version upon releases without having to change multiple back-end & front-end behaviours
 # for future people that is reading the open source code, hello :p
 current_version = "0.1.3"
+_is_devlab = os.environ.get("REOTEAB_DEVLAB") == "1"
 display_name = "Reoteab v0.1.3"
+if _is_devlab:
+    display_name = "Reoteab DevLab"
 os.environ["REOTEAB_VERSION"] = current_version
 os.environ["WEBKIT_DISABLE_COMPOSITING_MODE"] = "1"
 import time
 import psutil
 from datetime import datetime
 import logging
-import shutil
 import urllib.request
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import socket
@@ -37,7 +42,8 @@ os.environ['WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS'] = '--disable-gpu'
 APPDATA_BASE.mkdir(parents=True, exist_ok=True)
 os.chdir(APPDATA_BASE)
 
-_mutex = ctypes.windll.kernel32.CreateMutexW(None, True, "ReoteabSingleInstance")
+_mutex_name = "ReoteabDevLabSingleInstance" if _is_devlab else "ReoteabSingleInstance"
+_mutex = ctypes.windll.kernel32.CreateMutexW(None, True, _mutex_name)
 if ctypes.windll.kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
     ctypes.windll.user32.MessageBoxW(0, "Reoteab is already running!\n\nPlease close the existing instance before opening a new one.", "Reoteab", 0x30)
     sys.exit(0)
@@ -68,15 +74,7 @@ except Exception as e:
 
 
 _wv2_user_data_base = os.path.join(APPDATA_BASE, "WebView2UserData")
-try:
-    if os.path.exists(_wv2_user_data_base):
-        for _f in os.listdir(_wv2_user_data_base):
-            try: shutil.rmtree(os.path.join(_wv2_user_data_base, _f), ignore_errors=True)
-            except Exception: pass
-except Exception:
-    pass
-
-_wv2_user_data = os.path.join(_wv2_user_data_base, f"Session_{int(time.time())}")
+_wv2_user_data = os.path.join(_wv2_user_data_base, f"Session_{time.time_ns()}")
 os.makedirs(_wv2_user_data, exist_ok=True)
 os.environ["WEBVIEW2_USER_DATA_FOLDER"] = _wv2_user_data
 
@@ -103,7 +101,18 @@ def get_base_path(): return sys._MEIPASS if hasattr(sys, '_MEIPASS') else os.pat
 def _get_frontend_dist_dirs() -> list[str]:
     base_path = get_base_path()
     from biome_tracker.config import APPDATA_BASE
-    
+
+    if _is_devlab:
+        dirs = [
+            os.path.join(str(APPDATA_BASE), "devlab", "dist"),
+            os.path.join(os.getcwd(), "frontend", "devlab-dist"),
+        ]
+        if getattr(sys, "frozen", False):
+            dirs.append(os.path.join(base_path, "lib", "devlab"))
+        else:
+            dirs.append(os.path.join(base_path, "lib", "devlab"))
+        return [d for d in dirs if os.path.exists(d)]
+
     dirs = [
         os.path.join(str(APPDATA_BASE), "dist"),
         os.path.join(str(APPDATA_BASE), "frontend", "dist"),
@@ -127,13 +136,14 @@ def get_frontend_entry():
         index_file = os.path.join(dist_dir, "index.html")
         if os.path.exists(index_file):
             try:
-                abs_path = os.path.abspath(index_file).replace("\\", "/")
-                with open(index_file, "r", encoding="utf-8") as f:
-                    html_content = f.read()
+                abs_path = os.path.abspath(index_file)
                 print(f"Loading frontend from local: {abs_path}")
-                return {"html": html_content, "url": f"file:///{abs_path}"}
+                return {"url": abs_path}
             except Exception as e:
                 print(f"Error reading local index.html: {e}")
+
+    if _is_devlab:
+        return {"html": "<h2>Reoteab DevLab frontend is missing.</h2>", "url": "about:blank"}
 
     frontend_url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/lib/dist/index.html"
     try:
@@ -147,9 +157,9 @@ def get_frontend_entry():
             if html_content and len(html_content) > 1000:
                 saved_path = os.path.join(appdata_dist, "index.html")
                 with open(saved_path, "w", encoding="utf-8") as f: f.write(html_content)
-                abs_path = os.path.abspath(saved_path).replace("\\", "/")
+                abs_path = os.path.abspath(saved_path)
                 print(f"Fetched frontend from GitHub -> saved to: {abs_path}")
-                return {"html": html_content, "url": f"file:///{abs_path}"}
+                return {"url": abs_path}
     except Exception as e:
         print(f"Failed to fetch frontend from GitHub: {e}")
 
@@ -224,9 +234,12 @@ class Api:
         self._biome_confirm_evt = threading.Event()
         self._biome_confirm_result = None
         self.emergency_port = None
+        self._ui_bridge = UiEventBridge()
+        self._ui_maintenance = UiMaintenanceManager(self)
 
     def set_window(self, window):
         self._window = window
+        self._ui_bridge.set_window(window)
         if self._calib_mgr is None:
             from biome_tracker.base_support import CalibrationManager
             self._calib_mgr = CalibrationManager()
@@ -236,6 +249,16 @@ class Api:
             save_fn=save_config,
             emit_fn=self.emit_calibration_result
         )
+        self._ui_maintenance.set_window(window)
+
+    def report_ui_state(self, state):
+        return self._ui_maintenance.report_ui_state(state)
+
+    def get_ui_restore_state(self):
+        return self._ui_maintenance.get_restore_state()
+
+    def get_ui_events(self):
+        return self._ui_bridge.drain()
 
     def get_config(self):
         t = self._tracker
@@ -250,11 +273,15 @@ class Api:
         try:
             if not self._window:
                 return {"success": False, "error": "Window not available"}
-            result = self._window.create_file_dialog(
-                webview.FileDialog.OPEN,
-                allow_multiple=False,
-                file_types=("Image Files (*.png;*.jpg;*.jpeg;*.gif;*.webp)",),
-            )
+            self._ui_maintenance.set_operation("file_dialog", True)
+            try:
+                result = self._window.create_file_dialog(
+                    webview.FileDialog.OPEN,
+                    allow_multiple=False,
+                    file_types=("Image Files (*.png;*.jpg;*.jpeg;*.gif;*.webp)",),
+                )
+            finally:
+                self._ui_maintenance.set_operation("file_dialog", False)
             if not result:
                 return {"success": False, "error": "No image selected"}
             path = result[0] if isinstance(result, (list, tuple)) else result
@@ -340,7 +367,11 @@ class Api:
         if _cfg_bool(cfg, "fishing_failsafe_rejoin") and not _cfg_bool(cfg, "auto_reconnect"):
             cfg["fishing_failsafe_rejoin"] = False
 
-        save_config(cfg)
+        self._ui_maintenance.set_operation("saving", True)
+        try:
+            save_config(cfg)
+        finally:
+            self._ui_maintenance.set_operation("saving", False)
         if self._tracker:
             if not isinstance(getattr(self._tracker, "config", None), dict):
                 self._tracker.config = {}
@@ -394,10 +425,14 @@ class Api:
             if not self._window:
                 return {"success": False, "error": "Window not available"}
 
-            result = self._window.create_file_dialog(
-                webview.FileDialog.OPEN, allow_multiple=False,
-                file_types=("JSON Files (*.json)",),
-            )
+            self._ui_maintenance.set_operation("file_dialog", True)
+            try:
+                result = self._window.create_file_dialog(
+                    webview.FileDialog.OPEN, allow_multiple=False,
+                    file_types=("JSON Files (*.json)",),
+                )
+            finally:
+                self._ui_maintenance.set_operation("file_dialog", False)
             if not result:
                 return {"success": False, "error": "No file selected"}
 
@@ -407,7 +442,11 @@ class Api:
             if not isinstance(imported, dict):
                 return {"success": False, "error": "Invalid config file: must be a JSON object"}
 
-            save_config(imported)
+            self._ui_maintenance.set_operation("saving", True)
+            try:
+                save_config(imported)
+            finally:
+                self._ui_maintenance.set_operation("saving", False)
 
             if self._tracker:
                 if not isinstance(getattr(self._tracker, "config", None), dict):
@@ -434,7 +473,11 @@ class Api:
 
             downloads_dir = Path(os.path.expanduser("~/Downloads"))
             downloads_dir.mkdir(parents=True, exist_ok=True)
-            selected_dir = FileDialog.askdirectory(initialdir=str(downloads_dir), title="Select Downloads Folder")
+            self._ui_maintenance.set_operation("file_dialog", True)
+            try:
+                selected_dir = FileDialog.askdirectory(initialdir=str(downloads_dir), title="Select Downloads Folder")
+            finally:
+                self._ui_maintenance.set_operation("file_dialog", False)
             if not selected_dir:
                 return {"success": False, "error": "No directory selected"}
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -460,10 +503,14 @@ class Api:
             if not self._window:
                 return {"success": False, "error": "Window not available"}
 
-            result = self._window.create_file_dialog(
-                webview.FileDialog.OPEN, allow_multiple=False,
-                file_types=("JSON Files (*.json)",),
-            )
+            self._ui_maintenance.set_operation("file_dialog", True)
+            try:
+                result = self._window.create_file_dialog(
+                    webview.FileDialog.OPEN, allow_multiple=False,
+                    file_types=("JSON Files (*.json)",),
+                )
+            finally:
+                self._ui_maintenance.set_operation("file_dialog", False)
             if not result:
                 return {"success": False, "error": "No file selected"}
 
@@ -495,10 +542,14 @@ class Api:
             if not self._window:
                 return {"success": False, "error": "Window not available"}
 
-            result = self._window.create_file_dialog(
-                webview.FileDialog.SAVE, save_filename=filename,
-                file_types=("JSON Files (*.json)",)
-            )
+            self._ui_maintenance.set_operation("file_dialog", True)
+            try:
+                result = self._window.create_file_dialog(
+                    webview.FileDialog.SAVE, save_filename=filename,
+                    file_types=("JSON Files (*.json)",)
+                )
+            finally:
+                self._ui_maintenance.set_operation("file_dialog", False)
             if not result:
                 return {"success": False, "error": "Cancelled"}
 
@@ -671,10 +722,14 @@ class Api:
         
         modules = {}
         det = t.detection_running
+        biome_worker_alive = any(
+            thread.name == "Biome Check" and thread.is_alive()
+            for thread in getattr(t, "_detection_workers", [])
+        )
         
         categories = {
             "Core Features": {
-                "Biome Detection": {"active": det, "enabled": True},
+                "Biome Detection": {"active": det and biome_worker_alive, "enabled": True},
                 "Aura Detection": {"active": det and _cfg_bool(cfg, "enable_aura_detection"), "enabled": _cfg_bool(cfg, "enable_aura_detection")},
                 "Macro Idle Mode": {"active": _cfg_bool(cfg, "enable_idle_mode"), "enabled": _cfg_bool(cfg, "enable_idle_mode")},
                 "Anti-AFK": {"active": det and _cfg_bool(cfg, "anti_afk", True), "enabled": _cfg_bool(cfg, "anti_afk", True)},
@@ -964,26 +1019,23 @@ class Api:
 
     # --- frontend event emitters (JS bridge) ---
 
-    def _safe_eval_js(self, js_code):
-        if not self._window: return
-        try:
-            self._window.evaluate_js(js_code)
-        except Exception: pass
+    def _publish_ui_event(self, event, payload=None):
+        self._ui_bridge.publish(event, payload)
 
     def _emit_macro_status(self):
-        self._safe_eval_js(f'if(window.onMacroStatus) window.onMacroStatus("{self.get_macro_status()}");')
+        self._publish_ui_event("macro-status", self.get_macro_status())
 
     def _emit_config_update(self):
-        self._safe_eval_js('if(window.onConfigUpdated) window.onConfigUpdated();')
+        self._publish_ui_event("config")
 
     def _emit_biome_update(self, biome):
-        self._safe_eval_js(f'if(window.onBiomeUpdate) window.onBiomeUpdate("{biome}");')
+        self._publish_ui_event("biome", biome)
 
     def _emit_shortcut(self, key):
-        self._safe_eval_js(f'if(window.onShortcutEvent) window.onShortcutEvent("{key}");')
+        self._publish_ui_event("shortcut", key)
 
     def _emit_fishing_failsafe_warning(self, msg):
-        self._safe_eval_js(f"if(window.onFishingFailsafeWarning) window.onFishingFailsafeWarning({json.dumps(str(msg))});")
+        self._publish_ui_event("fishing-failsafe", str(msg))
 
     def _request_biome_confirm(self, biome: str):
         self._biome_confirm_evt.clear()
@@ -1202,14 +1254,11 @@ class Api:
              self._tracker.align_camera()
 
     def emit_calibration_result(self, data):
-         if self._window:
-             js_data = json.dumps(data)
-             self._window.evaluate_js(
-                 f"if(window.onCalibrationResult) window.onCalibrationResult({js_data});"
-                 f"if(window.onCalibrationResultMisc) window.onCalibrationResultMisc({js_data});"
-             )
+         self._ui_maintenance.set_operation("calibration", False)
+         self._publish_ui_event("calibration-result", data)
 
     def create_calibration_window(self, key="unknown", window_type="point"):
+        self._ui_maintenance.set_operation("calibration", True)
         self._calib_mgr.request_calibration(config_key=key, window_type=window_type)
 
     def auto_calibrate_fishing_detect_pixel(self):
@@ -1341,11 +1390,11 @@ def launch_app(api_class, tracker=None):
 def stop_app(tracker):
     if tracker and getattr(tracker, "detection_running", False): tracker.stop_detection()
 
-def main():
+def main(api_class=Api):
     ensure_workspace_files()
 
     tracker = None
-    api = Api(tracker=None)
+    api = api_class(tracker=None)
     api._setup_emergency_server()
     api._setup_emergency_hotkey()
     try:
@@ -1369,6 +1418,8 @@ def main():
                 from biome_tracker.core import BiomeTracker
                 tracker = BiomeTracker()
                 api._tracker = tracker
+                if hasattr(api, "on_tracker_ready"):
+                    api.on_tracker_ready(tracker)
                 tracker.on_stats_update = api._emit_config_update
                 tracker.on_biome_update = api._emit_biome_update
                 tracker.on_biome_confirm_request = api._request_biome_confirm
@@ -1442,6 +1493,8 @@ def main():
             except Exception as e2:
                 print(f"[Webview] Default backend also failed: {e2}")
 
+        api._ui_bridge.stop()
+        api._ui_maintenance.stop()
         return 0
 
     except KeyboardInterrupt:
@@ -1461,4 +1514,5 @@ def main():
 
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     raise SystemExit(main())

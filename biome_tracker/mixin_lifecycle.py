@@ -94,9 +94,17 @@ class LifecycleMixin:
         self._detection_generation = 0
         self._detection_thread_state = threading.local()
         self._detection_workers = []
+        self._detection_worker_health = {}
+        self._detection_health_lock = threading.Lock()
+        self._biome_pipeline_state = {}
+        self._last_biome_health_log = 0.0
+        self._rare_screenshot_lock = threading.Lock()
+        self._rare_screenshot_process_lock = threading.Lock()
+        self._rare_screenshot_process = None
         self._biome_transition_dispatcher = None
         self.logs = self.load_logs()
-        self.player_log_queue = queue.Queue()
+        self.player_log_queue = queue.Queue(maxsize=256)
+        self._player_log_queue_overflow_reported = False
         self.player_log_send_delay = float(self.config.get("player_log_send_delay", 2.0))
         self.biome_history = []
         self.player_log_sender_running = False
@@ -296,7 +304,9 @@ class LifecycleMixin:
             self.player_logger_running = False
             try:
                 if hasattr(self, "player_log_queue") and self.player_log_queue:
-                    self.player_log_queue.put(None)
+                    self.player_log_queue.put_nowait(None)
+            except queue.Full:
+                pass
             except Exception:
                 pass
             if getattr(self, 'has_started_once', False):

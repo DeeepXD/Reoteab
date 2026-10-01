@@ -32,6 +32,7 @@ class BiomeWebhookTests(unittest.TestCase):
 
         post.assert_called_once()
         self.assertEqual(post.call_args.args[0], "https://discord.invalid/webhook")
+        self.assertEqual(post.call_args.kwargs["timeout"], 10)
         self.assertIn(
             self.tracker.config["private_server_link"],
             post.call_args.kwargs["json"]["embeds"][0]["description"],
@@ -49,6 +50,22 @@ class BiomeWebhookTests(unittest.TestCase):
             [call.args[0] for call in post.call_args_list],
             ["https://discord.invalid/webhook", "https://discord.invalid/webhook"],
         )
+        self.assertTrue(all(call.kwargs["timeout"] == 10 for call in post.call_args_list))
+
+    def test_repeated_webhook_timeouts_are_logged_and_later_delivery_runs(self):
+        timeout = __import__("requests").exceptions.ReadTimeout("timed out")
+        with mock.patch(
+            "biome_tracker.mixin_webhook.requests.post",
+            side_effect=[timeout, timeout, self.response],
+        ) as post:
+            self.tracker.send_webhook("CYBERSPACE", "Ping", "start")
+            self.tracker.send_webhook("CYBERSPACE", "Ping", "end")
+            self.tracker.send_webhook("CYBERSPACE", "Ping", "start")
+
+        self.assertEqual(post.call_count, 3)
+        logged = [call.args[0] for call in self.tracker.append_log.call_args_list]
+        self.assertEqual(sum("Failed to send webhook" in line for line in logged), 2)
+        self.assertTrue(any("Sent Ping for CYBERSPACE - start" in line for line in logged))
 
 
 if __name__ == "__main__":

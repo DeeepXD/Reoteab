@@ -26,7 +26,8 @@ DEV_CONFIG_DIR = BASE_PATH / "config_folder"
 DEV_CONFIG = DEV_CONFIG_DIR / "config.json"
 
 _LOCAL_APPDATA = Path(_os.environ.get("LOCALAPPDATA", _os.path.expanduser("~")))
-REOTEAB_APPDATA = _LOCAL_APPDATA / "Reoteab"
+_RUNTIME_ROOT_OVERRIDE = _os.environ.get("REOTEAB_RUNTIME_ROOT", "").strip()
+REOTEAB_APPDATA = Path(_RUNTIME_ROOT_OVERRIDE) if _RUNTIME_ROOT_OVERRIDE else _LOCAL_APPDATA / "Reoteab"
 LEGACY_APPDATA = _LOCAL_APPDATA / "CoteabMacro"
 APPDATA_BASE = REOTEAB_APPDATA
 APPDATA_CONFIG = APPDATA_BASE / "config.json"
@@ -304,7 +305,7 @@ def ensure_workspace_files() -> None:
     config_file = get_config_file()
     
     # Migrate local config to AppData
-    if EXE_CONFIG.exists() and not config_file.exists():
+    if not _RUNTIME_ROOT_OVERRIDE and EXE_CONFIG.exists() and not config_file.exists():
         try:
             import shutil
             shutil.copy2(EXE_CONFIG, config_file)
@@ -312,7 +313,7 @@ def ensure_workspace_files() -> None:
             print(f"Failed to migrate config.json to AppData: {e}")
 
     legacy_config = LEGACY_APPDATA / "config.json"
-    if legacy_config.exists() and not config_file.exists():
+    if not _RUNTIME_ROOT_OVERRIDE and legacy_config.exists() and not config_file.exists():
         try:
             legacy_data = json.loads(legacy_config.read_text(encoding="utf-8"))
             if isinstance(legacy_data, dict):

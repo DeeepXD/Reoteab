@@ -171,6 +171,7 @@ export default function HeaderBar({ isRunning, onToggle, theme, onThemeChange, i
                         type="text"
                         className="form-input"
                         placeholder="Filter index"
+                        data-ui-transient="true"
                         value={searchQuery}
                         onChange={handleSearchChange}
                         onFocus={() => setIsSearchFocused(true)}
