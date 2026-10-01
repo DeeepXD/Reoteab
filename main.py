@@ -27,7 +27,6 @@ import time
 import psutil
 from datetime import datetime
 import logging
-import shutil
 import urllib.request
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import socket
@@ -75,15 +74,7 @@ except Exception as e:
 
 
 _wv2_user_data_base = os.path.join(APPDATA_BASE, "WebView2UserData")
-try:
-    if os.path.exists(_wv2_user_data_base):
-        for _f in os.listdir(_wv2_user_data_base):
-            try: shutil.rmtree(os.path.join(_wv2_user_data_base, _f), ignore_errors=True)
-            except Exception: pass
-except Exception:
-    pass
-
-_wv2_user_data = os.path.join(_wv2_user_data_base, f"Session_{int(time.time())}")
+_wv2_user_data = os.path.join(_wv2_user_data_base, f"Session_{time.time_ns()}")
 os.makedirs(_wv2_user_data, exist_ok=True)
 os.environ["WEBVIEW2_USER_DATA_FOLDER"] = _wv2_user_data
 

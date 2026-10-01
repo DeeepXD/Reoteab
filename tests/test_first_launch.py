@@ -52,6 +52,13 @@ class FirstLaunchTests(unittest.TestCase):
         self.assertNotIn("UpdateBanner", app_source)
         self.assertNotIn("auto_update_enabled", other_features_source)
 
+    def test_startup_does_not_delete_existing_webview_profiles(self):
+        main_source = (REPOSITORY_ROOT / "main.py").read_text(encoding="utf-8")
+
+        self.assertIn('WebView2UserData', main_source)
+        self.assertIn('Session_{time.time_ns()}', main_source)
+        self.assertNotIn('shutil.rmtree(os.path.join(_wv2_user_data_base', main_source)
+
 
 if __name__ == "__main__":
     unittest.main()
