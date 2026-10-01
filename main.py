@@ -16,9 +16,9 @@ from ui_maintenance import UiMaintenanceManager
 
 # i added this so we can easily change macro version upon releases without having to change multiple back-end & front-end behaviours
 # for future people that is reading the open source code, hello :p
-current_version = "0.1.3"
+current_version = "0.1.4"
 _is_devlab = os.environ.get("REOTEAB_DEVLAB") == "1"
-display_name = "Reoteab v0.1.3"
+display_name = "Reoteab v0.1.4"
 if _is_devlab:
     display_name = "Reoteab DevLab"
 os.environ["REOTEAB_VERSION"] = current_version

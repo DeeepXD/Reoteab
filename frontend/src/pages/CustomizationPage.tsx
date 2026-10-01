@@ -287,7 +287,7 @@ export default function CustomizationPage() {
                                         marginTop: "4px" 
                                     }}>
                                         <img src="https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/reoteab-icon.png" style={{ width: "16px", height: "16px", borderRadius: "50%" }} alt="footer" />
-                                        <span style={{ color: "#949BA4", fontSize: "11px", fontWeight: "500" }}>Reoteab v0.1.3 • Today at {now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                        <span style={{ color: "#949BA4", fontSize: "11px", fontWeight: "500" }}>Reoteab v0.1.4 • Today at {now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                                     </div>
                                 </div>
                                 

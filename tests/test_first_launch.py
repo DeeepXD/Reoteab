@@ -14,12 +14,12 @@ def class_method_names(path, class_name):
 class FirstLaunchTests(unittest.TestCase):
     def test_public_release_version_remains_current(self):
         main_source = (REPOSITORY_ROOT / "main.py").read_text(encoding="utf-8")
-        self.assertIn('current_version = "0.1.3"', main_source)
-        self.assertIn('display_name = "Reoteab v0.1.3"', main_source)
+        self.assertIn('current_version = "0.1.4"', main_source)
+        self.assertIn('display_name = "Reoteab v0.1.4"', main_source)
 
     def test_bundled_notice_matches_the_current_release(self):
         notice = (REPOSITORY_ROOT / "assets" / "noticetabcontents.txt").read_text(encoding="utf-8")
-        self.assertTrue(notice.startswith("# Reoteab v0.1.3"))
+        self.assertTrue(notice.startswith("# Reoteab v0.1.4"))
 
     def test_updater_api_and_install_methods_are_not_exposed(self):
         api_methods = class_method_names(REPOSITORY_ROOT / "main.py", "Api")

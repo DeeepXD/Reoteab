@@ -31,7 +31,7 @@ Reoteab is a community-maintained Sol's RNG macro for longer sessions. It contin
 
 Whether you want a focused fishing setup or a more complete session with merchant checks, biome alerts, and Discord notifications, you can enable only the parts you use.
 
-> Current public release: **v0.1.3**
+> Current public release: **v0.1.4**
 
 ## What you can do
 

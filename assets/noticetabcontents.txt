@@ -1,18 +1,18 @@
-# Reoteab v0.1.3
+# Reoteab v0.1.4
 
 Reoteab is an unofficial community-maintained continuation based on Coteab v2.2.0.
 
-## Improvements
+## Stability
 
-- Updated VIP and non-VIP fishing and Captain Flarg routes for the current Sol's RNG map
-- Added macro presets with optional images, plus fishing indicator auto-calibration
-- Added appearance customization for merchant and aura webhook embeds
+- Added WebView memory monitoring and safe maintenance during unattended sessions
+- Recreated WebView2 renderer resources without restarting the macro or backend workers
+- Switched to a bounded frontend-pulled UI event queue so presentation work cannot block the macro
 
 ## Fixes and reliability
 
-- Fixed repeated merchant alerts and duplicate/stale webhook work after macro restarts
-- Bounded runtime log history to support longer sessions
-- Runtime files now use Reoteab AppData while preserving compatible Coteab config imports
+- Fixed a first-launch stall caused by clearing old WebView profile folders before the window opened
+- Improved biome transition, screenshot, and webhook worker isolation during UI failures
+- Preserved the current Sol's RNG paths, presets, auto-calibration, and webhook improvements
 
 ## Notes
 
