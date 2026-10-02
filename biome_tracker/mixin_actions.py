@@ -3572,6 +3572,11 @@ class ActionsMixin:
             print("Roblox window not found.")
             return
 
+        try:
+            _, self._active_roblox_pid = win32process.GetWindowThreadProcessId(hwnd)
+        except Exception:
+            self._active_roblox_pid = None
+
         # Auto fullscreen
         if (
             self.config.get("auto_roblox_fullscreen", False)
@@ -3638,6 +3643,38 @@ class ActionsMixin:
         except Exception:
             pass
         return hwnds
+
+    def get_active_roblox_process(self):
+        try:
+            hwnds = self._find_roblox_hwnds()
+        except Exception:
+            return None
+        if not hwnds:
+            return None
+        try:
+            window_pids = []
+            for hwnd in hwnds:
+                _, window_pid = win32process.GetWindowThreadProcessId(hwnd)
+                if window_pid:
+                    window_pids.append(window_pid)
+            if not window_pids:
+                return None
+            pid = getattr(self, "_active_roblox_pid", None)
+            if pid not in window_pids:
+                pid = window_pids[0]
+            if not pid:
+                return None
+            process = psutil.Process(pid)
+            if str(process.name() or "") not in ["RobloxPlayerBeta.exe", "Windows10Universal.exe"]:
+                return None
+            current_user = str(psutil.Process().username() or "").strip().lower()
+            process_user = str(process.username() or "").strip().lower()
+            if current_user and process_user and current_user != process_user:
+                return None
+            self._active_roblox_pid = pid
+            return process
+        except (psutil.Error, OSError):
+            return None
 
     def _focus_window_hwnd(self, hwnd, max_attempts=20, sleep_between=0.25):
         attempt = 0

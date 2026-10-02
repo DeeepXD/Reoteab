@@ -1,8 +1,10 @@
+import { useCallback, useEffect, useState } from "react";
 import { useConfig } from "../contexts/ConfigContext";
 import ToggleSwitch from "../components/ToggleSwitch";
 
 export default function OtherFeaturesPage() {
     const { config, saveConfig, error } = useConfig();
+    const [memoryTrimStatus, setMemoryTrimStatus] = useState<any>(null);
 
     if (error) return <div style={{ padding: "20px", color: "red" }}>Error: {error}</div>;
     if (!config) return <div style={{ padding: "20px" }}>Loading...</div>;
@@ -10,6 +12,33 @@ export default function OtherFeaturesPage() {
     const updateConfig = (key: string, value: any) => {
         saveConfig({ ...config, [key]: value });
     };
+
+    const refreshMemoryTrimStatus = useCallback(async () => {
+        try {
+            const status = await window.pywebview?.api?.get_roblox_memory_trim_status?.();
+            if (status) setMemoryTrimStatus(status);
+        } catch {
+            // The status is optional presentation data.
+        }
+    }, []);
+
+    useEffect(() => {
+        refreshMemoryTrimStatus();
+        const interval = window.setInterval(refreshMemoryTrimStatus, 15000);
+        return () => window.clearInterval(interval);
+    }, [refreshMemoryTrimStatus]);
+
+    const requestMemoryTrim = async () => {
+        try {
+            const status = await window.pywebview?.api?.trim_roblox_memory_now?.();
+            if (status) setMemoryTrimStatus(status);
+            window.setTimeout(refreshMemoryTrimStatus, 1000);
+        } catch {
+            setMemoryTrimStatus({ status: "failed", message: "Could not request a Roblox memory trim." });
+        }
+    };
+
+    const memoryMb = (bytes?: number) => bytes === undefined ? "" : `${Math.round(bytes / (1024 * 1024))} MB`;
 
     return (
         <>
@@ -119,6 +148,48 @@ export default function OtherFeaturesPage() {
                     checked={config.close_chat_after_reconnect || false}
                     onChange={(val) => updateConfig("close_chat_after_reconnect", val)}
                 />
+
+                <ToggleSwitch
+                    label="Trim Roblox memory during long sessions"
+                    description="Lets Windows release reclaimable Roblox memory while the macro is running. It does not close or restart Roblox, but may briefly reload game data."
+                    checked={config.roblox_memory_trim_enabled || false}
+                    onChange={(val) => updateConfig("roblox_memory_trim_enabled", val)}
+                />
+                {config.roblox_memory_trim_enabled && (
+                    <div className="setting-row" style={{ padding: '0 20px 20px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '15px' }}>
+                        <label className="form-label" style={{ margin: 0 }}>Trim every</label>
+                        <input
+                            type="number"
+                            className="form-input"
+                            style={{ width: '80px', textAlign: 'center' }}
+                            value={config.roblox_memory_trim_interval_minutes || "60"}
+                            min="15"
+                            max="720"
+                            onChange={(e) => updateConfig("roblox_memory_trim_interval_minutes", e.target.value)}
+                        />
+                        <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>minutes when Roblox uses at least</span>
+                        <input
+                            type="number"
+                            className="form-input"
+                            style={{ width: '90px', textAlign: 'center' }}
+                            value={config.roblox_memory_trim_threshold_mb || "2048"}
+                            min="512"
+                            max="8192"
+                            onChange={(e) => updateConfig("roblox_memory_trim_threshold_mb", e.target.value)}
+                        />
+                        <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>MB</span>
+                    </div>
+                )}
+                <div className="setting-row" style={{ padding: '0 20px 20px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '12px' }}>
+                    <button className="btn btn-accent" style={{ fontSize: '11px', padding: '6px 12px' }} onClick={requestMemoryTrim}>
+                        Trim Roblox Memory Now
+                    </button>
+                    <span className="form-hint">
+                        {memoryTrimStatus?.status === "trimmed"
+                            ? `Last trim: ${memoryMb(memoryTrimStatus.before_rss)} → ${memoryMb(memoryTrimStatus.after_rss)} (${memoryMb(memoryTrimStatus.reclaimed_rss)} released)${memoryTrimStatus.follow_up_rss !== undefined ? ` • after 30s: ${memoryMb(memoryTrimStatus.follow_up_rss)}` : ""}`
+                            : memoryTrimStatus?.message || "Run the macro first to test Roblox memory trimming."}
+                    </span>
+                </div>
 
                 <ToggleSwitch
                     label="AZERTY Keyboard Mode (experimental)"

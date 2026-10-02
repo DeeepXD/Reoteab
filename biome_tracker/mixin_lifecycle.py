@@ -1,5 +1,6 @@
 from .base_support import *
 from .config import normalize_auto_pop_biomes
+from roblox_memory import RobloxMemoryTrimmer
 
 class LifecycleMixin:
     def __init__(self):
@@ -102,6 +103,7 @@ class LifecycleMixin:
         self._rare_screenshot_process_lock = threading.Lock()
         self._rare_screenshot_process = None
         self._biome_transition_dispatcher = None
+        self._roblox_memory_trimmer = RobloxMemoryTrimmer(self)
         self.logs = self.load_logs()
         self.player_log_queue = queue.Queue(maxsize=256)
         self._player_log_queue_overflow_reported = False

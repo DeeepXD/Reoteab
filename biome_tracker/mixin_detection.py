@@ -665,6 +665,10 @@ class DetectionMixin:
             pass
         
         self._set_biome_pipeline_stage("detector started", f"session {generation}", log=True)
+        try:
+            self._roblox_memory_trimmer.start()
+        except Exception:
+            pass
         print("Biome detection started.")
 
     def stop_detection(self):
@@ -675,6 +679,10 @@ class DetectionMixin:
         dispatcher = getattr(self, "_biome_transition_dispatcher", None)
         if dispatcher is not None:
             dispatcher.stop()
+        try:
+            self._roblox_memory_trimmer.stop()
+        except Exception:
+            pass
         self._stop_rare_screenshot_capture()
         deadline = time.monotonic() + 2.5
         for thread in getattr(self, "_detection_workers", []):

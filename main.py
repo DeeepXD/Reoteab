@@ -260,6 +260,16 @@ class Api:
     def get_ui_events(self):
         return self._ui_bridge.drain()
 
+    def get_roblox_memory_trim_status(self):
+        if not self._tracker:
+            return {"status": "unavailable", "message": "Macro tracker is not available."}
+        return self._tracker._roblox_memory_trimmer.snapshot()
+
+    def trim_roblox_memory_now(self):
+        if not self._tracker:
+            return {"status": "unavailable", "message": "Macro tracker is not available."}
+        return self._tracker._roblox_memory_trimmer.request_manual_trim()
+
     def get_config(self):
         t = self._tracker
         if t and isinstance(getattr(t, 'config', None), dict) and t.config:

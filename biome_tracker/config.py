@@ -40,6 +40,9 @@ MACRO_PRESET_EXCLUDED_KEYS = {
     "session_time",
     "session_window_start",
     "macro_last_start",
+    "roblox_memory_trim_enabled",
+    "roblox_memory_trim_interval_minutes",
+    "roblox_memory_trim_threshold_mb",
 }
 
 DEFAULT_AUTO_POP_BUFFS = [
