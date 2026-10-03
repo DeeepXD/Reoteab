@@ -1,4 +1,5 @@
 from .mixin_lifecycle import LifecycleMixin
+from .mixin_session_report import SessionReportMixin
 from .mixin_config import ConfigMixin
 from .mixin_detection import DetectionMixin
 from .mixin_actions import ActionsMixin
@@ -8,6 +9,7 @@ from .mixin_recorder import RecorderMixin
 
 class LegacyBiomeTracker(
     LifecycleMixin,
+    SessionReportMixin,
     ConfigMixin,
     DetectionMixin,
     ActionsMixin,

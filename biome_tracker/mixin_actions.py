@@ -2692,6 +2692,9 @@ class ActionsMixin:
         return False
 
     def _pause_timer_for_disconnect(self, reason=None):
+        report_reconnect = getattr(self, "record_macro_report_reconnect_attempt", None)
+        if callable(report_reconnect):
+            report_reconnect()
         try:
             if not getattr(self, "timer_paused_by_disconnect", False):
                 if self.start_time:
@@ -3336,6 +3339,9 @@ class ActionsMixin:
                 if "merchant_counts" not in self.config:
                     self.config["merchant_counts"] = {"Jester": 0, "Mari": 0, "Rin": 0}
                 self.config["merchant_counts"][merchant_name] = self.config["merchant_counts"].get(merchant_name, 0) + 1
+                report_merchant = getattr(self, "record_macro_report_merchant", None)
+                if callable(report_merchant):
+                    report_merchant(merchant_name)
                 self.save_config()
                 self.append_log(f"[Merchant Detection] {merchant_name} count: {self.config['merchant_counts'][merchant_name]}")
 

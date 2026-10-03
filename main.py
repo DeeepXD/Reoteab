@@ -887,6 +887,10 @@ class Api:
 
     def _on_fishing_failsafe_timeout(self):
         if not self._tracker: return
+        try:
+            self._tracker.record_macro_report_failsafe("Fishing timeout")
+        except Exception:
+            pass
         biome = str(getattr(self._tracker, "current_biome", "") or "").upper().strip()
 
         # dont kill roblox during a rare biome lol, wait for it to end

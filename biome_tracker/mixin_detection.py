@@ -596,6 +596,9 @@ class DetectionMixin:
             
         self._start_player_logger_thread()
         self.start_time = now
+        start_report = getattr(self, "start_macro_report", None)
+        if callable(start_report):
+            start_report(now)
         self.current_session = 0
         self._last_biome_health_log = 0.0
         self.has_started_once = True
@@ -734,7 +737,9 @@ class DetectionMixin:
         self.start_time = None
         self.stop_sent = True
         self.set_title_threadsafe(f"Reoteab {current_ver} (Stopped)")
-        self.send_macro_summary(last24h_seconds)
+        finish_report = getattr(self, "finish_macro_report", None)
+        report = finish_report(now) if callable(finish_report) else None
+        self.send_macro_summary(last24h_seconds, report=report)
         print("closed", self.current_session)
         self.save_config()
         print("Biome detection stopped.")
@@ -1152,6 +1157,9 @@ class DetectionMixin:
                 pass
             if biome not in self.biome_counts: self.biome_counts[biome] = 0
             self.biome_counts[biome] += 1
+            report_biome = getattr(self, "record_macro_report_biome", None)
+            if callable(report_biome):
+                report_biome(biome)
             self.update_stats()
 
             # son im crine - this is to send the current biome to frontend 
@@ -1331,6 +1339,9 @@ class DetectionMixin:
                 if not self.start_time:
                     self.start_time = datetime.now()
             self.reconnecting_state = False
+            report_recovery = getattr(self, "record_macro_report_reconnect_recovery", None)
+            if callable(report_recovery):
+                report_recovery()
             self.has_sent_disconnected_message = False
             self.just_reconnected = True
             self._roblox_fullscreened = False
@@ -1342,6 +1353,9 @@ class DetectionMixin:
 
     def fallback_reconnect(self, current_attempt):
         print(f"Attempting fallback reconnect from attempt {current_attempt}...")
+        report_reconnect = getattr(self, "record_macro_report_reconnect_attempt", None)
+        if callable(report_reconnect):
+            report_reconnect()
         self.reconnecting_state = True
 
         self.terminate_roblox_processes()

@@ -72,6 +72,7 @@ class LifecycleMixin:
         self.config["merchant_counts"] = self.merchant_counts
 
         self.start_time = None
+        self._initialize_macro_report()
         self.saved_session = self.parse_session_time(self.config.get("session_time", "0:00:00"))
         self._session_window_reset_performed = False
         self.current_session = 0

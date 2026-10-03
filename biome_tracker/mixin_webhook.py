@@ -587,10 +587,13 @@ class WebhookMixin:
         except Exception as e:
             self.error_logging(e, "Error in webhook_status")
 
-    def send_macro_summary(self, last24h_seconds, reason_text="Macro stopped!"):
+    def send_macro_summary(self, last24h_seconds, reason_text="Macro stopped!", report=None):
         try:
-            last24h_str = self.format_seconds_to_hhmmss(min(int(last24h_seconds), 86400))
-            session_str = self.format_seconds_to_hhmmss(int(self.current_session))
+            if report is None:
+                finish_report = getattr(self, "finish_macro_report", None)
+                report = finish_report() if callable(finish_report) else None
+            if report is None:
+                return
             urls = self.get_webhook_list()
             if not urls:
                 return
@@ -598,39 +601,72 @@ class WebhookMixin:
             current_utc_time = datetime.now(timezone.utc)
             current_utc_time.replace(microsecond=0).isoformat(timespec='seconds') + 'Z'
             current_utc_time = str(current_utc_time)
+            fields = [{
+                "name": "Run duration",
+                "value": self.format_seconds_to_hhmmss(int(report["duration_seconds"])),
+                "inline": True
+            }]
+            if report["biome_transitions"]:
+                fields.append({
+                    "name": "Biome transitions",
+                    "value": str(report["biome_transitions"]),
+                    "inline": True
+                })
+            if report["rare_biomes"]:
+                fields.append({
+                    "name": "Rare biomes",
+                    "value": "\n".join(f"- {name}: {count}" for name, count in sorted(report["rare_biomes"].items())),
+                    "inline": False
+                })
+            if report["merchants"]:
+                fields.append({
+                    "name": "Merchant detections",
+                    "value": "\n".join(f"- {name}: {count}" for name, count in sorted(report["merchants"].items())),
+                    "inline": False
+                })
+            if report["reconnect_attempts"]:
+                fields.append({
+                    "name": "Reconnects",
+                    "value": f"Attempts: {report['reconnect_attempts']}\nRecovered: {report['reconnect_recoveries']}",
+                    "inline": True
+                })
+            if report["failsafes"]:
+                fields.append({
+                    "name": "Failsafes",
+                    "value": "\n".join(f"- {name}: {count}" for name, count in sorted(report["failsafes"].items())),
+                    "inline": False
+                })
+            fields.extend([
+                {
+                    "name": "Join the Reoteab Discord:",
+                    "value": "https://discord.gg/bQNSU3pfPF",
+                    "inline": False
+                },
+                {
+                    "name": "Reoteab on GitHub:",
+                    "value": "https://github.com/DeeepXD/Reoteab",
+                    "inline": False
+                }
+            ])
             embed = {
-                "title": "== 🌟 Macro Status 🌟 ==",
-                "description": f"> ## {reason_text} Here is your session summary:",
-                "color": 0xff0000,
+                "title": "== Macro Report ==",
+                "description": f"> ## {reason_text}",
+                "color": 0x5865F2,
                 "timestamp": current_utc_time,
                 "footer": {
                     "text": f"Reoteab {current_ver}",
                     "icon_url": icon_url
                 },
-                "fields": [
-                    {
-                        "name": "Session Times:",
-                        "value": f"- in the last 24 hours: {last24h_str}\n- in this session: {session_str}",
-                        "inline": False
-                    },
-                    {
-                        "name": "Join the Reoteab Discord:",
-                        "value": "https://discord.gg/bQNSU3pfPF",
-                        "inline": False
-                    },
-                    {
-                        "name": "Reoteab on GitHub:",
-                        "value": "https://github.com/DeeepXD/Reoteab",
-                        "inline": False
-                    }
-                ]
+                "fields": fields
             }
             payload = {"embeds": [embed]}
             for webhook_url in urls:
                 try:
-                    requests.post(webhook_url, json=payload, timeout=5)
-                except Exception:
-                    pass
+                    response = requests.post(webhook_url, json=payload, timeout=5)
+                    response.raise_for_status()
+                    self.append_log("Macro Report webhook sent")
+                except requests.exceptions.RequestException as e:
+                    self.append_log(f"Failed to send Macro Report webhook: {e}")
         except Exception as e:
             self.error_logging(e, "Error in send_macro_summary")
 
