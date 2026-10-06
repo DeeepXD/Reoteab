@@ -93,20 +93,20 @@ _VIP_WALK_TO_FLARG_EVENTS: list[dict[str, Any]] = [
     {"type": "key_up", "key": "a", "t": 10.5},
     {"type": "key_down", "key": "s", "t": 12.5},
     {"type": "key_up", "key": "s", "t": 12.8},
-    {"type": "key_down", "key": "space", "t": 13.1},
+    {"type": "key_down", "key": "space", "t": 13.1, "climb_timing": True},
     {"type": "key_down", "key": "w", "t": 13.125},
-    {"type": "key_up", "key": "space", "t": 14.085},
+    {"type": "key_up", "key": "space", "t": 14.085, "climb_timing": True},
     {"type": "key_up", "key": "w", "t": 14.585},
 ]
 
 WALK_TO_SELL_FISH_EVENTS: list[dict[str, Any]] = _VIP_WALK_TO_FLARG_EVENTS + [
-    {"type": "key_down", "key": "e", "t": 14.885},
+    {"type": "key_down", "key": "e", "t": 14.885, "climb_timing": True},
     {"type": "key_up", "key": "e", "t": 14.925},
     {"type": "key_up", "key": "e", "t": 15.305},
 ]
 
 WALK_TO_FISH_EVENTS: list[dict[str, Any]] = _VIP_WALK_TO_FLARG_EVENTS + [
-    {"type": "key_down", "key": "a", "t": 14.885},
+    {"type": "key_down", "key": "a", "t": 14.885, "climb_timing": True},
     {"type": "key_up", "key": "a", "t": 16.005},
     {"type": "key_down", "key": "w", "t": 16.08},
     {"type": "key_up", "key": "w", "t": 18.43},
@@ -132,22 +132,22 @@ _NON_VIP_WALK_TO_FLARG_EVENTS: list[dict[str, Any]] = [
     {"type": "key_down", "key": "s", "t": 13.528},
     {"type": "key_up", "key": "s", "t": 13.708},
     {"type": "key_down", "key": "w", "t": 14.677},
-    {"type": "key_down", "key": "space", "t": 14.677},
-    {"type": "key_up", "key": "space", "t": 15.913},
+    {"type": "key_down", "key": "space", "t": 14.677, "climb_timing": True},
+    {"type": "key_up", "key": "space", "t": 15.913, "climb_timing": True},
     {"type": "key_up", "key": "w", "t": 16.385},
 ]
 
 NON_VIP_WALK_TO_SELL_FISH_EVENTS: list[dict[str, Any]] = _NON_VIP_WALK_TO_FLARG_EVENTS + [
-    {"type": "key_down", "key": "e", "t": 16.385},
-    {"type": "key_up", "key": "e", "t": 16.425},
-    {"type": "key_up", "key": "e", "t": 16.805},
+    {"type": "key_down", "key": "e", "t": 16.635, "climb_timing": True},
+    {"type": "key_up", "key": "e", "t": 16.675},
+    {"type": "key_up", "key": "e", "t": 17.055},
 ]
 
 NON_VIP_WALK_TO_FISH_EVENTS: list[dict[str, Any]] = _NON_VIP_WALK_TO_FLARG_EVENTS + [
-    {"type": "key_down", "key": "a", "t": 16.385},
-    {"type": "key_up", "key": "a", "t": 17.757},
-    {"type": "key_down", "key": "w", "t": 18.596},
-    {"type": "key_up", "key": "w", "t": 21.733},
+    {"type": "key_down", "key": "a", "t": 16.635, "climb_timing": True},
+    {"type": "key_up", "key": "a", "t": 18.007},
+    {"type": "key_down", "key": "w", "t": 18.846},
+    {"type": "key_up", "key": "w", "t": 21.983},
 ]
 
 def _load_config_file() -> dict[str, Any]:
@@ -405,7 +405,10 @@ def _run_recorded_events(
             if speed_multiplier > 1.0 and dt > 0:
                 ev_key = str(ev.get("key", "")).lower().strip()
                 ev_type = str(ev.get("type", ""))
-                if ev_type in ("key_down", "key_up") and ev_key in _MOVEMENT_KEYS:
+                if (
+                    (ev_type in ("key_down", "key_up") and ev_key in _MOVEMENT_KEYS)
+                    or bool(ev.get("climb_timing", False))
+                ):
                     dt *= speed_multiplier
 
             if dt > 0 and not sleep_interruptible(dt, 0.01):

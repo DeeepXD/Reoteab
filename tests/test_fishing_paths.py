@@ -12,6 +12,44 @@ def _event_signature(events):
     ]
 
 
+def _play_path(events, speed_multiplier=1.0):
+    clock = [0.0]
+    actions = []
+
+    def sleep_interruptible(seconds, _poll):
+        clock[0] += seconds
+        return True
+
+    def key_down(key):
+        actions.append(("down", key, clock[0]))
+
+    def key_up(key):
+        actions.append(("up", key, clock[0]))
+
+    with (
+        mock.patch.object(fishing, "_autoit_key_down", side_effect=key_down),
+        mock.patch.object(fishing, "_autoit_key_up", side_effect=key_up),
+        mock.patch.object(fishing.autoit, "mouse_wheel", create=True),
+        mock.patch.object(fishing.time, "sleep"),
+    ):
+        assert fishing._run_recorded_events(
+            events=events,
+            sleep_interruptible=sleep_interruptible,
+            should_continue=lambda: True,
+            can_run=lambda: True,
+            speed_multiplier=speed_multiplier,
+        )
+
+    return actions
+
+
+def _next_action(actions, start, kind, key):
+    for index in range(start + 1, len(actions)):
+        if actions[index][:2] == (kind, key):
+            return index, actions[index][2]
+    raise AssertionError(f"Missing {kind} {key} after index {start}")
+
+
 class FishingPathTests(unittest.TestCase):
     def test_vip_routes_match_solrich(self):
         flarg_path = [
@@ -50,7 +88,7 @@ class FishingPathTests(unittest.TestCase):
             ],
         )
 
-    def test_non_vip_routes_match_solrich(self):
+    def test_non_vip_routes_include_climb_settle(self):
         flarg_path = [
             ("mouse_wheel", None, 80, 0.0),
             ("mouse_wheel", None, -15, 0.25),
@@ -80,20 +118,116 @@ class FishingPathTests(unittest.TestCase):
         self.assertEqual(
             _event_signature(fishing.NON_VIP_WALK_TO_SELL_FISH_EVENTS),
             flarg_path + [
-                ("key_down", "e", None, 16.385),
-                ("key_up", "e", None, 16.425),
-                ("key_up", "e", None, 16.805),
+                ("key_down", "e", None, 16.635),
+                ("key_up", "e", None, 16.675),
+                ("key_up", "e", None, 17.055),
             ],
         )
         self.assertEqual(
             _event_signature(fishing.NON_VIP_WALK_TO_FISH_EVENTS),
             flarg_path + [
-                ("key_down", "a", None, 16.385),
-                ("key_up", "a", None, 17.757),
-                ("key_down", "w", None, 18.596),
-                ("key_up", "w", None, 21.733),
+                ("key_down", "a", None, 16.635),
+                ("key_up", "a", None, 18.007),
+                ("key_down", "w", None, 18.846),
+                ("key_up", "w", None, 21.983),
             ],
         )
+
+    def test_vip_climb_keeps_its_existing_landing_buffer(self):
+        actions = _play_path(fishing.WALK_TO_FISH_EVENTS)
+        space_down, _ = _next_action(actions, -1, "down", "space")
+        space_up, _ = _next_action(actions, space_down, "up", "space")
+        w_up, _ = _next_action(actions, space_up, "up", "w")
+        _, a_down_at = _next_action(actions, w_up, "down", "a")
+
+        self.assertAlmostEqual(actions[space_up][2] - actions[space_down][2], 0.985)
+        self.assertAlmostEqual(actions[w_up][2] - actions[space_up][2], 0.5)
+        self.assertAlmostEqual(a_down_at - actions[w_up][2], 0.3)
+
+    def test_non_vip_climb_waits_before_turning(self):
+        actions = _play_path(fishing.NON_VIP_WALK_TO_FISH_EVENTS)
+        space_down, _ = _next_action(actions, -1, "down", "space")
+        space_up, _ = _next_action(actions, space_down, "up", "space")
+        w_up, _ = _next_action(actions, space_up, "up", "w")
+        _, a_down_at = _next_action(actions, w_up, "down", "a")
+
+        self.assertAlmostEqual(actions[space_up][2] - actions[space_down][2], 1.236)
+        self.assertAlmostEqual(actions[w_up][2] - actions[space_up][2], 0.472)
+        self.assertAlmostEqual(a_down_at - actions[w_up][2], 0.25)
+
+    def test_playback_multiplier_scales_climb_space_and_settle_timing(self):
+        multiplier = 1.25
+        vip_actions = _play_path(fishing.WALK_TO_FISH_EVENTS, multiplier)
+        vip_space_down, _ = _next_action(vip_actions, -1, "down", "space")
+        vip_space_up, _ = _next_action(vip_actions, vip_space_down, "up", "space")
+        vip_w_up, _ = _next_action(vip_actions, vip_space_up, "up", "w")
+        _, vip_a_down_at = _next_action(vip_actions, vip_w_up, "down", "a")
+
+        self.assertAlmostEqual(vip_actions[vip_space_up][2] - vip_actions[vip_space_down][2], 0.985 * multiplier)
+        self.assertAlmostEqual(vip_actions[vip_w_up][2] - vip_actions[vip_space_up][2], 0.5 * multiplier)
+        self.assertAlmostEqual(vip_a_down_at - vip_actions[vip_w_up][2], 0.3 * multiplier)
+
+        non_vip_actions = _play_path(fishing.NON_VIP_WALK_TO_FISH_EVENTS, multiplier)
+        non_vip_space_down, _ = _next_action(non_vip_actions, -1, "down", "space")
+        non_vip_space_up, _ = _next_action(non_vip_actions, non_vip_space_down, "up", "space")
+        non_vip_w_up, _ = _next_action(non_vip_actions, non_vip_space_up, "up", "w")
+        _, non_vip_a_down_at = _next_action(non_vip_actions, non_vip_w_up, "down", "a")
+
+        self.assertAlmostEqual(non_vip_actions[non_vip_space_up][2] - non_vip_actions[non_vip_space_down][2], 1.236 * multiplier)
+        self.assertAlmostEqual(non_vip_actions[non_vip_w_up][2] - non_vip_actions[non_vip_space_up][2], 0.472 * multiplier)
+        self.assertAlmostEqual(non_vip_a_down_at - non_vip_actions[non_vip_w_up][2], 0.25 * multiplier)
+
+    def test_cancellation_during_climb_releases_held_keys(self):
+        released = []
+
+        def sleep_interruptible(seconds, _poll):
+            return seconds < 0.96
+
+        with (
+            mock.patch.object(fishing, "_autoit_key_down"),
+            mock.patch.object(fishing, "_autoit_key_up", side_effect=released.append),
+            mock.patch.object(fishing.autoit, "mouse_wheel", create=True),
+            mock.patch.object(fishing.time, "sleep"),
+        ):
+            self.assertFalse(
+                fishing._run_recorded_events(
+                    events=fishing.WALK_TO_FISH_EVENTS,
+                    sleep_interruptible=sleep_interruptible,
+                    should_continue=lambda: True,
+                    can_run=lambda: True,
+                )
+            )
+
+        self.assertIn("space", released)
+        self.assertIn("w", released)
+        self.assertTrue({"w", "a", "s", "d", "space"}.issubset(released))
+
+    def test_cancellation_after_space_down_releases_keys(self):
+        released = []
+        space_down = [False]
+
+        def key_down(key):
+            if key == "space":
+                space_down[0] = True
+
+        with (
+            mock.patch.object(fishing, "_autoit_key_down", side_effect=key_down),
+            mock.patch.object(fishing, "_autoit_key_up", side_effect=released.append),
+            mock.patch.object(fishing.autoit, "mouse_wheel", create=True),
+            mock.patch.object(fishing.time, "sleep"),
+        ):
+            self.assertFalse(
+                fishing._run_recorded_events(
+                    events=fishing.WALK_TO_FISH_EVENTS,
+                    sleep_interruptible=lambda *_args: True,
+                    should_continue=lambda: not space_down[0],
+                    can_run=lambda: True,
+                )
+            )
+
+        self.assertTrue(space_down[0])
+        self.assertIn("space", released)
+        self.assertIn("w", released)
 
     def test_path_helpers_select_vip_and_non_vip_routes(self):
         callbacks = {
