@@ -12,17 +12,17 @@ def class_method_names(path, class_name):
 
 
 class FirstLaunchTests(unittest.TestCase):
-    def test_tester_build_version_uses_the_shared_beta_identity(self):
+    def test_stable_build_version_uses_the_shared_release_identity(self):
         main_source = (REPOSITORY_ROOT / "main.py").read_text(encoding="utf-8")
         version_source = (REPOSITORY_ROOT / "reoteab_version.py").read_text(encoding="utf-8")
-        self.assertIn('VERSION = "1.0.0-beta.2"', version_source)
+        self.assertIn('VERSION = "1.0.0"', version_source)
         self.assertIn('DISPLAY_NAME = f"Reoteab {DISPLAY_VERSION}"', version_source)
         self.assertIn('current_version = VERSION', main_source)
         self.assertIn('display_name = DISPLAY_NAME', main_source)
 
     def test_bundled_notice_matches_the_current_release(self):
         notice = (REPOSITORY_ROOT / "assets" / "noticetabcontents.txt").read_text(encoding="utf-8")
-        self.assertTrue(notice.startswith("# Reoteab 1.0 Beta 2"))
+        self.assertTrue(notice.startswith("# Reoteab v1.0.0"))
 
     def test_updater_api_and_install_methods_are_not_exposed(self):
         api_methods = class_method_names(REPOSITORY_ROOT / "main.py", "Api")

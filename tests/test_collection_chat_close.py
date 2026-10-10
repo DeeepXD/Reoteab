@@ -144,7 +144,10 @@ class CollectionChatCloseTests(unittest.TestCase):
         with mock.patch.object(fishing, "_run_sell_fish_sequence", side_effect=run_sell):
             fishing.run_fishing_loop(
                 stop_event=stop_event,
-                config_provider=lambda: {"fishing_sell_how_many_fish": 1},
+                config_provider=lambda: {
+                    "fishing_sell_how_many_fish": 1,
+                    "close_chat_after_reconnect": True,
+                },
                 print_start_stop=False,
                 runtime_state=runtime_state,
             )

@@ -34,7 +34,6 @@ const navItems = [
     { id: "webhook", label: "Webhook", icon: "🔗" },
     { id: "stats", label: "Stats", icon: "📊" },
     { id: "status", label: "Status", icon: "⚙️" },
-    ...(import.meta.env.VITE_REOTEAB_DEVLAB === "true" ? [{ id: "devlab", label: "DevLab", icon: "🧪" }] : []),
     { section: "Macro Settings" },
     { id: "misc", label: "Automated actions", icon: "🤖" },
     { id: "calibrations", label: "Macro Calibrations", icon: "🎯" },

@@ -1,11 +1,11 @@
 from reoteab_version import BUILD_CHANNEL, DISPLAY_NAME, DISPLAY_VERSION, VERSION, session_diagnostics
 
 
-def test_beta_2_identity_is_consistent():
-    assert VERSION == "1.0.0-beta.2"
-    assert DISPLAY_VERSION == "1.0 Beta 2"
-    assert DISPLAY_NAME == "Reoteab 1.0 Beta 2"
-    assert BUILD_CHANNEL == "tester-beta"
+def test_stable_1_0_identity_is_consistent():
+    assert VERSION == "1.0.0"
+    assert DISPLAY_VERSION == "v1.0.0"
+    assert DISPLAY_NAME == "Reoteab v1.0.0"
+    assert BUILD_CHANNEL == "stable"
 
 
 def test_session_diagnostics_include_relevant_safe_context_only():
@@ -19,7 +19,7 @@ def test_session_diagnostics_include_relevant_safe_context_only():
     })
 
     output = "\n".join(diagnostics)
-    assert "Reoteab 1.0 Beta 2" in output
+    assert "Reoteab v1.0.0" in output
     assert "Non-VIP" in output
     assert "1.15x" in output
     assert "auto reconnect: on" in output

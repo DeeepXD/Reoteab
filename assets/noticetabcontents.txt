@@ -1,17 +1,14 @@
-# Reoteab 1.0 Beta 2
+# Reoteab v1.0.0
 
-This Tester build focuses on long-session reliability and clearer diagnostics.
+Reoteab 1.0 is the stable release of the tested 1.0 improvements.
 
-## Tester improvements
+## Highlights
 
-- Added optional Roblox working-set trimming for long macro sessions
-- Added concise build and session diagnostics for route, playback, reconnect, and failsafe settings
-- Improved tester build identity across the UI, runtime logs, and webhook footers
-- Preserved Macro Report, fishing climb timing, and WebView stability work from Beta 1
+- Improved VIP and Non-VIP fishing routes, including the Non-VIP post-climb turn
+- Playback-multiplier-aware fishing movement and existing recovery/failsafe handling
+- Macro Report, WebView stability safeguards, and optional Roblox memory trimming
 
 ## Notes
 
-- Review calibration and settings before starting automation
-- This is a Tester build. Real Roblox and extended AFK validation are still required.
-- Join the Reoteab Discord: https://discord.gg/bQNSU3pfPF
-- Reoteab on GitHub: https://github.com/DeeepXD/Reoteab
+- Reoteab uses its bundled interface for this release so an old AppData UI cannot override it.
+- Roblox updates, display scaling, and calibration can still affect automation. Recalibrate when your setup changes.

@@ -24,7 +24,6 @@ import MovementsPage from "./pages/MovementsPage";
 import PresetsPage from "./pages/PresetsPage";
 import RecorderWindow from "./pages/RecorderWindow";
 import BiomeConfirmWindow from "./pages/BiomeConfirmWindow";
-import DevLabPage from "./pages/DevLabPage";
 import useUiMaintenance from "./hooks/useUiMaintenance";
 import useUiEvents from "./hooks/useUiEvents";
 
@@ -77,10 +76,6 @@ const pages: Record<string, React.FC> = {
   themedesign: ThemeDesignPage,
   // puzzle: PuzzlePage,
 };
-
-if (import.meta.env.VITE_REOTEAB_DEVLAB === "true") {
-  pages.devlab = DevLabPage;
-}
 
 function App() {
   const [activeTab, setActiveTab] = useState("notice");

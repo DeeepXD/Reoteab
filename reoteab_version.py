@@ -1,7 +1,7 @@
-VERSION = "1.0.0-beta.2"
-DISPLAY_VERSION = "1.0 Beta 2"
+VERSION = "1.0.0"
+DISPLAY_VERSION = "v1.0.0"
 DISPLAY_NAME = f"Reoteab {DISPLAY_VERSION}"
-BUILD_CHANNEL = "tester-beta"
+BUILD_CHANNEL = "stable"
 
 
 def session_diagnostics(config):

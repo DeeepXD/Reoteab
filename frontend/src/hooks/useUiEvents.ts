@@ -22,7 +22,6 @@ export default function useUiEvents(isApiReady: boolean) {
                 (window as any).onCalibrationResult?.(payload);
                 (window as any).onCalibrationResultMisc?.(payload);
             }
-            if (event === "devlab-status") (window as any).onDevLabStatus?.(payload);
         };
 
         const poll = async () => {

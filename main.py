@@ -16,17 +16,13 @@ from ui_maintenance import UiMaintenanceManager
 from reoteab_version import VERSION, DISPLAY_NAME, DISPLAY_VERSION
 
 current_version = VERSION
-_is_devlab = os.environ.get("REOTEAB_DEVLAB") == "1"
 display_name = DISPLAY_NAME
-if _is_devlab:
-    display_name = "Reoteab DevLab"
 os.environ["REOTEAB_VERSION"] = current_version
 os.environ["WEBKIT_DISABLE_COMPOSITING_MODE"] = "1"
 import time
 import psutil
 from datetime import datetime
 import logging
-import urllib.request
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 import socket
 import random
@@ -41,8 +37,7 @@ os.environ['WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS'] = '--disable-gpu'
 APPDATA_BASE.mkdir(parents=True, exist_ok=True)
 os.chdir(APPDATA_BASE)
 
-_mutex_name = "ReoteabDevLabSingleInstance" if _is_devlab else "ReoteabSingleInstance"
-_mutex = ctypes.windll.kernel32.CreateMutexW(None, True, _mutex_name)
+_mutex = ctypes.windll.kernel32.CreateMutexW(None, True, "ReoteabSingleInstance")
 if ctypes.windll.kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
     ctypes.windll.user32.MessageBoxW(0, "Reoteab is already running!\n\nPlease close the existing instance before opening a new one.", "Reoteab", 0x30)
     sys.exit(0)
@@ -99,33 +94,15 @@ def get_base_path(): return sys._MEIPASS if hasattr(sys, '_MEIPASS') else os.pat
 
 def _get_frontend_dist_dirs() -> list[str]:
     base_path = get_base_path()
-    from biome_tracker.config import APPDATA_BASE
-
-    if _is_devlab:
-        dirs = [
-            os.path.join(str(APPDATA_BASE), "devlab", "dist"),
-            os.path.join(os.getcwd(), "frontend", "devlab-dist"),
-        ]
-        if getattr(sys, "frozen", False):
-            dirs.append(os.path.join(base_path, "lib", "devlab"))
-        else:
-            dirs.append(os.path.join(base_path, "lib", "devlab"))
-        return [d for d in dirs if os.path.exists(d)]
-
-    dirs = [
-        os.path.join(str(APPDATA_BASE), "dist"),
-        os.path.join(str(APPDATA_BASE), "frontend", "dist"),
-        os.path.join(os.getcwd(), "frontend", "dist"),
-        os.path.join(os.getcwd(), "dist"),
-    ]
-    
     if getattr(sys, "frozen", False):
-        dirs.append(os.path.join(base_path, "lib", "dist"))
-        dirs.append(os.path.join(base_path, "dist"))
+        # Packaged stable releases must load the UI they shipped with. This
+        # prevents stale AppData and other release channels from overriding it.
+        dirs = [os.path.join(base_path, "lib", "dist")]
     else:
-        dirs.append(os.path.join(base_path, "frontend", "dist"))
-        dirs.append(os.path.join(base_path, "lib", "dist"))
-        dirs.append(os.path.join(base_path, "dist"))
+        dirs = [
+            os.path.join(base_path, "frontend", "dist"),
+            os.path.join(base_path, "lib", "dist"),
+        ]
 
     return [d for d in dirs if os.path.exists(d)]
 
@@ -141,28 +118,13 @@ def get_frontend_entry():
             except Exception as e:
                 print(f"Error reading local index.html: {e}")
 
-    if _is_devlab:
-        return {"html": "<h2>Reoteab DevLab frontend is missing.</h2>", "url": "about:blank"}
-
-    frontend_url = "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/lib/dist/index.html"
-    try:
-        from biome_tracker.config import APPDATA_BASE
-        appdata_dist = os.path.join(str(APPDATA_BASE), "dist")
-        os.makedirs(appdata_dist, exist_ok=True)
-
-        req = urllib.request.Request(frontend_url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=8) as response:
-            html_content = response.read().decode('utf-8')
-            if html_content and len(html_content) > 1000:
-                saved_path = os.path.join(appdata_dist, "index.html")
-                with open(saved_path, "w", encoding="utf-8") as f: f.write(html_content)
-                abs_path = os.path.abspath(saved_path)
-                print(f"Fetched frontend from GitHub -> saved to: {abs_path}")
-                return {"url": abs_path}
-    except Exception as e:
-        print(f"Failed to fetch frontend from GitHub: {e}")
-
-    return {"url": "http://localhost:5173"}
+    return {
+        "html": (
+            "<h2>Reoteab frontend is missing.</h2>"
+            "<p>Please download a fresh official release and try again.</p>"
+        ),
+        "url": "about:blank",
+    }
 
 
 def _cfg_bool(cfg, key, default=False):

@@ -34,7 +34,7 @@ class WebhookCustomizationTests(unittest.TestCase):
         self.assertNotIn("title", embed)
         self.assertEqual(embed["color"], 11753)
         self.assertEqual(embed["thumbnail"]["url"], "https://i.postimg.cc/RZh2pw0j/mari.png ")
-        self.assertEqual(embed["footer"]["text"], "Reoteab 1.0.0-beta.2")
+        self.assertEqual(embed["footer"]["text"], "Reoteab 1.0.0")
         self.assertIn("Mari has arrived", embed["description"])
         self.assertEqual(embed["fields"], [{"name": "Detection Source", "value": "OCR"}])
         self.assertEqual(self.post.call_count, 1)
@@ -134,8 +134,8 @@ class WebhookCustomizationTests(unittest.TestCase):
             "https://raw.githubusercontent.com/DeeepXD/Reoteab/main/assets/reoteab-icon.png",
         )
 
-        self.post.reset_mock()
-        self.webhooks.send_aura_webhook("Lunar", "1,000,000", "during WINDY")
+        with mock.patch("biome_tracker.mixin_webhook.requests.post", return_value=_Response()) as self.post:
+            self.webhooks.send_aura_webhook("Lunar", "1,000,000", "during WINDY")
         embed = self._post_embed()
         self.assertEqual(embed["color"], 0xFF73EC)
         self.assertEqual(embed["title"], "⭐ Aura Detection ⭐")
