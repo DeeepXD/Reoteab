@@ -13,12 +13,11 @@ import sys
 import multiprocessing
 from ui_bridge import UiEventBridge
 from ui_maintenance import UiMaintenanceManager
+from reoteab_version import VERSION, DISPLAY_NAME, DISPLAY_VERSION
 
-# i added this so we can easily change macro version upon releases without having to change multiple back-end & front-end behaviours
-# for future people that is reading the open source code, hello :p
-current_version = "0.1.4"
+current_version = VERSION
 _is_devlab = os.environ.get("REOTEAB_DEVLAB") == "1"
-display_name = "Reoteab v0.1.4"
+display_name = DISPLAY_NAME
 if _is_devlab:
     display_name = "Reoteab DevLab"
 os.environ["REOTEAB_VERSION"] = current_version
@@ -619,7 +618,7 @@ class Api:
         return "STOPPED"
 
     def get_macro_version(self):
-        return current_version
+        return DISPLAY_VERSION
 
     def get_notice_content(self):
         try:

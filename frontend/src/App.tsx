@@ -282,7 +282,7 @@ function App() {
       if (!cancelled) {
         setMacroVersion(version);
       }
-      document.title = `Reoteab v${version.replace(/^v/, "")}`;
+      document.title = `Reoteab ${version.replace(/^v/, "")}`;
       return true;
     };
 

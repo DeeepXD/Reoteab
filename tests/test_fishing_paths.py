@@ -126,10 +126,10 @@ class FishingPathTests(unittest.TestCase):
         self.assertEqual(
             _event_signature(fishing.NON_VIP_WALK_TO_FISH_EVENTS),
             flarg_path + [
-                ("key_down", "a", None, 16.635),
-                ("key_up", "a", None, 18.007),
-                ("key_down", "w", None, 18.846),
-                ("key_up", "w", None, 21.983),
+                ("key_down", "a", None, 16.385),
+                ("key_up", "a", None, 17.757),
+                ("key_down", "w", None, 18.596),
+                ("key_up", "w", None, 21.733),
             ],
         )
 
@@ -144,7 +144,7 @@ class FishingPathTests(unittest.TestCase):
         self.assertAlmostEqual(actions[w_up][2] - actions[space_up][2], 0.5)
         self.assertAlmostEqual(a_down_at - actions[w_up][2], 0.3)
 
-    def test_non_vip_climb_waits_before_turning(self):
+    def test_non_vip_turns_immediately_after_landing(self):
         actions = _play_path(fishing.NON_VIP_WALK_TO_FISH_EVENTS)
         space_down, _ = _next_action(actions, -1, "down", "space")
         space_up, _ = _next_action(actions, space_down, "up", "space")
@@ -153,7 +153,21 @@ class FishingPathTests(unittest.TestCase):
 
         self.assertAlmostEqual(actions[space_up][2] - actions[space_down][2], 1.236)
         self.assertAlmostEqual(actions[w_up][2] - actions[space_up][2], 0.472)
-        self.assertAlmostEqual(a_down_at - actions[w_up][2], 0.25)
+        self.assertAlmostEqual(a_down_at - actions[w_up][2], 0.0)
+
+    def test_non_vip_post_climb_tail_keeps_the_recorded_turn_timing(self):
+        actions = _play_path(fishing.NON_VIP_WALK_TO_FISH_EVENTS)
+        space_down, _ = _next_action(actions, -1, "down", "space")
+        space_up, _ = _next_action(actions, space_down, "up", "space")
+        w_up, _ = _next_action(actions, space_up, "up", "w")
+        a_down, a_down_at = _next_action(actions, w_up, "down", "a")
+        a_up, a_up_at = _next_action(actions, a_down, "up", "a")
+        w_down, w_down_at = _next_action(actions, a_up, "down", "w")
+        _, w_up_at = _next_action(actions, w_down, "up", "w")
+
+        self.assertAlmostEqual(a_up_at - a_down_at, 1.372)
+        self.assertAlmostEqual(w_down_at - a_up_at, 0.839)
+        self.assertAlmostEqual(w_up_at - w_down_at, 3.137)
 
     def test_playback_multiplier_scales_climb_space_and_settle_timing(self):
         multiplier = 1.25
@@ -175,7 +189,7 @@ class FishingPathTests(unittest.TestCase):
 
         self.assertAlmostEqual(non_vip_actions[non_vip_space_up][2] - non_vip_actions[non_vip_space_down][2], 1.236 * multiplier)
         self.assertAlmostEqual(non_vip_actions[non_vip_w_up][2] - non_vip_actions[non_vip_space_up][2], 0.472 * multiplier)
-        self.assertAlmostEqual(non_vip_a_down_at - non_vip_actions[non_vip_w_up][2], 0.25 * multiplier)
+        self.assertAlmostEqual(non_vip_a_down_at - non_vip_actions[non_vip_w_up][2], 0.0)
 
     def test_cancellation_during_climb_releases_held_keys(self):
         released = []

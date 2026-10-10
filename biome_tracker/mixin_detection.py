@@ -1,6 +1,7 @@
 import multiprocessing
 
 from .base_support import *
+from reoteab_version import session_diagnostics
 from .biome_transitions import BiomeTransitionDispatcher, biome_webhook_events
 
 
@@ -599,6 +600,8 @@ class DetectionMixin:
         start_report = getattr(self, "start_macro_report", None)
         if callable(start_report):
             start_report(now)
+        for diagnostic in session_diagnostics(self.config):
+            self.append_log(diagnostic)
         self.current_session = 0
         self._last_biome_health_log = 0.0
         self.has_started_once = True

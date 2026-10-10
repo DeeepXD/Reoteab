@@ -107,3 +107,24 @@ def test_trim_records_a_single_follow_up_measurement():
 
     assert trimmer.snapshot()["follow_up_rss"] == 2400 * 1024 * 1024
     assert trimmer.snapshot()["returned_rss"] == 200 * 1024 * 1024
+
+
+def test_trim_revalidates_the_active_roblox_target_before_calling_windows():
+    original = Process(pid=456)
+    replacement = Process(pid=789)
+    tracker = Tracker(original)
+    calls = []
+    trimmer = make_trimmer(tracker, lambda pid: calls.append(pid))
+
+    targets = iter((original, replacement))
+
+    def changed_target():
+        return next(targets)
+
+    tracker.get_active_roblox_process = changed_target
+    result = trimmer._trim_once(manual=True)
+
+    assert result["status"] == "skipped"
+    assert "target changed" in result["message"].lower()
+    assert calls == []
+    assert "target changed" in tracker.logs[-1].lower()

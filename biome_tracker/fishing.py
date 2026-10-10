@@ -144,10 +144,12 @@ NON_VIP_WALK_TO_SELL_FISH_EVENTS: list[dict[str, Any]] = _NON_VIP_WALK_TO_FLARG_
 ]
 
 NON_VIP_WALK_TO_FISH_EVENTS: list[dict[str, Any]] = _NON_VIP_WALK_TO_FLARG_EVENTS + [
-    {"type": "key_down", "key": "a", "t": 16.635, "climb_timing": True},
-    {"type": "key_up", "key": "a", "t": 18.007},
-    {"type": "key_down", "key": "w", "t": 18.846},
-    {"type": "key_up", "key": "w", "t": 21.983},
+    # Turn off the ledge as soon as forward movement ends.  A later turn leaves
+    # the non-VIP route facing the wall beside the climb.
+    {"type": "key_down", "key": "a", "t": 16.385},
+    {"type": "key_up", "key": "a", "t": 17.757},
+    {"type": "key_down", "key": "w", "t": 18.596},
+    {"type": "key_up", "key": "w", "t": 21.733},
 ]
 
 def _load_config_file() -> dict[str, Any]:

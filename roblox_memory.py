@@ -94,6 +94,15 @@ class RobloxMemoryTrimmer:
         self._last_result = result
         return dict(result)
 
+    def _revalidate_active_process(self, expected_pid):
+        try:
+            process = self.tracker.get_active_roblox_process()
+        except Exception:
+            return None
+        if process is None or int(getattr(process, "pid", 0) or 0) != int(expected_pid):
+            return None
+        return process
+
     def _trim_once(self, manual=False, lock_held=False):
         if not lock_held and not self._trim_lock.acquire(blocking=False):
             return self._set_result("busy", "A Roblox memory trim is already running.")
@@ -121,6 +130,11 @@ class RobloxMemoryTrimmer:
                     pid=process.pid,
                     before_rss=before,
                 )
+
+            process = self._revalidate_active_process(process.pid)
+            if process is None:
+                self._append_log("[Memory Trim] Skipped because the active Roblox target changed before trimming.")
+                return self._set_result("skipped", "Active Roblox target changed before trimming.")
 
             try:
                 self._empty_working_set(process.pid)

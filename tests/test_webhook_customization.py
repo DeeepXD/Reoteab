@@ -34,7 +34,7 @@ class WebhookCustomizationTests(unittest.TestCase):
         self.assertNotIn("title", embed)
         self.assertEqual(embed["color"], 11753)
         self.assertEqual(embed["thumbnail"]["url"], "https://i.postimg.cc/RZh2pw0j/mari.png ")
-        self.assertEqual(embed["footer"]["text"], "Reoteab 0.1.4")
+        self.assertEqual(embed["footer"]["text"], "Reoteab 1.0.0-beta.2")
         self.assertIn("Mari has arrived", embed["description"])
         self.assertEqual(embed["fields"], [{"name": "Detection Source", "value": "OCR"}])
         self.assertEqual(self.post.call_count, 1)

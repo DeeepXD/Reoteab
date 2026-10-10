@@ -1,21 +1,17 @@
-# Reoteab v0.1.4
+# Reoteab 1.0 Beta 2
 
-Reoteab is an unofficial community-maintained continuation based on Coteab v2.2.0.
+This Tester build focuses on long-session reliability and clearer diagnostics.
 
-## Stability
+## Tester improvements
 
-- Added WebView memory monitoring and safe maintenance during unattended sessions
-- Recreated WebView2 renderer resources without restarting the macro or backend workers
-- Switched to a bounded frontend-pulled UI event queue so presentation work cannot block the macro
-
-## Fixes and reliability
-
-- Fixed a first-launch stall caused by clearing old WebView profile folders before the window opened
-- Improved biome transition, screenshot, and webhook worker isolation during UI failures
-- Preserved the current Sol's RNG paths, presets, auto-calibration, and webhook improvements
+- Added optional Roblox working-set trimming for long macro sessions
+- Added concise build and session diagnostics for route, playback, reconnect, and failsafe settings
+- Improved tester build identity across the UI, runtime logs, and webhook footers
+- Preserved Macro Report, fishing climb timing, and WebView stability work from Beta 1
 
 ## Notes
 
 - Review calibration and settings before starting automation
+- This is a Tester build. Real Roblox and extended AFK validation are still required.
 - Join the Reoteab Discord: https://discord.gg/bQNSU3pfPF
 - Reoteab on GitHub: https://github.com/DeeepXD/Reoteab
